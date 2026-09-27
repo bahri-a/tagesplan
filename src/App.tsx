@@ -6,10 +6,13 @@
  * Dialoge, die überall erscheinen können.
  */
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { APP_NAME } from './config/defaults'
 import { T } from './config/texts'
+import { EndDayDialog } from './components/EndDayDialog'
 import { useNow, useTimerEngine } from './components/hooks'
+import { Toast } from './components/Toast'
+import { WelcomeBackDialog } from './components/WelcomeBackDialog'
 import { requestPersistentStorage } from './db/database'
 import { formatCountdown } from './logic/time'
 import * as timer from './logic/timer'
@@ -18,7 +21,9 @@ import { PlanScreen } from './screens/PlanScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
 import { TodayScreen } from './screens/TodayScreen'
 import { unlockAudio } from './signals/sounds'
-import { initStore, useAppState } from './store/store'
+import { endDay, getEndDayConflicts } from './store/actions'
+import { shouldAskToEndPreviousDay } from './store/selectors'
+import { getState, initStore, useAppState } from './store/store'
 import './components/components.css'
 
 type Screen = 'today' | 'plan' | 'settings'
@@ -48,10 +53,33 @@ export default function App() {
 function Shell() {
   const state = useAppState()
   const [screen, setScreen] = useState<Screen>('today')
+  const [endDayDialog, setEndDayDialog] = useState<'closed' | 'confirm' | 'conflicts'>('closed')
+  const [toast, setToast] = useState<string | null>(null)
+  const askEndPrevious = useAskToEndPreviousDay()
 
   useTimerEngine()
   useTheme(state.settings.theme)
   useWindowTitle(state.timer)
+
+  const clearToast = useCallback(() => setToast(null), [])
+
+  const dayEnded = () => {
+    setEndDayDialog('closed')
+    askEndPrevious.hide()
+    setScreen('today')
+    setToast(T.endDay.finished)
+  }
+
+  // „Ja, Tag beenden“ aus „Willkommen zurück“: ohne weitere Rückfrage.
+  const endPreviousDay = () => {
+    askEndPrevious.hide()
+    if (getEndDayConflicts().length > 0) {
+      setEndDayDialog('conflicts')
+    } else {
+      endDay()
+      dayEnded()
+    }
+  }
 
   return (
     <>
@@ -73,12 +101,49 @@ function Shell() {
       </header>
 
       <main className="main">
-        {screen === 'today' && <TodayScreen onPlan={() => setScreen('plan')} onEndDay={() => {}} />}
+        {screen === 'today' && (
+          <TodayScreen onPlan={() => setScreen('plan')} onEndDay={() => setEndDayDialog('confirm')} />
+        )}
         {screen === 'plan' && <PlanScreen />}
         {screen === 'settings' && <SettingsScreen />}
       </main>
+
+      {askEndPrevious.visible && endDayDialog === 'closed' && (
+        <WelcomeBackDialog onEndDay={endPreviousDay} onKeepWorking={askEndPrevious.hide} />
+      )}
+      {endDayDialog !== 'closed' && (
+        <EndDayDialog
+          skipConfirm={endDayDialog === 'conflicts'}
+          onCancel={() => setEndDayDialog('closed')}
+          onEnded={dayEnded}
+        />
+      )}
+      {toast && <Toast message={toast} onDone={clearToast} />}
     </>
   )
+}
+
+/**
+ * Soll „Willkommen zurück! Möchtest du den Tag von … beenden?“ erscheinen?
+ * Geprüft wird beim Öffnen der App und immer, wenn du ins Fenster zurückkehrst.
+ */
+function useAskToEndPreviousDay() {
+  const [visible, setVisible] = useState(() => shouldAskToEndPreviousDay(getState(), Date.now()))
+  useEffect(() => {
+    const check = () => {
+      if (document.visibilityState === 'visible') {
+        setVisible(shouldAskToEndPreviousDay(getState(), Date.now()))
+      }
+    }
+    document.addEventListener('visibilitychange', check)
+    window.addEventListener('focus', check)
+    return () => {
+      document.removeEventListener('visibilitychange', check)
+      window.removeEventListener('focus', check)
+    }
+  }, [])
+  const hide = useCallback(() => setVisible(false), [])
+  return { visible, hide }
 }
 
 /** Setzt Hell/Dunkel. Bei „Automatisch“ folgt die App macOS. */

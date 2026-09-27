@@ -180,3 +180,50 @@
     transform: translate(-50%, 8px);
   }
 }
+
+/* ---------- Tag beenden: zwei Aufgaben nebeneinander ---------- */
+
+.conflict-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+}
+
+.conflict-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.1rem 1.2rem;
+  box-shadow: none;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    transform 0.1s;
+}
+
+.conflict-card:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.conflict-card:active {
+  transform: scale(0.98);
+}
+
+.conflict-origin {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.conflict-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.conflict-progress {
+  margin-top: 0.75rem;
+  text-align: center;
+}
