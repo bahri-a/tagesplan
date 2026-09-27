@@ -13,6 +13,7 @@ import { EndDayDialog } from './components/EndDayDialog'
 import { useNow, useTimerEngine } from './components/hooks'
 import { NotePad } from './components/NotePad'
 import { Toast } from './components/Toast'
+import { UpdateBanner } from './components/UpdateBanner'
 import { WelcomeBackDialog } from './components/WelcomeBackDialog'
 import { requestPersistentStorage } from './db/database'
 import { formatCountdown } from './logic/time'
@@ -122,6 +123,7 @@ function Shell() {
         />
       )}
       {toast && <Toast message={toast} onDone={clearToast} />}
+      <UpdateBanner />
     </>
   )
 }
@@ -149,12 +151,24 @@ function useAskToEndPreviousDay() {
   return { visible, hide }
 }
 
-/** Setzt Hell/Dunkel. Bei „Automatisch“ folgt die App macOS. */
+/**
+ * Setzt Hell/Dunkel. Bei „Automatisch“ folgt die App macOS.
+ * Auch die Titelleiste des installierten App-Fensters bekommt die passende Farbe.
+ */
 function useTheme(theme: ThemeSetting) {
   useEffect(() => {
     const root = document.documentElement
     if (theme === 'system') delete root.dataset.theme
     else root.dataset.theme = theme
+
+    const updateTitleBar = () => {
+      const background = getComputedStyle(root).getPropertyValue('--bg').trim()
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', background)
+    }
+    updateTitleBar()
+    const darkMode = window.matchMedia('(prefers-color-scheme: dark)')
+    darkMode.addEventListener('change', updateTitleBar)
+    return () => darkMode.removeEventListener('change', updateTitleBar)
   }, [theme])
 }
 

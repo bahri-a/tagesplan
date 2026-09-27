@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Lokale Einstellungen für Claude Code
+.claude/
