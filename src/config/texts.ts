@@ -78,6 +78,13 @@ export const T = {
     removeStep: 'Schritt entfernen',
     close: 'Zuklappen',
     empty: 'Noch nichts geplant.',
+    // Ansagen für Screenreader beim Verschieben
+    dragInstructions:
+      'Leertaste zum Aufnehmen, Pfeiltasten zum Verschieben, Leertaste zum Ablegen, Escape zum Abbrechen.',
+    dragStart: (title: string) => `„${title}“ aufgenommen.`,
+    dragOver: (title: string, place: number) => `„${title}“ über Platz ${place}.`,
+    dragEnd: (title: string, place: number) => `„${title}“ auf Platz ${place} abgelegt.`,
+    dragCancel: (title: string) => `Verschieben von „${title}“ abgebrochen.`,
   },
 
   endDay: {
