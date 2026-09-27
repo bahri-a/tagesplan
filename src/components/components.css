@@ -1,0 +1,173 @@
+/* Aussehen der gemeinsamen Bausteine (Kopfleiste, Dialog, Zahlenfeld …) */
+
+/* ---------- Kopfleiste mit Navigation ---------- */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.nav {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+
+.nav-item {
+  padding: 0.4em 1.1em;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-weight: 500;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.nav-item:hover {
+  color: var(--text);
+}
+
+.nav-item[aria-current='page'] {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
+/* Kleine Timer-Anzeige in der Kopfleiste, wenn du nicht auf „Heute“ bist. */
+.timer-pill {
+  position: absolute;
+  right: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.3em 0.85em;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.timer-pill.is-break {
+  background: var(--break-soft);
+  color: var(--break);
+}
+
+.main {
+  padding: 1rem 1.25rem 6rem;
+}
+
+/* ---------- Dialog ---------- */
+
+.dialog {
+  width: min(460px, calc(100vw - 2rem));
+  padding: 1.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 20px 60px rgb(0 0 0 / 0.2);
+}
+
+.dialog-wide {
+  width: min(640px, calc(100vw - 2rem));
+}
+
+.dialog::backdrop {
+  background: rgb(20 22 25 / 0.35);
+  backdrop-filter: blur(2px);
+}
+
+.dialog-title {
+  margin-bottom: 0.75rem;
+  font-size: 1.25rem;
+}
+
+.dialog-text {
+  margin-bottom: 1.25rem;
+  color: var(--text-muted);
+}
+
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+}
+
+/* ---------- Zahlenfeld mit – / + ---------- */
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.stepper-btn {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  font-size: 1.1rem;
+}
+
+.stepper-input {
+  width: 3.2rem;
+  padding: 0.3em 0.2em;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.stepper-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.stepper-unit {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* ---------- Kleine Meldung unten (Toast) ---------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7em 1.1em;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  transform: translateX(-50%);
+  animation: toast-in 0.25s ease-out;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}

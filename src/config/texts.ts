@@ -1,0 +1,162 @@
+/**
+ * TEXTE DER OBERFLÄCHE
+ * ====================
+ * Die wichtigsten Texte an einer Stelle. Ändere sie hier, wenn dir eine
+ * Formulierung nicht gefällt. (Funktionen wie `(name) => …` setzen einen
+ * Wert in den Text ein.)
+ */
+
+export const T = {
+  nav: {
+    today: 'Heute',
+    plan: 'Planen',
+    settings: 'Einstellungen',
+    timerBlock: 'Block',
+    timerPaused: 'Pausiert',
+    timerBreak: 'Pause',
+  },
+
+  today: {
+    taskOf: (n: number, total: number) => `Aufgabe ${n} von ${total}`,
+    blockOf: (n: number, total: number) => `Block ${n} von ${total}`,
+    minutes: (m: number) => `${m} Minuten`,
+    now: 'Jetzt',
+    startBlock: 'Block starten',
+    longPauseDone: (title: string) => `Lange Pause gemacht – weiter mit „${title}“`,
+    pause: 'Pausieren',
+    resume: 'Weiter',
+    paused: 'Pausiert – die Zeit steht.',
+    abort: 'Abbrechen',
+    abortConfirm: 'Block wirklich abbrechen?',
+    abortYes: 'Ja, abbrechen',
+    abortNo: 'Nein, weiter',
+    breakTitle: 'Kurze Pause',
+    breakHint: 'Steh kurz auf, trink etwas, schau aus dem Fenster.',
+    breakOver: 'Pause vorbei',
+    nextBlock: 'Nächsten Block starten',
+    askDone: 'Hauptaufgabe erledigt oder noch ein Block?',
+    done: 'Erledigt',
+    oneMore: 'Noch ein Block',
+    oneMoreStart: 'Noch einen Block starten',
+    allDoneTitle: 'Alles erledigt für heute.',
+    allDoneText: 'Stark gemacht! Du kannst jetzt morgen planen oder den Tag beenden.',
+    emptyTitle: 'Noch keine Aufgabe für heute.',
+    emptyText: 'Plane eine Hauptaufgabe – die schwerste zuerst.',
+    goPlan: 'Jetzt planen',
+    dayList: 'Heute',
+    endDay: 'Tag beenden',
+    steps: 'Schritte',
+  },
+
+  plan: {
+    today: 'Heute',
+    tomorrow: 'Morgen',
+    hardestFirst: 'Schwerste Aufgabe nach oben.',
+    overLimit: (max: number) =>
+      `Das sind mehr als deine üblichen ${max} Hauptaufgaben. Das ist okay – vielleicht passt eine auch auf einen anderen Tag.`,
+    newTask: 'Neue Hauptaufgabe …',
+    add: 'Hinzufügen',
+    title: 'Titel',
+    steps: 'Schritte',
+    firstStep: 'Erster Schritt – sofort machbar, z. B. „PDF öffnen“',
+    nextStep: 'Nächster Schritt …',
+    blocks: 'Blöcke',
+    blockLength: 'Blocklänge',
+    standard: (m: number) => `Standard (${m} Min.)`,
+    custom: 'Eigene',
+    minutesShort: 'Min.',
+    blocksMeta: (n: number) => (n === 1 ? '1 Block' : `${n} Blöcke`),
+    stepsMeta: (done: number, total: number) => `${done}/${total} Schritte`,
+    done: 'Erledigt',
+    reopen: 'Wieder öffnen',
+    markDone: 'Als erledigt markieren',
+    delete: 'Löschen',
+    deleteConfirm: 'Aufgabe löschen?',
+    yes: 'Ja',
+    no: 'Nein',
+    dragHandle: 'Ziehen zum Sortieren',
+    removeStep: 'Schritt entfernen',
+    close: 'Zuklappen',
+    empty: 'Noch nichts geplant.',
+  },
+
+  endDay: {
+    title: 'Tag beenden',
+    question: 'Möchtest du den Tag jetzt beenden? Offene Aufgaben wandern auf ihren Platz im neuen Tag.',
+    runningBlock: 'Der laufende Block wird dabei gestoppt – deine Minuten bleiben gespeichert.',
+    conflictTitle: (place: number) => `Welche Aufgabe soll auf Platz ${place}?`,
+    conflictHint: 'Die andere kommt direkt dahinter.',
+    carried: 'von heute',
+    planned: 'für morgen geplant',
+    confirm: 'Tag beenden',
+    cancel: 'Abbrechen',
+    finished: 'Neuer Tag – schön, dass du da bist.',
+  },
+
+  welcome: {
+    title: 'Willkommen zurück!',
+    question: (dayName: string) => `Möchtest du den Tag von ${dayName} beenden?`,
+    yes: 'Ja, Tag beenden',
+    no: 'Nein, ich arbeite noch daran',
+  },
+
+  notes: {
+    open: 'Notizen',
+    title: 'Notizzettel',
+    placeholder: 'Alles, was dir gerade durch den Kopf geht …',
+    close: 'Schließen',
+  },
+
+  settings: {
+    title: 'Einstellungen',
+    blocksSection: 'Arbeitsblöcke',
+    blockMinutes: 'Blocklänge',
+    blockMinutesHint: 'So lange arbeitest du am Stück.',
+    shortBreak: 'Kurze Pause',
+    shortBreakHint: 'Pause nach jedem Block.',
+    defaultBlocks: 'Blöcke pro Hauptaufgabe',
+    defaultBlocksHint: 'Startwert für neue Hauptaufgaben.',
+    maxTasks: 'Hauptaufgaben pro Tag',
+    maxTasksHint: 'Darüber erscheint ein sanfter Hinweis.',
+    minutes: 'Min.',
+    appearance: 'Aussehen',
+    themeSystem: 'Automatisch',
+    themeLight: 'Hell',
+    themeDark: 'Dunkel',
+    sounds: 'Töne & Benachrichtigungen',
+    testBlockEnd: '▶ Ton „Block vorbei“',
+    testBreakEnd: '▶ Ton „Pause vorbei“',
+    notifyGranted: 'Chrome-Benachrichtigungen sind erlaubt.',
+    notifyDefault: 'Chrome-Benachrichtigungen sind noch nicht erlaubt.',
+    notifyDenied:
+      'Chrome-Benachrichtigungen sind blockiert. Du kannst sie über das Schloss-Symbol links neben der Adresse wieder erlauben.',
+    notifyAllow: 'Erlauben',
+    data: 'Daten',
+    backup: 'Sichern',
+    backupHint: 'Speichert alle deine Daten als Datei.',
+    restore: 'Wiederherstellen',
+    restoreHint: 'Lädt eine Sicherungsdatei – ersetzt die aktuellen Daten.',
+    restoreConfirmTitle: 'Sicherung wiederherstellen?',
+    restoreConfirm: (date: string) =>
+      `Die Sicherung vom ${date} ersetzt alle Daten, die gerade in der App sind.`,
+    restoreYes: 'Ja, wiederherstellen',
+    restoreNo: 'Abbrechen',
+    restoreDone: 'Fertig – deine Sicherung ist wiederhergestellt.',
+    restoreInvalid: 'Diese Datei konnte ich nicht lesen. Ist es eine Tagesplan-Sicherung (.json)?',
+    storagePersisted: 'Chrome behält deine Daten dauerhaft.',
+    storageNotPersisted:
+      'Chrome hat den dauerhaften Speicher noch nicht bestätigt. Das passiert meist automatisch, sobald die App installiert ist. Sichere zur Sicherheit ab und zu.',
+  },
+
+  notification: {
+    blockEndTitle: 'Block geschafft',
+    blockEndBody: (title: string) => `Zeit für eine kurze Pause. (${title})`,
+    breakEndTitle: 'Pause vorbei',
+    breakEndBody: (title: string) => `Bereit für den nächsten Block? (${title})`,
+  },
+
+  update: {
+    ready: 'Eine neue Version der App ist bereit.',
+    reload: 'Neu laden',
+  },
+}
