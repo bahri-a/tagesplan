@@ -146,6 +146,15 @@
   font-size: 0.9rem;
 }
 
+/* ---------- Kurze Rückfrage direkt im Text („Wirklich …? Ja / Nein“) ---------- */
+
+.confirm-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.92rem;
+}
+
 /* ---------- Kleine Meldung unten (Toast) ---------- */
 
 .toast {

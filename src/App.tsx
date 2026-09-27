@@ -73,7 +73,7 @@ function Shell() {
       </header>
 
       <main className="main">
-        {screen === 'today' && <TodayScreen onPlan={() => setScreen('plan')} />}
+        {screen === 'today' && <TodayScreen onPlan={() => setScreen('plan')} onEndDay={() => {}} />}
         {screen === 'plan' && <PlanScreen />}
         {screen === 'settings' && <SettingsScreen />}
       </main>

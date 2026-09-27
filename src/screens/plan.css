@@ -187,13 +187,6 @@
   margin-left: auto;
 }
 
-.confirm-inline {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.92rem;
-}
-
 /* ---------- Schritte (Checkliste) ---------- */
 
 .step-list {

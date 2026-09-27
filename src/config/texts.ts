@@ -19,7 +19,9 @@ export const T = {
   today: {
     taskOf: (n: number, total: number) => `Aufgabe ${n} von ${total}`,
     blockOf: (n: number, total: number) => `Block ${n} von ${total}`,
-    minutes: (m: number) => `${m} Minuten`,
+    blockDoneOf: (n: number, total: number) => `Block ${n} von ${total} geschafft`,
+    remaining: 'noch',
+    minutes: (m: number) => (m === 1 ? '1 Minute' : `${m} Minuten`),
     now: 'Jetzt',
     startBlock: 'Block starten',
     longPauseDone: (title: string) => `Lange Pause gemacht – weiter mit „${title}“`,
@@ -45,7 +47,8 @@ export const T = {
     goPlan: 'Jetzt planen',
     dayList: 'Heute',
     endDay: 'Tag beenden',
-    steps: 'Schritte',
+    allSteps: (done: number, total: number) => `Alle Schritte (${done}/${total})`,
+    hideSteps: 'Schritte ausblenden',
   },
 
   plan: {
