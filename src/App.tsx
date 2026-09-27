@@ -11,6 +11,7 @@ import { APP_NAME } from './config/defaults'
 import { T } from './config/texts'
 import { EndDayDialog } from './components/EndDayDialog'
 import { useNow, useTimerEngine } from './components/hooks'
+import { NotePad } from './components/NotePad'
 import { Toast } from './components/Toast'
 import { WelcomeBackDialog } from './components/WelcomeBackDialog'
 import { requestPersistentStorage } from './db/database'
@@ -107,6 +108,8 @@ function Shell() {
         {screen === 'plan' && <PlanScreen />}
         {screen === 'settings' && <SettingsScreen />}
       </main>
+
+      <NotePad />
 
       {askEndPrevious.visible && endDayDialog === 'closed' && (
         <WelcomeBackDialog onEndDay={endPreviousDay} onKeepWorking={askEndPrevious.hide} />

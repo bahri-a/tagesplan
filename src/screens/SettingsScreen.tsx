@@ -3,10 +3,12 @@
  * Blocklänge, Pausen, Grenzen, Aussehen, Töne und Datensicherung.
  */
 
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { SETTINGS_LIMITS } from '../config/defaults'
 import { T } from '../config/texts'
+import { Dialog } from '../components/Dialog'
 import { NumberStepper } from '../components/NumberStepper'
+import { downloadBackup, parseBackup, restoreBackup, type BackupFile } from '../db/backup'
 import type { ThemeSetting } from '../model/types'
 import {
   notificationPermission,
@@ -117,7 +119,92 @@ export function SettingsScreen() {
           </div>
         )}
       </section>
+
+      <DataSection />
     </div>
+  )
+}
+
+/** Sichern (Datei herunterladen) und Wiederherstellen (Datei einlesen). */
+function DataSection() {
+  const fileInput = useRef<HTMLInputElement>(null)
+  const [pending, setPending] = useState<BackupFile | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
+  const [persisted, setPersisted] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    navigator.storage?.persisted?.().then(setPersisted, () => setPersisted(null))
+  }, [])
+
+  const readFile = async (file: File | undefined) => {
+    if (!file) return
+    const backup = parseBackup(await file.text())
+    if (backup) {
+      setMessage(null)
+      setPending(backup)
+    } else {
+      setMessage(T.settings.restoreInvalid)
+    }
+  }
+
+  const confirmRestore = async () => {
+    if (!pending) return
+    await restoreBackup(pending)
+    setPending(null)
+    setMessage(T.settings.restoreDone)
+  }
+
+  return (
+    <section className="card settings-section">
+      <h2>{T.settings.data}</h2>
+
+      <div className="setting-row">
+        <div className="muted small">{T.settings.backupHint}</div>
+        <button type="button" className="btn" onClick={downloadBackup}>
+          {T.settings.backup}
+        </button>
+      </div>
+
+      <div className="setting-row">
+        <div className="muted small">{T.settings.restoreHint}</div>
+        <button type="button" className="btn" onClick={() => fileInput.current?.click()}>
+          {T.settings.restore}
+        </button>
+        <input
+          ref={fileInput}
+          type="file"
+          accept="application/json,.json"
+          hidden
+          onChange={(e) => {
+            void readFile(e.target.files?.[0])
+            // Zurücksetzen, damit dieselbe Datei erneut gewählt werden kann.
+            e.target.value = ''
+          }}
+        />
+      </div>
+
+      {message && <p className="hint">{message}</p>}
+
+      {persisted !== null && (
+        <p className="muted small">{persisted ? T.settings.storagePersisted : T.settings.storageNotPersisted}</p>
+      )}
+
+      {pending && (
+        <Dialog title={T.settings.restoreConfirmTitle} onClose={() => setPending(null)}>
+          <p className="dialog-text">
+            {T.settings.restoreConfirm(new Date(pending.exportedAt).toLocaleString('de-DE'))}
+          </p>
+          <div className="dialog-actions">
+            <button type="button" className="btn btn-quiet" onClick={() => setPending(null)}>
+              {T.settings.restoreNo}
+            </button>
+            <button type="button" className="btn btn-primary" onClick={() => void confirmRestore()}>
+              {T.settings.restoreYes}
+            </button>
+          </div>
+        </Dialog>
+      )}
+    </section>
   )
 }
 

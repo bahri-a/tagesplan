@@ -227,3 +227,82 @@
   margin-top: 0.75rem;
   text-align: center;
 }
+
+/* ---------- Notizzettel ---------- */
+
+.notes-button {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 20;
+  padding: 0.45em 0.95em;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  opacity: 0.75;
+  transition:
+    opacity 0.15s,
+    color 0.15s;
+}
+
+.notes-button:hover {
+  color: var(--text);
+  opacity: 1;
+}
+
+/* Ist das Fenster breit genug, rückt der Inhalt neben den Zettel statt darunter. */
+@media (min-width: 900px) {
+  .notes-open .main {
+    padding-right: calc(min(360px, 100vw - 2.5rem) + 2.5rem);
+  }
+}
+
+.notes-panel {
+  position: fixed;
+  top: 4.5rem;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  width: min(360px, calc(100vw - 2.5rem));
+  padding: 1rem;
+  animation: notes-in 0.2s ease-out;
+}
+
+@keyframes notes-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+}
+
+.notes-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+
+.notes-head h2 {
+  font-size: 1rem;
+}
+
+.notes-text {
+  flex: 1;
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: var(--bg);
+  line-height: 1.55;
+  resize: none;
+}
+
+.notes-text:focus {
+  outline: none;
+  border-color: var(--accent);
+}

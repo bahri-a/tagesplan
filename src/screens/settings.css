@@ -43,10 +43,6 @@
   gap: 1rem;
 }
 
-.settings-persist {
-  margin-top: 0.25rem;
-}
-
 /* Umschalter „Automatisch / Hell / Dunkel“ */
 .segmented {
   display: inline-flex;
