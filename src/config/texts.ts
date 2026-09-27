@@ -153,6 +153,7 @@ export const T = {
     restoreNo: 'Abbrechen',
     restoreDone: 'Fertig – deine Sicherung ist wiederhergestellt.',
     restoreInvalid: 'Diese Datei konnte ich nicht lesen. Ist es eine Tagesplan-Sicherung (.json)?',
+    version: (date: string) => `Version vom ${date}`,
     storagePersisted: 'Chrome behält deine Daten dauerhaft.',
     storageNotPersisted:
       'Chrome hat den dauerhaften Speicher noch nicht bestätigt. Das passiert meist automatisch, sobald die App installiert ist. Sichere zur Sicherheit ab und zu.',

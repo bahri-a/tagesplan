@@ -68,3 +68,7 @@
   color: var(--text);
   box-shadow: var(--shadow);
 }
+
+.settings-version {
+  text-align: center;
+}

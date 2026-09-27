@@ -15,6 +15,10 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   base: process.env.BASE_PATH ?? '/',
+  // Zeitpunkt des Bauens – wird unten in den Einstellungen angezeigt.
+  define: {
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+  },
   plugins: [
     react(),
     VitePWA({

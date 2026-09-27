@@ -121,6 +121,10 @@ export function SettingsScreen() {
       </section>
 
       <DataSection />
+
+      <p className="muted small settings-version">
+        {T.settings.version(new Date(__BUILD_TIME__).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }))}
+      </p>
     </div>
   )
 }
