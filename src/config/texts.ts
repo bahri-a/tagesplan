@@ -189,7 +189,8 @@ export const T = {
     question: 'Möchtest du den Tag jetzt beenden? Offene Aufgaben wandern auf ihren Platz im neuen Tag.',
     runningBlock: 'Der laufende Block wird dabei gestoppt – deine Minuten bleiben gespeichert.',
     conflictTitle: (place: number) => `Welche Aufgabe soll auf Platz ${place}?`,
-    conflictHint: 'Die andere kommt direkt dahinter.',
+    conflictHint: 'Die andere kommt direkt dahinter. Mit × streichst du eine.',
+    dropLabel: (title: string) => `„${title}“ streichen`,
     carried: 'von heute',
     planned: 'für morgen geplant',
     confirm: 'Tag beenden',
@@ -266,7 +267,7 @@ export const T = {
     noiseBrown: 'Braun',
     noisePink: 'Rosa',
     noiseWhite: 'Weiß',
-    // Braun, rosa und weiß im Wechsel (je 5 Sekunden) – damit es nicht monoton wird.
+    // Braun, rosa und weiß im Wechsel (je 12 Sekunden) – damit es nicht monoton wird.
     noiseMix: 'Ultra (Mix)',
     noisePreview: (name: string) => `${name} probehören`,
     testBlockEnd: '▶ Ton „Block vorbei“',

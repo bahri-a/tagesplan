@@ -211,6 +211,8 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   (Blöcke, Zeit, erledigte Aufgaben). Dann wird „morgen“ zu „heute“.
 - Offene Aufgaben wandern auf ihren alten Platz. Ist der schon belegt, siehst du beide
   Aufgaben nebeneinander und wählst mit einem Klick.
+  Willst du eine davon gar nicht mehr? Das kleine **×** oben rechts auf der Karte streicht sie:
+  eine Aufgabe von heute wird dann nicht mitgenommen, eine für morgen geplante fällt weg.
 - Vergessen? Kein Problem: Öffnest du die App am nächsten Tag, fragt sie freundlich nach.
   (Arbeit bis 4 Uhr nachts zählt noch zum alten Tag.)
 
@@ -223,7 +225,7 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
 - **Einstellungen → Töne:** **An** oder **Aus**. Bei „Aus“ bleibt die App komplett still –
   keine Töne am Block- und Pausenende, keine Vorwarnung, kein Rauschen.
 - Darunter: welches **Rauschen** (Braun = tief und weich, Rosa, Weiß = hell, **Ultra (Mix)** =
-  braun, rosa und weiß im Wechsel, je 5 Sekunden – damit es nicht monoton wird). Unter Braun,
+  braun, rosa und weiß im Wechsel, je 12 Sekunden – damit es nicht monoton wird). Unter Braun,
   Rosa und Weiß spielt ein kleiner **Lautsprecher** das Rauschen ein paar Sekunden zum
   Probehören. Darunter kannst du die Töne „Block vorbei“ und „Pause vorbei“ anhören.
 

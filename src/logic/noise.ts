@@ -17,7 +17,7 @@ type PureColor = Exclude<NoiseColor, 'mix'>
 /** Wie lange ein reines Rauschen berechnet und dann wiederholt wird (Sekunden). */
 export const NOISE_LOOP_S = 12
 /** Beim Mix: so lange läuft jede Art, bevor die nächste kommt (Sekunden). */
-export const NOISE_MIX_SEGMENT_S = 5
+export const NOISE_MIX_SEGMENT_S = 12
 /** Weicher Übergang beim Wiederholen und zwischen den Arten im Mix (Sekunden). */
 export const NOISE_CROSSFADE_S = 0.3
 

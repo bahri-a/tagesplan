@@ -603,3 +603,21 @@ describe('Planen: kopieren, verschieben, zuletzt verwendet', () => {
     expect(titles()).toEqual(['Physik', 'Mathe'])
   })
 })
+
+describe('Tag beenden: streichen bei der Platzwahl', () => {
+  it('gestrichene übertragene Aufgabe bleibt zurück, gestrichene geplante wird gelöscht', () => {
+    const a = actions.addTask(today(), 'Heute offen')
+    const x = actions.addTask(tomorrow(), 'Morgen geplant')
+    const b = actions.addTask(today(), 'Heute auch offen')
+    actions.addTask(tomorrow(), 'Morgen zwei')
+    const oldDay = today()
+    expect(actions.getEndDayConflicts()).toHaveLength(2)
+    expect(actions.getEndDayConflicts(new Set([a.id, b.id]))).toHaveLength(0)
+    actions.endDay({}, new Set([a.id, x.id]))
+    const s = getState()
+    expect(sel.tasksOfDay(s, today()).map((t) => t.title)).toEqual(['Morgen zwei', 'Heute auch offen'])
+    expect(s.tasks[a.id].dayId).toBe(oldDay) // nicht mitgenommen, aber nicht gelöscht
+    expect(s.tasks[a.id].deletedAt).toBeNull()
+    expect(s.tasks[x.id].deletedAt).not.toBeNull()
+  })
+})

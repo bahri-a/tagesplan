@@ -67,4 +67,13 @@ describe('mergeCarryOver', () => {
     expect(r.conflicts.map((c) => c.place)).toEqual([1, 3])
     expect(ids(r.order)).toEqual(['X', 'A', 'B', 'Y'])
   })
+
+  it('× streicht: übertragene bleibt zurück, geplante fällt weg – kein Konflikt mehr', () => {
+    const old = [task('A', 0), task('B', 1)]
+    const planned = [task('X', 0), task('Y', 1)]
+    expect(mergeCarryOver(old, planned).conflicts).toHaveLength(2)
+    const r = mergeCarryOver(old, planned, {}, new Set(['A', 'Y']))
+    expect(ids(r.order)).toEqual(['X', 'B'])
+    expect(r.conflicts).toEqual([])
+  })
 })
