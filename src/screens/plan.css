@@ -108,7 +108,7 @@
   column-gap: 0.5rem;
   flex: 1;
   min-width: 0;
-  padding: 0.75rem 1rem 0.75rem 0.3rem;
+  padding: 0.75rem 0.5rem 0.75rem 0.3rem;
   border: none;
   background: transparent;
   text-align: left;
@@ -133,6 +133,35 @@
   grid-area: meta;
   color: var(--text-muted);
   font-size: 0.85rem;
+}
+
+/* Papierkorb rechts: immer da, aber blass – bei Maus oder Tastatur-Fokus kräftiger */
+.task-delete {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  align-self: center;
+  width: 2rem;
+  height: 2rem;
+  margin-right: 0.55rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-small);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0.4;
+  transition:
+    opacity 0.15s,
+    background 0.15s,
+    color 0.15s;
+}
+
+.task-delete:hover,
+.task-delete:focus-visible {
+  background: var(--surface-2);
+  color: var(--text);
+  opacity: 1;
 }
 
 /* ---------- Aufgeklappte Karte (Bearbeiten) ---------- */

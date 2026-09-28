@@ -174,6 +174,26 @@
   animation: toast-in 0.25s ease-out;
 }
 
+/* „Rückgängig“ in der Meldung – ruhig, in der Akzentfarbe */
+.toast-separator {
+  margin: 0 -0.5rem;
+  color: var(--text-muted);
+}
+
+.toast-action {
+  padding: 0.2em 0.5em;
+  border: none;
+  border-radius: var(--radius-small);
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.toast-action:hover {
+  background: var(--accent-soft);
+}
+
 @keyframes toast-in {
   from {
     opacity: 0;

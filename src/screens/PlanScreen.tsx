@@ -2,6 +2,9 @@
  * BILDSCHIRM „PLANEN“
  * Zwei Spalten: Heute und Morgen. Hauptaufgaben anlegen, per Drag & Drop
  * sortieren und aufklappen, um Schritte und Blöcke festzulegen.
+ * Löschen über den Papierkorb: sofort, danach kurz „Rückgängig“ (zeigt die App unten an).
+ * Nur wenn für die Aufgabe gerade ein Block oder eine kurze Pause läuft, wird vorher gefragt –
+ * „Rückgängig“ holt den Timer nämlich nicht zurück.
  */
 
 import { useState } from 'react'
@@ -23,23 +26,45 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { T } from '../config/texts'
+import { Dialog } from '../components/Dialog'
 import { TaskCard } from '../components/TaskCard'
-import type { ID } from '../model/types'
-import { addTask, reorderTasks } from '../store/actions'
-import { activeDay, plannedDay, tasksOfDay } from '../store/selectors'
-import { useAppState } from '../store/store'
+import type { ID, Task } from '../model/types'
+import { addTask, deleteTask, reorderTasks } from '../store/actions'
+import { activeDay, plannedDay, runningTimerOfTask, tasksOfDay } from '../store/selectors'
+import { getState, useAppState } from '../store/store'
 import './plan.css'
 
-export function PlanScreen() {
+interface Props {
+  /** Eine Aufgabe wurde gelöscht – die App zeigt dann „Aufgabe gelöscht · Rückgängig“. */
+  onTaskDeleted: (taskId: ID) => void
+}
+
+export function PlanScreen({ onTaskDeleted }: Props) {
   const state = useAppState()
   // Es ist immer höchstens eine Aufgabe aufgeklappt – das hält es ruhig.
   const [expandedId, setExpandedId] = useState<ID | null>(null)
   const [justCreatedId, setJustCreatedId] = useState<ID | null>(null)
+  // Rückfrage vor dem Löschen, wenn für die Aufgabe gerade ein Block oder eine Pause läuft.
+  const [confirmDelete, setConfirmDelete] = useState<{ task: Task; running: 'block' | 'break' } | null>(null)
 
   const toggle = (id: ID) => setExpandedId((current) => (current === id ? null : id))
   const created = (id: ID) => {
     setExpandedId(id)
     setJustCreatedId(id)
+  }
+
+  const remove = (id: ID) => {
+    setConfirmDelete(null)
+    deleteTask(id)
+    // Kommt die Aufgabe per „Rückgängig“ zurück, ist sie zugeklappt.
+    setExpandedId((current) => (current === id ? null : current))
+    onTaskDeleted(id)
+  }
+
+  const requestDelete = (task: Task) => {
+    const running = runningTimerOfTask(getState(), task.id, Date.now())
+    if (running) setConfirmDelete({ task, running })
+    else remove(task.id)
   }
 
   return (
@@ -58,9 +83,26 @@ export function PlanScreen() {
             justCreatedId={justCreatedId}
             onToggle={toggle}
             onCreated={created}
+            onDelete={requestDelete}
           />
         ))}
       </div>
+
+      {confirmDelete && (
+        <Dialog title={`„${confirmDelete.task.title || '…'}“`} onClose={() => setConfirmDelete(null)}>
+          <p className="dialog-text">
+            {confirmDelete.running === 'block' ? T.plan.deleteRunningBlock : T.plan.deleteRunningBreak}
+          </p>
+          <div className="dialog-actions">
+            <button type="button" className="btn btn-quiet" onClick={() => setConfirmDelete(null)}>
+              {T.plan.deleteNo}
+            </button>
+            <button type="button" className="btn btn-primary" onClick={() => remove(confirmDelete.task.id)}>
+              {T.plan.deleteYes}
+            </button>
+          </div>
+        </Dialog>
+      )}
     </div>
   )
 }
@@ -72,9 +114,10 @@ interface DayColumnProps {
   justCreatedId: ID | null
   onToggle: (id: ID) => void
   onCreated: (id: ID) => void
+  onDelete: (task: Task) => void
 }
 
-function DayColumn({ dayId, label, expandedId, justCreatedId, onToggle, onCreated }: DayColumnProps) {
+function DayColumn({ dayId, label, expandedId, justCreatedId, onToggle, onCreated, onDelete }: DayColumnProps) {
   const state = useAppState()
   const tasks = tasksOfDay(state, dayId)
   const max = state.settings.maxTasksPerDay
@@ -134,6 +177,7 @@ function DayColumn({ dayId, label, expandedId, justCreatedId, onToggle, onCreate
                 expanded={expandedId === task.id}
                 focusStepInput={justCreatedId === task.id}
                 onToggle={() => onToggle(task.id)}
+                onDelete={() => onDelete(task)}
               />
             ))}
           </ol>

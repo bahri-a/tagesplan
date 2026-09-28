@@ -64,7 +64,11 @@ export function updateTask(taskId: ID, patch: TaskPatch): void {
   commit({ tasks: [next] })
 }
 
-/** Hauptaufgabe (mit ihren Schritten) löschen. */
+/**
+ * Hauptaufgabe (mit ihren Schritten) löschen – weich, also mit `deletedAt`.
+ * Aufgabe und Schritte bekommen denselben Zeitpunkt; daran erkennt `restoreTask`,
+ * was zusammen gelöscht wurde. Die Aufgabe behält ihre alte `position`.
+ */
 export function deleteTask(taskId: ID): void {
   const s = getState()
   const task = s.tasks[taskId]
@@ -82,6 +86,38 @@ export function deleteTask(taskId: ID): void {
   const rest = tasksOfDay(s, task.dayId).filter((t) => t.id !== taskId)
   changes.tasks!.push(...renumber(rest))
   commit(changes)
+}
+
+/**
+ * „Rückgängig“ nach dem Löschen: Die Aufgabe kommt mit ihren ersten Schritten und
+ * individuellen Werten zurück – auf ihren alten Platz, die anderen rücken wieder nach hinten.
+ *  - Nur die Schritte, die zusammen mit der Aufgabe gelöscht wurden, kommen zurück
+ *    (vorher einzeln entfernte Schritte bleiben weg).
+ *  - Ein beim Löschen beendeter Block oder eine Pause kommt bewusst NICHT zurück.
+ *  - Ist ihr Tag inzwischen beendet, passiert nichts (Rückgabe `false`).
+ */
+export function restoreTask(taskId: ID): boolean {
+  const s = getState()
+  const task = s.tasks[taskId]
+  if (!task || task.deletedAt === null) return false
+  if (s.days[task.dayId]?.status === 'ended') return false
+
+  const deletedAt = task.deletedAt
+  const restored: Task = { ...task, deletedAt: null }
+  const others = tasksOfDay(s, task.dayId)
+  const place = Math.min(task.position, others.length)
+  const ordered = [...others.slice(0, place), restored, ...others.slice(place)]
+  const steps = Object.values(s.steps)
+    .filter((st) => st.taskId === taskId && st.deletedAt === deletedAt)
+    .map((st) => ({ ...st, deletedAt: null }))
+
+  commit({
+    tasks: ordered.flatMap((t, index) =>
+      t === restored || t.position !== index ? [{ ...t, position: index }] : [],
+    ),
+    steps,
+  })
+  return true
 }
 
 /** Neue Reihenfolge nach Drag & Drop. */

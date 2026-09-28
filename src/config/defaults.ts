@@ -62,3 +62,6 @@ export const NOTE_SAVE_DELAY_MS = 400
  * bevor der nächste erscheint (Millisekunden) – ein kleines Erfolgserlebnis.
  */
 export const STEP_DONE_FEEDBACK_MS = 900
+
+/** Wie lange nach dem Löschen einer Aufgabe „Rückgängig“ angeboten wird (Millisekunden). */
+export const UNDO_DELETE_MS = 8000
