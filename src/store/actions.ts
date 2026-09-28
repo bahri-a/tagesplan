@@ -16,6 +16,7 @@ import {
   activeDay,
   blockMinutesFor,
   plannedDay,
+  shortBreakMinutesFor,
   stepsOfTask,
   tasksOfDay,
 } from './selectors'
@@ -35,15 +36,18 @@ export function addTask(dayId: ID, title: string): Task {
     position: tasksOfDay(s, dayId).length,
     estimatedBlocks: s.settings.defaultBlocksPerTask,
     blockMinutesOverride: null,
+    shortBreakMinutesOverride: null,
     completedAt: null,
   }
   commit({ tasks: [task] })
   return task
 }
 
-type TaskPatch = Partial<Pick<Task, 'title' | 'estimatedBlocks' | 'blockMinutesOverride'>>
+type TaskPatch = Partial<
+  Pick<Task, 'title' | 'estimatedBlocks' | 'blockMinutesOverride' | 'shortBreakMinutesOverride'>
+>
 
-/** Titel, Blockanzahl oder eigene Blocklänge ändern. */
+/** Titel, Blockanzahl, individuelle Blocklänge oder individuelle kurze Pause ändern. */
 export function updateTask(taskId: ID, patch: TaskPatch): void {
   const task = getState().tasks[taskId]
   if (!task) return
@@ -52,6 +56,10 @@ export function updateTask(taskId: ID, patch: TaskPatch): void {
   if (next.blockMinutesOverride !== null) {
     const { min, max } = SETTINGS_LIMITS.blockMinutes
     next.blockMinutesOverride = clamp(Math.round(next.blockMinutesOverride), min, max)
+  }
+  if (next.shortBreakMinutesOverride !== null) {
+    const { min, max } = SETTINGS_LIMITS.shortBreakMinutes
+    next.shortBreakMinutesOverride = clamp(Math.round(next.shortBreakMinutesOverride), min, max)
   }
   commit({ tasks: [next] })
 }
@@ -192,15 +200,18 @@ export function checkTimer(now = Date.now()): TimerEvent[] {
   const changes: Changes = {}
   const titleOf = (taskId: ID) => s.tasks[taskId]?.title ?? ''
 
-  // 1. Block abgelaufen → gilt als durchgehalten, die kurze Pause startet.
+  // 1. Block abgelaufen → gilt als durchgehalten, die kurze Pause startet
+  //    (so lang wie bei dieser Aufgabe eingestellt, sonst Standard).
   if (t.phase === 'block' && timer.isBlockFinished(t, now)) {
     const endedAt = timer.blockEndsAt(t)
+    const task = s.tasks[t.taskId]
+    const breakMinutes = task ? shortBreakMinutesFor(s, task) : s.settings.shortBreakMinutes
     changes.blocks = [blockRecord(t, 'completed', endedAt)]
     t = {
       phase: 'break',
       taskId: t.taskId,
       startedAt: endedAt,
-      durationMs: s.settings.shortBreakMinutes * 60_000,
+      durationMs: breakMinutes * 60_000,
       endSignaled: false,
     }
     changes.timer = t

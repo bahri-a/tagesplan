@@ -138,7 +138,9 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
 - Tab **Planen**: links **Heute**, rechts **Morgen**.
 - Titel eintippen, Enter → die Aufgabe klappt auf, und du kannst direkt die **ersten Schritte**
   eintippen (jeweils Enter). Das sind nur winzige Einstiege wie „PDF öffnen“ – keine Blöcke.
-- Pro Aufgabe einstellbar: **Blöcke** (Schätzung) und **Blocklänge** (Standard oder eigene).
+- Pro Aufgabe einstellbar: **Blöcke** (Schätzung), **Blocklänge** und **Kurze Pause**
+  (jeweils „Standard“ oder „Individuell“). Die Standardwerte – 25 Minuten Block, 7 Minuten
+  Pause – änderst du unter **Einstellungen**.
 - Reihenfolge: am Griff **⠿** links ziehen. **Schwerste Aufgabe nach oben.**
 - Planst du mehr als dein Limit, erscheint nur ein sanfter Hinweis.
 
@@ -215,7 +217,7 @@ src/
   model/types.ts       ← Datenmodell (sync-tauglich: UUIDs, Zeitstempel, weiches Löschen)
   db/database.ts       ← Speichern/Laden in IndexedDB
   db/backup.ts         ← Sichern und Wiederherstellen
-  logic/               ← reine Logik: Timer-Rechnung, Tageswechsel, Übertrag (+ Tests)
+  logic/               ← reine Logik: Timer-Rechnung, Tageswechsel, Übertrag, Daten-Updates (+ Tests)
   store/               ← App-Zustand, Aktionen (addTask, startBlock, endDay …), Abfragen
   screens/             ← die drei Bildschirme: Heute, Planen, Einstellungen
   components/          ← Bausteine: Timer-Ring, Aufgaben-Karte, Dialoge, Notizzettel …

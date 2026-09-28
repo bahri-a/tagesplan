@@ -7,6 +7,7 @@
  */
 
 import { APP_NAME } from '../config/defaults'
+import { tablesToV2 } from '../logic/migrations'
 import { fileDate } from '../logic/time'
 import { getState, reloadStore, type AppState } from '../store/store'
 import { replaceAll, TABLE_NAMES, type Tables } from './database'
@@ -14,8 +15,11 @@ import { replaceAll, TABLE_NAMES, type Tables } from './database'
 /** Kennung, damit wir nur echte Tagesplan-Sicherungen einlesen. */
 const BACKUP_APP_ID = 'tagesplan'
 
-/** Version des Sicherungsformats. Erhöhen, wenn sich das Datenmodell ändert. */
-const BACKUP_SCHEMA_VERSION = 1
+/**
+ * Version des Sicherungsformats. Erhöhen, wenn sich das Datenmodell ändert.
+ * 2 = mit individueller kurzer Pause pro Aufgabe (ältere Sicherungen werden beim Wiederherstellen angepasst).
+ */
+const BACKUP_SCHEMA_VERSION = 2
 
 export interface BackupFile {
   app: typeof BACKUP_APP_ID
@@ -79,7 +83,9 @@ export function parseBackup(text: string): BackupFile | null {
 
 /** Ersetzt alle Daten durch die Sicherung und lädt die App-Daten neu. */
 export async function restoreBackup(backup: BackupFile): Promise<void> {
-  await replaceAll(backup.data)
+  // Ältere Sicherungen erst auf den aktuellen Stand bringen.
+  const data = backup.schemaVersion < 2 ? tablesToV2(backup.data, Date.now()) : backup.data
+  await replaceAll(data)
   await reloadStore()
 }
 

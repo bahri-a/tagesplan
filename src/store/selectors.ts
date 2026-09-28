@@ -47,9 +47,14 @@ export function blocksDone(s: AppState, taskId: ID): number {
   return blocksOfTask(s, taskId).length
 }
 
-/** Blocklänge für diese Aufgabe in Minuten (eigene oder Standard). */
+/** Blocklänge für diese Aufgabe in Minuten (individuell oder Standard). */
 export function blockMinutesFor(s: AppState, task: Task): number {
   return task.blockMinutesOverride ?? s.settings.blockMinutes
+}
+
+/** Länge der kurzen Pause nach einem Block dieser Aufgabe in Minuten (individuell oder Standard). */
+export function shortBreakMinutesFor(s: AppState, task: Task): number {
+  return task.shortBreakMinutesOverride ?? s.settings.shortBreakMinutes
 }
 
 /** Die Aufgabe, die gerade dran ist: die oberste noch nicht erledigte von heute. */

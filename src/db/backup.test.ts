@@ -19,7 +19,7 @@ describe('Sichern und Wiederherstellen', () => {
     const dayId = sel.activeDay(getState()).id
     const task = actions.addTask(dayId, 'Kapitel 3')
     actions.addStep(task.id, 'PDF öffnen')
-    actions.updateSettings({ blockMinutes: 25 })
+    actions.updateSettings({ blockMinutes: 30 })
     actions.updateNote('Idee für später')
     await flushSaves()
 
@@ -39,9 +39,38 @@ describe('Sichern und Wiederherstellen', () => {
     const s = getState()
     expect(sel.tasksOfDay(s, dayId).map((t) => t.title)).toEqual(['Kapitel 3'])
     expect(sel.stepsOfTask(s, task.id).map((st) => st.text)).toEqual(['PDF öffnen'])
-    expect(s.settings.blockMinutes).toBe(25)
+    expect(s.settings.blockMinutes).toBe(30)
     expect(s.note.text).toBe('Idee für später')
     expect(s.timer.phase).toBe('idle')
+  })
+
+  it('bringt eine ältere Sicherung (Version 1) auf den aktuellen Stand', async () => {
+    const dayId = sel.activeDay(getState()).id
+    const task = actions.addTask(dayId, 'Kapitel 3')
+    await flushSaves()
+    // So sah eine Sicherung aus Version 1 aus: alte Standardwerte, Aufgaben ohne individuelle Pause.
+    const current = createBackup()
+    const old = {
+      ...current,
+      schemaVersion: 1,
+      data: {
+        ...current.data,
+        tasks: current.data.tasks.map((t) => {
+          const oldTask: Partial<typeof t> = { ...t }
+          delete oldTask.shortBreakMinutesOverride
+          return oldTask
+        }),
+        settings: current.data.settings.map((st) => ({ ...st, blockMinutes: 15, shortBreakMinutes: 5 })),
+      },
+    }
+    const backup = parseBackup(JSON.stringify(old))
+    expect(backup).not.toBeNull()
+    await restoreBackup(backup!)
+
+    const s = getState()
+    expect(s.tasks[task.id].shortBreakMinutesOverride).toBeNull()
+    expect(s.settings.blockMinutes).toBe(25)
+    expect(s.settings.shortBreakMinutes).toBe(7)
   })
 
   it('lehnt fremde oder kaputte Dateien freundlich ab', () => {

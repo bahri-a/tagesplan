@@ -10,6 +10,7 @@
  */
 
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
+import { settingsToV2, taskToV2 } from '../logic/migrations'
 import type {
   Block,
   Day,
@@ -22,7 +23,7 @@ import type {
 } from '../model/types'
 
 const DB_NAME = 'tagesplan'
-const DB_VERSION = 1
+const DB_VERSION = 2
 
 /** Die Tabellen, die später synchronisiert werden könnten (und gesichert werden). */
 export interface Tables {
@@ -59,7 +60,7 @@ let dbPromise: Promise<IDBPDatabase<TagesplanDB>> | null = null
 
 function db(): Promise<IDBPDatabase<TagesplanDB>> {
   dbPromise ??= openDB<TagesplanDB>(DB_NAME, DB_VERSION, {
-    upgrade(database, oldVersion) {
+    async upgrade(database, oldVersion, _newVersion, transaction) {
       // Version 1: alle Tabellen anlegen.
       if (oldVersion < 1) {
         for (const name of TABLE_NAMES) {
@@ -67,7 +68,16 @@ function db(): Promise<IDBPDatabase<TagesplanDB>> {
         }
         database.createObjectStore('local')
       }
-      // Spätere Versionen: hier `if (oldVersion < 2) { … }` ergänzen.
+      // Version 2: kurze Pause pro Aufgabe; neue Standardwerte 25/7 statt 15/5.
+      // (Nur nötig, wenn schon Daten von Version 1 da sind.)
+      if (oldVersion >= 1 && oldVersion < 2) {
+        const now = Date.now()
+        const tasks = transaction.objectStore('tasks')
+        for (const task of await tasks.getAll()) await tasks.put(taskToV2(task))
+        const settings = transaction.objectStore('settings')
+        for (const s of await settings.getAll()) await settings.put(settingsToV2(s, now))
+      }
+      // Spätere Versionen: hier `if (oldVersion < 3) { … }` ergänzen.
     },
   })
   return dbPromise

@@ -13,6 +13,7 @@ function task(id: string, position: number, done = false): Task {
     position,
     estimatedBlocks: 3,
     blockMinutesOverride: null,
+    shortBreakMinutesOverride: null,
     completedAt: done ? 1 : null,
   }
 }

@@ -51,8 +51,10 @@ export interface Task extends BaseRecord {
   position: number
   /** Geschätzte Anzahl Blöcke. */
   estimatedBlocks: number
-  /** Eigene Blocklänge in Minuten – oder `null` für den Standard. */
+  /** Individuelle Blocklänge in Minuten – oder `null` für den Standard. */
   blockMinutesOverride: number | null
+  /** Individuelle Länge der kurzen Pause in Minuten – oder `null` für den Standard. (Seit Datenbank-Version 2) */
+  shortBreakMinutesOverride: number | null
   /** Wann die Aufgabe als erledigt markiert wurde – oder `null`. */
   completedAt: number | null
 }

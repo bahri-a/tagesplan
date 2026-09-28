@@ -17,9 +17,9 @@ export const APP_NAME = 'Tagesplan'
 /** Startwerte für die Einstellungen (beim ersten Öffnen der App). */
 export const DEFAULT_SETTINGS: SettingsValues = {
   /** Länge eines Arbeitsblocks in Minuten. */
-  blockMinutes: 15,
+  blockMinutes: 25,
   /** Länge der kurzen Pause nach einem Block in Minuten. */
-  shortBreakMinutes: 5,
+  shortBreakMinutes: 7,
   /** Wie viele Blöcke eine neue Hauptaufgabe zunächst bekommt. */
   defaultBlocksPerTask: 3,
   /** Ab wie vielen Hauptaufgaben pro Tag ein sanfter Hinweis erscheint. */

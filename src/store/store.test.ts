@@ -6,12 +6,16 @@
 import 'fake-indexeddb/auto'
 import { IDBFactory } from 'fake-indexeddb'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { DEFAULT_SETTINGS } from '../config/defaults'
 import { resetDatabaseForTests } from '../db/database'
 import * as actions from './actions'
 import * as sel from './selectors'
 import { flushSaves, getState, initStore, resetStoreForTests } from './store'
 
 const MIN = 60_000
+// Die Abläufe rechnen mit den Standardwerten – so passen sie auch, wenn sich diese ändern.
+const BLOCK = DEFAULT_SETTINGS.blockMinutes * MIN
+const BREAK = DEFAULT_SETTINGS.shortBreakMinutes * MIN
 const START = new Date(2026, 8, 28, 9, 0).getTime() // Mo, 28.09.2026, 9:00
 
 function at(ms: number) {
@@ -40,8 +44,8 @@ describe('Start', () => {
     const s = getState()
     expect(sel.activeDay(s)).toBeTruthy()
     expect(sel.plannedDay(s)).toBeTruthy()
-    expect(s.settings.blockMinutes).toBe(15)
-    expect(s.settings.shortBreakMinutes).toBe(5)
+    expect(s.settings.blockMinutes).toBe(25)
+    expect(s.settings.shortBreakMinutes).toBe(7)
   })
 
   it('lädt gespeicherte Daten nach einem Neustart wieder', async () => {
@@ -60,18 +64,18 @@ describe('Block und kurze Pause', () => {
   it('Block läuft ab → durchgehalten, kurze Pause startet, danach Ton', () => {
     const task = actions.addTask(today(), 'A')
     actions.startBlock(task.id)
-    expect(actions.checkTimer(at(14 * MIN))).toEqual([])
+    expect(actions.checkTimer(at(BLOCK - MIN))).toEqual([])
 
-    const events = actions.checkTimer(at(15 * MIN + 500))
+    const events = actions.checkTimer(at(BLOCK + 500))
     expect(events).toEqual([{ type: 'blockEnd', taskTitle: 'A', fresh: true }])
     const [block] = sel.blocksOfTask(getState(), task.id)
     expect(block.status).toBe('completed')
-    expect(block.workedSeconds).toBe(15 * 60)
+    expect(block.workedSeconds).toBe(BLOCK / 1000)
     expect(getState().timer.phase).toBe('break')
 
-    expect(actions.checkTimer(at(20 * MIN + 100))).toEqual([{ type: 'breakEnd', taskTitle: 'A', fresh: true }])
+    expect(actions.checkTimer(at(BLOCK + BREAK + 100))).toEqual([{ type: 'breakEnd', taskTitle: 'A', fresh: true }])
     // Das Pausenende wird nur einmal gemeldet.
-    expect(actions.checkTimer(at(21 * MIN))).toEqual([])
+    expect(actions.checkTimer(at(BLOCK + BREAK + MIN))).toEqual([])
   })
 
   it('Pausieren verlängert den Block, pausierte Zeit zählt nicht', () => {
@@ -81,11 +85,11 @@ describe('Block und kurze Pause', () => {
     actions.pauseCurrentBlock()
     at(8 * MIN)
     actions.resumeCurrentBlock()
-    expect(actions.checkTimer(at(15 * MIN + 500))).toEqual([])
-    actions.checkTimer(at(18 * MIN))
+    expect(actions.checkTimer(at(BLOCK + 500))).toEqual([])
+    actions.checkTimer(at(BLOCK + 3 * MIN))
     const [block] = sel.blocksOfTask(getState(), task.id)
     expect(block.pausedMs).toBe(3 * MIN)
-    expect(block.workedSeconds).toBe(15 * 60)
+    expect(block.workedSeconds).toBe(BLOCK / 1000)
   })
 
   it('Abbrechen speichert die gearbeitete Zeit und zählt als Block', () => {
@@ -108,11 +112,35 @@ describe('Block und kurze Pause', () => {
     expect(sel.blocksOfTask(getState(), task.id)[0].status).toBe('completed')
   })
 
-  it('nutzt die eigene Blocklänge der Aufgabe', () => {
+  it('nutzt die individuelle Blocklänge der Aufgabe', () => {
     const task = actions.addTask(today(), 'A')
     actions.updateTask(task.id, { blockMinutesOverride: 10 })
     actions.startBlock(task.id)
     expect(actions.checkTimer(at(10 * MIN))).toHaveLength(1)
+  })
+
+  it('nutzt die individuelle kurze Pause der Aufgabe – sonst den Standard', () => {
+    const a = actions.addTask(today(), 'A')
+    actions.updateTask(a.id, { shortBreakMinutesOverride: 3 })
+    actions.startBlock(a.id)
+    actions.checkTimer(at(BLOCK))
+    const t = getState().timer
+    expect(t.phase === 'break' && t.durationMs).toBe(3 * MIN)
+    expect(actions.checkTimer(at(BLOCK + 3 * MIN))).toEqual([{ type: 'breakEnd', taskTitle: 'A', fresh: true }])
+
+    const b = actions.addTask(today(), 'B')
+    actions.startBlock(b.id)
+    actions.checkTimer(at(2 * BLOCK + 3 * MIN))
+    const t2 = getState().timer
+    expect(t2.phase === 'break' && t2.durationMs).toBe(BREAK)
+  })
+
+  it('begrenzt die individuelle Pause auf erlaubte Werte', () => {
+    const task = actions.addTask(today(), 'A')
+    actions.updateTask(task.id, { shortBreakMinutesOverride: 999 })
+    expect(getState().tasks[task.id].shortBreakMinutesOverride).toBe(60)
+    actions.updateTask(task.id, { shortBreakMinutesOverride: null })
+    expect(getState().tasks[task.id].shortBreakMinutesOverride).toBeNull()
   })
 })
 
@@ -121,10 +149,10 @@ describe('Hauptaufgabe erledigt, lange Pause', () => {
     const task = actions.addTask(today(), 'A')
     actions.updateTask(task.id, { estimatedBlocks: 2 })
     actions.startBlock(task.id)
-    actions.checkTimer(at(15 * MIN))
+    actions.checkTimer(at(BLOCK))
     expect(sel.isAskingDone(getState(), getState().tasks[task.id])).toBe(false)
     actions.startBlock(task.id)
-    at(25 * MIN)
+    at(BLOCK + 10 * MIN)
     actions.abortCurrentBlock()
     expect(sel.isAskingDone(getState(), getState().tasks[task.id])).toBe(true)
 
@@ -137,7 +165,7 @@ describe('Hauptaufgabe erledigt, lange Pause', () => {
     const b = actions.addTask(today(), 'B')
     expect(sel.needsLongPause(getState(), a)).toBe(false)
     actions.startBlock(a.id)
-    actions.checkTimer(at(15 * MIN))
+    actions.checkTimer(at(BLOCK))
     actions.finishTask(a.id)
     const s = getState()
     expect(s.timer.phase).toBe('idle')
@@ -194,7 +222,7 @@ describe('Tag beenden', () => {
     expect(sel.shouldAskToEndPreviousDay(getState(), at(24 * 60 * MIN))).toBe(false)
     at(0)
     actions.startBlock(a.id)
-    actions.checkTimer(at(15 * MIN))
+    actions.checkTimer(at(BLOCK))
     // Nachts um 2 Uhr zählt noch zum selben Tag
     const nightTwo = new Date(2026, 8, 29, 2, 0).getTime()
     expect(sel.shouldAskToEndPreviousDay(getState(), nightTwo)).toBe(false)

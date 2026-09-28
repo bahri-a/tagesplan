@@ -1,13 +1,14 @@
 /**
  * Eine Hauptaufgabe als Karte im Bildschirm „Planen“.
  * Zugeklappt: Nummer, Titel, Blöcke und Schritte auf einen Blick.
- * Aufgeklappt: Titel, erste Schritte, Blockanzahl und Blocklänge bearbeiten.
+ * Aufgeklappt: Titel, erste Schritte, Blockanzahl, Blocklänge und kurze Pause bearbeiten.
  * Über den Griff links lässt sich die Karte verschieben (Drag & Drop).
  */
 
 import { useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { SETTINGS_LIMITS } from '../config/defaults'
 import { T } from '../config/texts'
 import type { Task } from '../model/types'
 import { deleteTask, setTaskCompleted, updateTask } from '../store/actions'
@@ -84,7 +85,6 @@ export function TaskCard({ task, number, expanded, focusStepInput, onToggle }: P
 function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepInput: boolean; onClose: () => void }) {
   const state = useAppState()
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const standardMinutes = state.settings.blockMinutes
   const isDone = task.completedAt !== null
 
   return (
@@ -116,33 +116,21 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
           />
         </div>
 
-        <div className="field">
-          <span className="field-label">{T.plan.blockLength}</span>
-          <div className="block-length">
-            <select
-              className="input select"
-              value={task.blockMinutesOverride === null ? 'standard' : 'custom'}
-              onChange={(e) =>
-                updateTask(task.id, {
-                  blockMinutesOverride: e.target.value === 'standard' ? null : standardMinutes,
-                })
-              }
-            >
-              <option value="standard">{T.plan.standard(standardMinutes)}</option>
-              <option value="custom">{T.plan.custom}</option>
-            </select>
-            {task.blockMinutesOverride !== null && (
-              <NumberStepper
-                label={T.plan.blockLength}
-                value={task.blockMinutesOverride}
-                min={1}
-                max={240}
-                unit={T.plan.minutesShort}
-                onChange={(v) => updateTask(task.id, { blockMinutesOverride: v })}
-              />
-            )}
-          </div>
-        </div>
+        <MinutesChoice
+          label={T.plan.blockLength}
+          standardMinutes={state.settings.blockMinutes}
+          override={task.blockMinutesOverride}
+          limits={SETTINGS_LIMITS.blockMinutes}
+          onChange={(v) => updateTask(task.id, { blockMinutesOverride: v })}
+        />
+
+        <MinutesChoice
+          label={T.plan.shortBreak}
+          standardMinutes={state.settings.shortBreakMinutes}
+          override={task.shortBreakMinutesOverride}
+          limits={SETTINGS_LIMITS.shortBreakMinutes}
+          onChange={(v) => updateTask(task.id, { shortBreakMinutesOverride: v })}
+        />
       </div>
 
       <div className="task-editor-footer">
@@ -169,6 +157,48 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
         <button type="button" className="btn btn-small task-editor-close" onClick={onClose}>
           {T.plan.close}
         </button>
+      </div>
+    </div>
+  )
+}
+
+interface MinutesChoiceProps {
+  label: string
+  /** Der Standardwert aus den Einstellungen. */
+  standardMinutes: number
+  /** Individueller Wert dieser Aufgabe – oder `null` für den Standard. */
+  override: number | null
+  limits: { min: number; max: number }
+  onChange: (value: number | null) => void
+}
+
+/**
+ * Auswahl „Standard (… Min.)“ oder „Individuell“ – für Blocklänge und kurze Pause.
+ * Bei „Individuell“ erscheint daneben ein Zahlenfeld, das mit dem Standardwert beginnt.
+ */
+function MinutesChoice({ label, standardMinutes, override, limits, onChange }: MinutesChoiceProps) {
+  return (
+    <div className="field">
+      <span className="field-label">{label}</span>
+      <div className="block-length">
+        <select
+          className="input select"
+          aria-label={label}
+          value={override === null ? 'standard' : 'custom'}
+          onChange={(e) => onChange(e.target.value === 'standard' ? null : standardMinutes)}
+        >
+          <option value="standard">{T.plan.standard(standardMinutes)}</option>
+          <option value="custom">{T.plan.custom}</option>
+        </select>
+        {override !== null && (
+          <NumberStepper
+            label={label}
+            value={override}
+            {...limits}
+            unit={T.plan.minutesShort}
+            onChange={onChange}
+          />
+        )}
       </div>
     </div>
   )
