@@ -54,7 +54,8 @@ export function NumberStepper({ value, onChange, label, min = 1, max = Infinity,
           if (e.key === 'Enter') e.currentTarget.blur()
         }}
       />
-      {unit && <span className="stepper-unit">{unit}</span>}
+      {/* Auch ein leerer Text ("") erzeugt den Platz – so stehen mehrere Zahlenfelder bündig. */}
+      {unit !== undefined && <span className="stepper-unit">{unit}</span>}
       <button
         type="button"
         className="btn btn-small stepper-btn"

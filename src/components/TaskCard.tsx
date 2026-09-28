@@ -105,18 +105,22 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
         <StepList taskId={task.id} autoFocusNew={focusStepInput} />
       </div>
 
-      <div className="task-editor-row">
-        <div className="field">
-          <span className="field-label">{T.plan.blocks}</span>
+      {/* Zahlen der Aufgabe: immer dieselben drei Zeilen – beim Ändern springt nichts. */}
+      <div className="task-numbers">
+        <div className="number-row">
+          <span className="number-row-label">
+            <span className="number-row-name">{T.plan.blocks}</span>
+          </span>
           <NumberStepper
             label={T.plan.blocks}
             value={task.estimatedBlocks}
             min={1}
+            unit=""
             onChange={(v) => updateTask(task.id, { estimatedBlocks: v })}
           />
         </div>
 
-        <MinutesChoice
+        <DurationRow
           label={T.plan.blockLength}
           standardMinutes={state.settings.blockMinutes}
           override={task.blockMinutesOverride}
@@ -124,7 +128,7 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
           onChange={(v) => updateTask(task.id, { blockMinutesOverride: v })}
         />
 
-        <MinutesChoice
+        <DurationRow
           label={T.plan.shortBreak}
           standardMinutes={state.settings.shortBreakMinutes}
           override={task.shortBreakMinutesOverride}
@@ -162,7 +166,7 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
   )
 }
 
-interface MinutesChoiceProps {
+interface DurationRowProps {
   label: string
   /** Der Standardwert aus den Einstellungen. */
   standardMinutes: number
@@ -173,33 +177,41 @@ interface MinutesChoiceProps {
 }
 
 /**
- * Auswahl „Standard (… Min.)“ oder „Individuell“ – für Blocklänge und kurze Pause.
- * Bei „Individuell“ erscheint daneben ein Zahlenfeld, das mit dem Standardwert beginnt.
+ * Eine Dauer (Blocklänge oder kurze Pause) als ruhige Zeile:
+ * links Name und darunter „Standard“ bzw. „Individuell · zurücksetzen“, rechts immer dasselbe Zahlenfeld.
+ * Wer die Zahl ändert, macht sie automatisch individuell. Wer genau den Standardwert
+ * einstellt oder „zurücksetzen“ klickt, ist wieder beim Standard (folgt dann den Einstellungen).
  */
-function MinutesChoice({ label, standardMinutes, override, limits, onChange }: MinutesChoiceProps) {
+function DurationRow({ label, standardMinutes, override, limits, onChange }: DurationRowProps) {
+  const isCustom = override !== null
   return (
-    <div className="field">
-      <span className="field-label">{label}</span>
-      <div className="block-length">
-        <select
-          className="input select"
-          aria-label={label}
-          value={override === null ? 'standard' : 'custom'}
-          onChange={(e) => onChange(e.target.value === 'standard' ? null : standardMinutes)}
-        >
-          <option value="standard">{T.plan.standard(standardMinutes)}</option>
-          <option value="custom">{T.plan.custom}</option>
-        </select>
-        {override !== null && (
-          <NumberStepper
-            label={label}
-            value={override}
-            {...limits}
-            unit={T.plan.minutesShort}
-            onChange={onChange}
-          />
+    <div className="number-row">
+      <span className="number-row-label">
+        <span className="number-row-name">{label}</span>
+        {isCustom ? (
+          <span className="number-row-state is-custom">
+            {T.plan.custom} ·{' '}
+            <button
+              type="button"
+              className="link-button"
+              aria-label={T.plan.resetLabel(label, standardMinutes)}
+              title={T.plan.resetLabel(label, standardMinutes)}
+              onClick={() => onChange(null)}
+            >
+              {T.plan.reset}
+            </button>
+          </span>
+        ) : (
+          <span className="number-row-state">{T.plan.standard}</span>
         )}
-      </div>
+      </span>
+      <NumberStepper
+        label={label}
+        value={override ?? standardMinutes}
+        {...limits}
+        unit={T.plan.minutesShort}
+        onChange={(v) => onChange(v === standardMinutes ? null : v)}
+      />
     </div>
   )
 }

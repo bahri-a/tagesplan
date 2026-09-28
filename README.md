@@ -138,9 +138,10 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
 - Tab **Planen**: links **Heute**, rechts **Morgen**.
 - Titel eintippen, Enter → die Aufgabe klappt auf, und du kannst direkt die **ersten Schritte**
   eintippen (jeweils Enter). Das sind nur winzige Einstiege wie „PDF öffnen“ – keine Blöcke.
-- Pro Aufgabe einstellbar: **Blöcke** (Schätzung), **Blocklänge** und **Kurze Pause**
-  (jeweils „Standard“ oder „Individuell“). Die Standardwerte – 25 Minuten Block, 7 Minuten
-  Pause – änderst du unter **Einstellungen**.
+- Pro Aufgabe einstellbar: **Blöcke** (Schätzung), **Blocklänge** und **Kurze Pause**.
+  Änderst du eine Dauer mit – / +, gilt sie nur für diese Aufgabe („Individuell“);
+  **zurücksetzen** holt wieder den Standard. Die Standardwerte – 25 Minuten Block,
+  7 Minuten Pause – änderst du unter **Einstellungen**.
 - Reihenfolge: am Griff **⠿** links ziehen. **Schwerste Aufgabe nach oben.**
 - Planst du mehr als dein Limit, erscheint nur ein sanfter Hinweis.
 
