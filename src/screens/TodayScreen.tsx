@@ -27,8 +27,10 @@ import {
   abortCurrentBlock,
   addExtraBlock,
   finishTask,
+  isInWarningTime,
   pauseCurrentBlock,
   resumeCurrentBlock,
+  updateSettings,
   startBlock,
   toggleStep,
 } from '../store/actions'
@@ -306,7 +308,10 @@ function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: 
         totalMs={timerState.plannedMs}
         caption={paused ? T.nav.timerPaused : T.today.remaining}
         paused={paused}
+        warm={isInWarningTime(timerState, now)}
       />
+
+      <NoiseToggle />
 
       {paused && (
         <>
@@ -434,5 +439,41 @@ function CurrentStep({ task }: { task: Task }) {
         {showAll ? T.today.hideSteps : T.today.allSteps(doneCount, steps.length)}
       </button>
     </div>
+  )
+}
+
+/**
+ * Rauschen an/aus – ein einziger Knopf, gut sichtbar unter dem Ring (auch im Mini-Fenster).
+ * Zeigt immer deutlich den Zustand („Rauschen an“ / „Rauschen aus“). Sind in den
+ * Einstellungen alle Töne aus, erscheint er nicht.
+ */
+export function NoiseToggle() {
+  const { settings } = useAppState()
+  if (!settings.sounds) return null
+  const on = settings.noiseOn
+  return (
+    <button
+      type="button"
+      className="noise-toggle"
+      aria-pressed={on}
+      aria-label={on ? T.today.noiseTurnOff : T.today.noiseTurnOn}
+      title={on ? T.today.noiseTurnOff : T.today.noiseTurnOn}
+      onClick={() => updateSettings({ noiseOn: !on })}
+    >
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <path d="M3 8h3l4-3.5v11L6 12H3z" />
+        {on ? (
+          <>
+            <path d="M13 7.5a3.5 3.5 0 0 1 0 5" />
+            <path d="M15.3 5.3a6.6 6.6 0 0 1 0 9.4" />
+          </>
+        ) : (
+          <path d="M13.5 8l4 4m0-4l-4 4" />
+        )}
+      </svg>
+      <span>
+        {T.today.noise} <span className="noise-toggle-state">{on ? T.today.noiseOn : T.today.noiseOff}</span>
+      </span>
+    </button>
   )
 }

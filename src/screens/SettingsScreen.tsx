@@ -9,7 +9,7 @@ import { T } from '../config/texts'
 import { Dialog } from '../components/Dialog'
 import { NumberStepper } from '../components/NumberStepper'
 import { downloadBackup, parseBackup, restoreBackup, type BackupFile } from '../db/backup'
-import type { SurfaceSetting, ThemeSetting } from '../model/types'
+import type { NoiseColor, SurfaceSetting, ThemeSetting } from '../model/types'
 import {
   notificationPermission,
   requestNotificationPermission,
@@ -30,6 +30,42 @@ const SURFACES: { value: SurfaceSetting; label: string }[] = [
   { value: 'pur', label: T.settings.surfacesPur },
   { value: 'glass', label: T.settings.surfacesGlass },
 ]
+
+const SOUNDS: { value: boolean; label: string }[] = [
+  { value: true, label: T.settings.soundsOn },
+  { value: false, label: T.settings.soundsOff },
+]
+
+const NOISE_COLORS: { value: NoiseColor; label: string }[] = [
+  { value: 'brown', label: T.settings.noiseBrown },
+  { value: 'pink', label: T.settings.noisePink },
+  { value: 'white', label: T.settings.noiseWhite },
+]
+
+/** Kleiner Umschalter mit 2–3 Möglichkeiten (wie bei Hell/Dunkel). */
+function Segmented<V extends string | boolean>(props: {
+  label: string
+  options: { value: V; label: string }[]
+  value: V
+  onChange: (value: V) => void
+}) {
+  return (
+    <div className="segmented" role="radiogroup" aria-label={props.label}>
+      {props.options.map((option) => (
+        <button
+          key={String(option.value)}
+          type="button"
+          role="radio"
+          aria-checked={props.value === option.value}
+          className="segmented-item"
+          onClick={() => props.onChange(option.value)}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  )
+}
 
 export function SettingsScreen() {
   const { settings } = useAppState()
@@ -112,14 +148,34 @@ export function SettingsScreen() {
 
       <section className="card settings-section">
         <h2>{T.settings.sounds}</h2>
-        <div className="settings-buttons">
-          <button type="button" className="btn" onClick={playBlockEnd}>
-            {T.settings.testBlockEnd}
-          </button>
-          <button type="button" className="btn" onClick={playBreakEnd}>
-            {T.settings.testBreakEnd}
-          </button>
-        </div>
+        <SettingRow label={T.settings.soundsLabel} hint={T.settings.soundsHint}>
+          <Segmented
+            label={T.settings.soundsLabel}
+            options={SOUNDS}
+            value={settings.sounds}
+            onChange={(sounds) => updateSettings({ sounds })}
+          />
+        </SettingRow>
+        {settings.sounds && (
+          <>
+            <SettingRow label={T.settings.noiseColor} hint={T.settings.noiseColorHint}>
+              <Segmented
+                label={T.settings.noiseColor}
+                options={NOISE_COLORS}
+                value={settings.noiseColor}
+                onChange={(noiseColor) => updateSettings({ noiseColor })}
+              />
+            </SettingRow>
+            <div className="settings-buttons">
+              <button type="button" className="btn" onClick={playBlockEnd}>
+                {T.settings.testBlockEnd}
+              </button>
+              <button type="button" className="btn" onClick={playBreakEnd}>
+                {T.settings.testBreakEnd}
+              </button>
+            </div>
+          </>
+        )}
         {permission !== 'unsupported' && (
           <div className="settings-note">
             <span className="muted small">

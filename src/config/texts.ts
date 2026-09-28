@@ -59,6 +59,12 @@ export const T = {
     endDay: 'Tag beenden',
     allSteps: (done: number, total: number) => `Alle Schritte (${done}/${total})`,
     hideSteps: 'Schritte ausblenden',
+    // Rauschen im Block: ein Knopf, der deutlich zeigt, ob es an oder aus ist.
+    noise: 'Rauschen',
+    noiseOn: 'an',
+    noiseOff: 'aus',
+    noiseTurnOn: 'Rauschen einschalten',
+    noiseTurnOff: 'Rauschen ausschalten',
   },
 
   plan: {
@@ -158,6 +164,15 @@ export const T = {
     surfacesPur: 'Pur',
     surfacesGlass: 'Milchglas',
     sounds: 'Töne & Benachrichtigungen',
+    soundsLabel: 'Töne',
+    soundsHint: 'Aus = die App bleibt komplett still, auch Vorwarnung und Rauschen.',
+    soundsOn: 'An',
+    soundsOff: 'Aus',
+    noiseColor: 'Rauschen',
+    noiseColorHint: 'Läuft nur während eines Blocks. Ein- und ausschalten direkt in „Heute“.',
+    noiseBrown: 'Braun',
+    noisePink: 'Rosa',
+    noiseWhite: 'Weiß',
     testBlockEnd: '▶ Ton „Block vorbei“',
     testBreakEnd: '▶ Ton „Pause vorbei“',
     notifyGranted: 'Chrome-Benachrichtigungen sind erlaubt.',

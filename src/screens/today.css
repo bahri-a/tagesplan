@@ -166,10 +166,25 @@
 
 .timer-ring-stop-a {
   stop-color: var(--ring-block-a);
+  transition: stop-color 3s;
 }
 
 .timer-ring-stop-b {
   stop-color: var(--ring-block-b);
+  transition: stop-color 3s;
+}
+
+/* Vorwarnung: die letzten Minuten eines Blocks – der Ring wird langsam etwas wärmer. */
+.timer-ring.is-warm .timer-ring-stop-a {
+  stop-color: var(--ring-warm-a);
+}
+
+.timer-ring.is-warm .timer-ring-stop-b {
+  stop-color: var(--ring-warm-b);
+}
+
+.timer-ring.is-warm .timer-ring-halo {
+  fill: var(--ring-warm-b);
 }
 
 .timer-ring.is-break .timer-ring-track {
@@ -559,4 +574,46 @@
   .ask-done-actions {
     grid-template-columns: 1fr;
   }
+}
+
+/* ---------- Rauschen an/aus: ein einziger, gut sichtbarer Knopf ---------- */
+
+.noise-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.95rem 0.4rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.3s, color 0.3s, border-color 0.3s;
+}
+
+.noise-toggle svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.noise-toggle-state {
+  font-weight: 600;
+}
+
+.noise-toggle[aria-pressed='true'] {
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.noise-toggle:hover,
+.noise-toggle:focus-visible {
+  border-color: var(--accent);
 }

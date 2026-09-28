@@ -7,7 +7,7 @@ import { T } from '../config/texts'
 import { checkTimer, type TimerEvent } from '../store/actions'
 import { getState, subscribeToStore } from '../store/store'
 import { appIsInBackground, showNotification } from '../signals/notifications'
-import { playBlockEnd, playBreakEnd } from '../signals/sounds'
+import { playBlockEnd, playBlockWarning, playBreakEnd, setNoise } from '../signals/sounds'
 
 /**
  * Liefert die aktuelle Uhrzeit (Millisekunden) und aktualisiert sie
@@ -35,7 +35,9 @@ export function useNow(active: boolean, intervalMs = 250): number {
 /** Ton + (im Hintergrund) Benachrichtigung für ein Timer-Ereignis. */
 function signal(event: TimerEvent): void {
   if (!event.fresh) return
-  if (event.type === 'blockEnd') {
+  if (event.type === 'blockWarning') {
+    playBlockWarning() // nur ein leiser Ton, keine Benachrichtigung
+  } else if (event.type === 'blockEnd') {
     playBlockEnd()
     if (appIsInBackground()) {
       showNotification(T.notification.blockEndTitle, T.notification.blockEndBody(event.taskTitle))
@@ -83,6 +85,26 @@ export function useTimerEngine(): void {
       worker.terminate()
       document.removeEventListener('visibilitychange', check)
       window.removeEventListener('focus', check)
+    }
+  }, [])
+}
+
+/**
+ * Rauschen: läuft nur, solange ein Block läuft (nicht pausiert, nicht in der Pause),
+ * das Rauschen angeschaltet ist und Töne erlaubt sind. Blendet weich ein und aus.
+ */
+export function useNoise(): void {
+  useEffect(() => {
+    const update = () => {
+      const s = getState()
+      const running = s.timer.phase === 'block' && s.timer.pausedAt === null
+      setNoise(running && s.settings.noiseOn, s.settings.noiseColor)
+    }
+    update()
+    const unsubscribe = subscribeToStore(update)
+    return () => {
+      unsubscribe()
+      setNoise(false, getState().settings.noiseColor)
     }
   }, [])
 }
