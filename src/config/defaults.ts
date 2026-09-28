@@ -108,5 +108,8 @@ export const MINI_WINDOW_SIZE = { width: 300, height: 380 }
  */
 export const UNDO_EXTRA_BLOCK_MS = 3 * 60_000
 
+/** Wie viele Hauptaufgaben „Zuletzt verwendet“ in „Planen“ zeigt. */
+export const RECENT_TASKS_COUNT = 5
+
 /** Wie lange nach dem Löschen einer Aufgabe „Rückgängig“ angeboten wird (Millisekunden). */
 export const UNDO_DELETE_MS = 8000

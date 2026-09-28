@@ -49,6 +49,58 @@ export function addTask(dayId: ID, title: string): Task {
   return task
 }
 
+/**
+ * Eine Hauptaufgabe auf einen Tag kopieren (ans Ende): Titel, erste Schritte (nicht abgehakt),
+ * Blockanzahl, individuelle Blocklänge/Pause und Startsignal. Blöcke und „erledigt“ nicht.
+ * Für „Für morgen kopieren“ und „Zuletzt verwendet“.
+ */
+export function copyTask(taskId: ID, dayId: ID): Task | null {
+  const s = getState()
+  const source = s.tasks[taskId]
+  if (!source) return null
+  const now = Date.now()
+  const task: Task = {
+    ...baseFields(now),
+    dayId,
+    title: source.title,
+    position: tasksOfDay(s, dayId).length,
+    estimatedBlocks: source.estimatedBlocks,
+    blockMinutesOverride: source.blockMinutesOverride,
+    shortBreakMinutesOverride: source.shortBreakMinutesOverride,
+    completedAt: null,
+    startCue: source.startCue,
+    firstEstimatedBlocks: null,
+  }
+  const steps: Step[] = stepsOfTask(s, taskId).map((step) => ({
+    ...step,
+    ...baseFields(now),
+    taskId: task.id,
+    doneAt: null,
+  }))
+  commit({ tasks: [task], steps })
+  return task
+}
+
+/**
+ * Eine Hauptaufgabe per Drag & Drop auf den anderen Tag (heute ↔ morgen) schieben, an Platz
+ * `index`. Läuft für sie gerade ein Block, passiert nichts (Rückgabe `false`). Eine kurze Pause
+ * dieser Aufgabe endet dabei.
+ */
+export function moveTask(taskId: ID, dayId: ID, index: number): boolean {
+  const s = getState()
+  const task = s.tasks[taskId]
+  if (!task || task.dayId === dayId) return false
+  if (s.timer.phase === 'block' && s.timer.taskId === taskId) return false
+  const source = tasksOfDay(s, task.dayId).filter((t) => t.id !== taskId)
+  const target = tasksOfDay(s, dayId)
+  const place = clamp(index, 0, target.length)
+  target.splice(place, 0, { ...task, dayId })
+  const changes: Changes = { tasks: [...renumber(source), ...renumber(target)] }
+  if (s.timer.phase === 'break' && s.timer.taskId === taskId) changes.timer = { phase: 'idle' }
+  commit(changes)
+  return true
+}
+
 type TaskPatch = Partial<
   Pick<Task, 'title' | 'estimatedBlocks' | 'blockMinutesOverride' | 'shortBreakMinutesOverride' | 'startCue'>
 >

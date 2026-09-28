@@ -53,6 +53,108 @@
   gap: 0.5rem;
 }
 
+/* Beim Ziehen auf den anderen Tag: die Spalte leuchtet ganz zart, „Hierher ziehen“ im Titel. */
+.plan-column {
+  margin: -0.6rem;
+  padding: 0.6rem;
+  border-radius: 20px;
+  outline: 1.5px dashed transparent;
+  transition:
+    background 0.2s,
+    outline-color 0.2s;
+}
+
+.plan-column.is-drop-target {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  outline-color: var(--accent-line);
+}
+
+.drop-hint {
+  margin-left: 0.6rem;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* Kopieren sitzt direkt vor dem Papierkorb – etwas enger zusammen. */
+.task-copy {
+  margin-right: 0;
+}
+
+/* ---------- „Zuletzt verwendet“ – ganz unten, leise ---------- */
+
+.recent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-top: 2.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.recent-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem 1rem;
+}
+
+.recent-title {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.recent-target .segmented-item {
+  padding: 0.25em 0.85em;
+  font-size: 0.85rem;
+}
+
+.recent-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recent-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  max-width: 18rem;
+  padding: 0.45em 0.95em 0.45em 0.7em;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.recent-chip:hover,
+.recent-chip:focus-visible {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+
+.recent-plus {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.recent-chip-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ---------- Karte einer Hauptaufgabe ---------- */
 
 .task-card {

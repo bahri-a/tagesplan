@@ -544,3 +544,48 @@ describe('Erledigte Hauptaufgaben', () => {
     expect(sel.taskWork(getState(), task.id)).toEqual({ blocks: 2, minutes: BLOCK / MIN + 10 })
   })
 })
+
+describe('Planen: kopieren, verschieben, zuletzt verwendet', () => {
+  it('kopiert eine Aufgabe mit Schritten (nicht abgehakt) ans Ende von morgen', () => {
+    const task = actions.addTask(today(), 'Lernen')
+    actions.updateTask(task.id, { estimatedBlocks: 4, startCue: 'Kaffee steht' })
+    const step = actions.addStep(task.id, 'Skript öffnen')
+    actions.toggleStep(step.id)
+    actions.addTask(tomorrow(), 'Anderes')
+    const copy = actions.copyTask(task.id, tomorrow())!
+    const s = getState()
+    expect(sel.tasksOfDay(s, tomorrow()).map((t) => t.title)).toEqual(['Anderes', 'Lernen'])
+    expect(copy.estimatedBlocks).toBe(4)
+    expect(copy.startCue).toBe('Kaffee steht')
+    const steps = sel.stepsOfTask(s, copy.id)
+    expect(steps.map((x) => [x.text, x.doneAt])).toEqual([['Skript öffnen', null]])
+    expect(sel.stepsOfTask(s, task.id)).toHaveLength(1) // das Original bleibt
+  })
+
+  it('verschiebt eine Aufgabe von heute auf morgen – nicht, solange ihr Block läuft', () => {
+    const a = actions.addTask(today(), 'A')
+    const b = actions.addTask(today(), 'B')
+    actions.addTask(tomorrow(), 'C')
+    actions.startBlock(a.id)
+    expect(actions.moveTask(a.id, tomorrow(), 0)).toBe(false)
+    expect(actions.moveTask(b.id, tomorrow(), 0)).toBe(true)
+    const s = getState()
+    expect(sel.tasksOfDay(s, today()).map((t) => [t.title, t.position])).toEqual([['A', 0]])
+    expect(sel.tasksOfDay(s, tomorrow()).map((t) => [t.title, t.position])).toEqual([['B', 0], ['C', 1]])
+  })
+
+  it('„Zuletzt verwendet“: jüngste zuerst, jeder Titel einmal, ohne Titel des Ziel-Tags', () => {
+    at(0)
+    actions.addTask(today(), 'Mathe')
+    at(MIN)
+    actions.addTask(today(), 'Englisch')
+    at(2 * MIN)
+    actions.addTask(tomorrow(), 'mathe ')
+    at(3 * MIN)
+    actions.addTask(today(), 'Physik')
+    const titles = (dayId: string) => sel.recentTasks(getState(), dayId, 5).map((t) => t.title)
+    expect(titles(tomorrow())).toEqual(['Physik', 'Englisch'])
+    expect(titles(today())).toEqual([])
+    expect(sel.recentTasks(getState(), 'anderer-tag', 2).map((t) => t.title)).toEqual(['Physik', 'mathe'])
+  })
+})

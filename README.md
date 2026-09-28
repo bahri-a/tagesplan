@@ -146,6 +146,12 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   In „Heute“ steht es vor dem ersten Block der Aufgabe über dem Start-Knopf:
   „Wenn der Kaffee auf dem Tisch steht → los.“ Solche Wenn-dann-Pläne helfen beim Anfangen.
 - Reihenfolge: am Griff **⠿** links ziehen. **Schwerste Aufgabe nach oben.**
+  Ziehst du eine Karte hinüber in die andere Spalte, liegt sie danach bei **Morgen** (oder
+  **Heute**) – praktisch, wenn du heute etwas nicht schaffst.
+- **Für morgen kopieren:** das kleine Doppel-Blatt auf jeder Karte von heute. Ein Klick – die
+  Aufgabe steht mit ihren ersten Schritten und Einstellungen auch bei Morgen.
+- **Zuletzt verwendet** (ganz unten): deine letzten 5 Hauptaufgaben. Ein Klick legt sie wieder
+  an – rechts wählst du, ob für **Heute** oder **Morgen** (Standard: Morgen).
 - Planst du mehr als dein Limit, erscheint nur ein sanfter Hinweis.
 - **Löschen:** der kleine Papierkorb rechts auf jeder Karte. Die Aufgabe ist sofort weg;
   unten steht 8 Sekunden lang **Aufgabe gelöscht · Rückgängig** – ein Klick holt sie mit
