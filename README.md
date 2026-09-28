@@ -182,6 +182,8 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   „Noch ein Block“ kurz nach dem letzten Block: erst der Rest der kurzen Pause, dann weiter.
   Aus Versehen „Noch ein Block“ geklickt? Oben links in der Karte steht dann kurz **‹ Zurück** –
   damit kommst du wieder zur Frage (bis zum Start des Blocks und noch in seinen ersten 3 Minuten).
+- Erledigte Hauptaufgaben stehen oben als eigene kleine Karte mit ✓ – mit Blöcken und echter
+  Arbeitszeit. Die nächste Aufgabe steht darunter.
 - Vor jeder weiteren Aufgabe: **Lange Pause gemacht? / Weiter mit „…“** (nicht getimt).
 - An einem früheren Tag angefangen, aber noch nicht fertig? Dann fragt die App:
   **Weitermachen** oder **Abschließen**.

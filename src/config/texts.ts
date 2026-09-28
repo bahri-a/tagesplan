@@ -80,6 +80,9 @@ export const T = {
     breakOver: 'Pause vorbei',
     nextBlock: 'Nächsten Block starten',
     askDone: 'Hauptaufgabe erledigt oder noch ein Block?',
+    // Karte über der aktuellen Aufgabe für jede heute erledigte Hauptaufgabe.
+    doneCard: 'Erledigt',
+    doneCardsLabel: 'Heute erledigt',
     // An einem früheren Tag angefangen, aber noch nicht fertig:
     askResume: 'Hier hast du schon angefangen. Weitermachen oder abschließen?',
     resumeTask: 'Weitermachen',

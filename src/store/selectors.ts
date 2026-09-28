@@ -46,6 +46,15 @@ function countedBlocks(s: AppState, taskId: ID): Block[] {
   return blocksOfTask(s, taskId).filter((b) => b.status !== 'undone')
 }
 
+/**
+ * Was an dieser Aufgabe gearbeitet wurde (über alle Tage): gezählte Blöcke und echte Minuten
+ * (auch aus abgebrochenen und zurückgenommenen Blöcken, ohne Pausen).
+ */
+export function taskWork(s: AppState, taskId: ID): { blocks: number; minutes: number } {
+  const seconds = blocksOfTask(s, taskId).reduce((sum, b) => sum + b.workedSeconds, 0)
+  return { blocks: countedBlocks(s, taskId).length, minutes: Math.round(seconds / 60) }
+}
+
 /** Wann der letzte Block dieser Aufgabe geendet hat (oder `null`). */
 export function lastBlockEndedAt(s: AppState, taskId: ID): number | null {
   const ends = countedBlocks(s, taskId).map((b) => b.endedAt)
