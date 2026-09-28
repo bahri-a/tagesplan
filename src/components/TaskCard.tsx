@@ -4,6 +4,7 @@
  * Aufgeklappt: Titel, erste Schritte, Blockanzahl, Blocklänge und kurze Pause bearbeiten.
  * Über den Griff links lässt sich die Karte verschieben (Drag & Drop),
  * über den Papierkorb rechts löschen (danach kurz „Rückgängig“, siehe PlanScreen).
+ * Karten von heute haben daneben einen leisen Knopf „Für morgen kopieren“.
  */
 
 import { useSortable } from '@dnd-kit/sortable'
@@ -26,9 +27,11 @@ interface Props {
   onToggle: () => void
   /** Papierkorb geklickt – was dann passiert (Rückfrage, Löschen, „Rückgängig“), regelt „Planen“. */
   onDelete: () => void
+  /** Nur bei Karten von heute: mit einem Klick für morgen kopieren. */
+  onCopy?: () => void
 }
 
-export function TaskCard({ task, number, expanded, focusStepInput, onToggle, onDelete }: Props) {
+export function TaskCard({ task, number, expanded, focusStepInput, onToggle, onDelete, onCopy }: Props) {
   const state = useAppState()
   const steps = stepsOfTask(state, task.id)
   const stepsDone = steps.filter((s) => s.doneAt !== null).length
@@ -78,7 +81,18 @@ export function TaskCard({ task, number, expanded, focusStepInput, onToggle, onD
           </span>
         </button>
 
-        {/* Eigener Knopf neben der Zusammenfassung: klappt nichts auf und zieht nichts. */}
+        {/* Eigene Knöpfe neben der Zusammenfassung: klappen nichts auf und ziehen nichts. */}
+        {onCopy && (
+          <button
+            type="button"
+            className="task-delete task-copy"
+            aria-label={T.plan.copyLabel(task.title || '…')}
+            title={T.plan.copyToTomorrow}
+            onClick={onCopy}
+          >
+            <CopyIcon />
+          </button>
+        )}
         <button
           type="button"
           className="task-delete"
@@ -237,6 +251,25 @@ function DurationRow({ label, standardMinutes, override, limits, onChange }: Dur
 }
 
 /** Kleiner Papierkorb (eigenes SVG, keine Bibliothek). Farbe kommt vom Knopf (currentColor). */
+function CopyIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="5.5" y="5.5" width="8" height="8" rx="2" />
+      <path d="M10.5 3.2A1.8 1.8 0 0 0 8.8 2H4a2 2 0 0 0-2 2v4.8a1.8 1.8 0 0 0 1.2 1.7" />
+    </svg>
+  )
+}
+
 function TrashIcon() {
   return (
     <svg

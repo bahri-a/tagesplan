@@ -151,6 +151,19 @@ export const T = {
     delete: 'Aufgabe löschen',
     deleteLabel: (title: string) => `Aufgabe „${title}“ löschen`,
     deleted: 'Aufgabe gelöscht',
+    // Kopieren (nur auf Karten von heute) und Verschieben zwischen den Tagen
+    copyToTomorrow: 'Für morgen kopieren',
+    copyLabel: (title: string) => `„${title}“ für morgen kopieren`,
+    copied: (title: string) => `„${title}“ für morgen kopiert`,
+    moveBlocked: 'Für diese Aufgabe läuft gerade ein Block – verschieben geht danach.',
+    dropHere: 'Hierher ziehen',
+    dragMoved: (title: string, day: string) => `„${title}“ liegt jetzt bei ${day}.`,
+    // „Zuletzt verwendet“ unten in „Planen“
+    recentTitle: 'Zuletzt verwendet',
+    recentTarget: 'Hinzufügen zu',
+    recentAdd: (title: string, day: string) => `„${title}“ zu ${day} hinzufügen`,
+    recentNone: (day: string) => `Steht alles schon bei ${day}.`,
+    recentAdded: (title: string, day: string) => `„${title}“ steht jetzt bei ${day}.`,
     undo: 'Rückgängig',
     // Nur wenn für die Aufgabe gerade ein Block oder eine kurze Pause läuft (der Timer kommt nicht zurück).
     deleteRunningBlock: 'Der laufende Block wird beendet. Trotzdem löschen?',

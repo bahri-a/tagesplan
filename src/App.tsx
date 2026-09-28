@@ -134,7 +134,7 @@ function Shell() {
         {screen === 'today' && (
           <TodayScreen onPlan={() => setScreen('plan')} onEndDay={() => setEndDayDialog('confirm')} />
         )}
-        {screen === 'plan' && <PlanScreen onTaskDeleted={taskDeleted} />}
+        {screen === 'plan' && <PlanScreen onTaskDeleted={taskDeleted} onNotice={(message) => showToast(message)} />}
         {screen === 'settings' && <SettingsScreen />}
       </main>
 

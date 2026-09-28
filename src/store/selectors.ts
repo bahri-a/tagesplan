@@ -55,6 +55,32 @@ export function taskWork(s: AppState, taskId: ID): { blocks: number; minutes: nu
   return { blocks: countedBlocks(s, taskId).length, minutes: Math.round(seconds / 60) }
 }
 
+/**
+ * „Zuletzt verwendet“ in „Planen“: die zuletzt benutzten Hauptaufgaben, jeder Titel nur einmal
+ * (die jüngste Aufgabe mit diesem Titel), ohne Titel, die auf `dayId` schon stehen.
+ * „Benutzt“ = angelegt, daran gearbeitet oder erledigt – je nachdem, was zuletzt war.
+ */
+export function recentTasks(s: AppState, dayId: ID, limit: number): Task[] {
+  const key = (title: string) => title.trim().toLocaleLowerCase('de')
+  const lastWork = new Map<ID, number>()
+  for (const b of alive(Object.values(s.blocks))) {
+    lastWork.set(b.taskId, Math.max(lastWork.get(b.taskId) ?? 0, b.endedAt))
+  }
+  const usedAt = (t: Task) => Math.max(t.createdAt, t.completedAt ?? 0, lastWork.get(t.id) ?? 0)
+  const onDay = new Set(tasksOfDay(s, dayId).map((t) => key(t.title)))
+  const seen = new Set<string>()
+  const result: Task[] = []
+  const tasks = alive(Object.values(s.tasks)).sort((a, b) => usedAt(b) - usedAt(a))
+  for (const task of tasks) {
+    const k = key(task.title)
+    if (!k || onDay.has(k) || seen.has(k)) continue
+    seen.add(k)
+    result.push(task)
+    if (result.length === limit) break
+  }
+  return result
+}
+
 /** Wann der letzte Block dieser Aufgabe geendet hat (oder `null`). */
 export function lastBlockEndedAt(s: AppState, taskId: ID): number | null {
   const ends = countedBlocks(s, taskId).map((b) => b.endedAt)
