@@ -177,6 +177,8 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
 - Läuft der Block durch → sanfter Ton, die **kurze Pause** startet von selbst.
 - Pause vorbei → Ton und **Nächsten Block starten**. Wann du klickst, ist deine Sache.
 - Nach dem letzten geschätzten Block: **Erledigt** oder **Noch ein Block**.
+  Aus Versehen „Noch ein Block“ geklickt? Oben links in der Karte steht dann kurz **‹ Zurück** –
+  damit kommst du wieder zur Frage (bis zum Start des Blocks und noch in seinen ersten 3 Minuten).
 - Vor jeder weiteren Aufgabe: **Lange Pause gemacht – weiter mit …** (nicht getimt).
 - Im laufenden Block steht unter dem Timer **Zum Einstieg: …** – dein nächster erster Schritt zum Abhaken.
   Abhaken beendet keinen Block. Sind alle abgehakt, steht dort „Einstieg geschafft!

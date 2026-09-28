@@ -425,3 +425,62 @@ describe('Früher fertig', () => {
     expect(next.phase === 'block' && next.plannedMs).toBe(BLOCK)
   })
 })
+
+describe('Zurück nach „Noch ein Block“', () => {
+  /** Aufgabe mit 1 Block, dieser ist geschafft → die Frage „Erledigt oder noch ein Block?“ ist da. */
+  function askingTask() {
+    const task = actions.addTask(today(), 'A')
+    actions.updateTask(task.id, { estimatedBlocks: 1 })
+    actions.startBlock(task.id)
+    actions.checkTimer(at(BLOCK))
+    return task
+  }
+  const fresh = (id: string) => getState().tasks[id]
+
+  it('in der Pause: Schätzung wie vorher, die Frage ist wieder da', () => {
+    const task = askingTask()
+    actions.addExtraBlock(task.id, false)
+    expect(sel.canUndoExtraBlock(getState(), fresh(task.id), at(BLOCK + MIN))).toBe(true)
+    actions.undoExtraBlock(at(BLOCK + MIN))
+    expect(fresh(task.id).estimatedBlocks).toBe(1)
+    expect(sel.isAskingDone(getState(), fresh(task.id))).toBe(true)
+    expect(getState().timer.phase).toBe('break') // die Pause läuft einfach weiter
+    expect(sel.canUndoExtraBlock(getState(), fresh(task.id), at(BLOCK + MIN))).toBe(false)
+  })
+
+  it('gerade gestarteter Zusatz-Block wird verworfen und zählt nicht', () => {
+    const task = askingTask()
+    at(BLOCK + BREAK + 100)
+    actions.checkTimer()
+    actions.addExtraBlock(task.id, true)
+    expect(getState().timer.phase).toBe('block')
+    actions.undoExtraBlock(at(BLOCK + BREAK + MIN))
+    expect(getState().timer.phase).toBe('idle')
+    expect(sel.blocksDone(getState(), task.id)).toBe(1)
+    expect(sel.isAskingDone(getState(), fresh(task.id))).toBe(true)
+  })
+
+  it('nicht mehr nach längerer Arbeit im Zusatz-Block oder wenn er geschafft ist', () => {
+    const task = askingTask()
+    const start = BLOCK + BREAK + 100
+    at(start)
+    actions.checkTimer()
+    actions.addExtraBlock(task.id, true)
+    expect(sel.canUndoExtraBlock(getState(), fresh(task.id), at(start + 5 * MIN))).toBe(false)
+    actions.undoExtraBlock(at(start + 5 * MIN))
+    expect(getState().timer.phase).toBe('block')
+    actions.checkTimer(at(start + BLOCK))
+    expect(sel.canUndoExtraBlock(getState(), fresh(task.id), at(start + BLOCK + MIN))).toBe(false)
+  })
+
+  it('verschwindet mit „Erledigt“ und nach dem Tageswechsel', () => {
+    const task = askingTask()
+    actions.addExtraBlock(task.id, false)
+    actions.endDay()
+    expect(sel.canUndoExtraBlock(getState(), fresh(task.id), Date.now())).toBe(false)
+    const other = askingTask()
+    actions.addExtraBlock(other.id, false)
+    actions.finishTask(other.id)
+    expect(sel.canUndoExtraBlock(getState(), fresh(other.id), Date.now())).toBe(false)
+  })
+})

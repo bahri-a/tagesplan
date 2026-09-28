@@ -5,6 +5,7 @@
  * „Welche Aufgabe ist gerade dran?“. Sie ändern nichts.
  */
 
+import { UNDO_EXTRA_BLOCK_MS } from '../config/defaults'
 import { dayKey } from '../logic/time'
 import { blockWorkedMs, isBreakOver } from '../logic/timer'
 import { alive, sortByPosition } from '../logic/records'
@@ -97,6 +98,23 @@ export function needsLongPause(s: AppState, task: Task): boolean {
  */
 export function isAskingDone(s: AppState, task: Task): boolean {
   return task.completedAt === null && blocksDone(s, task.id) >= task.estimatedBlocks
+}
+
+/**
+ * Gibt es nach „Noch ein Block“ noch den Weg zurück zur Frage „Erledigt oder noch ein Block?“
+ * (z. B. nach einem Versehen oder nur zum Ausprobieren)? Ja, solange
+ *  - dieser zusätzliche Block noch nicht geschafft oder abgebrochen ist,
+ *  - die Schätzung seitdem nicht anders geändert wurde,
+ *  - und – falls er schon läuft – erst kurz darin gearbeitet wurde (`UNDO_EXTRA_BLOCK_MS`).
+ */
+export function canUndoExtraBlock(s: AppState, task: Task, now: number): boolean {
+  const mark = s.local.extraBlock
+  if (!mark || mark.taskId !== task.id || task.completedAt !== null) return false
+  if (task.estimatedBlocks !== mark.previousEstimate + 1) return false
+  if (blocksDone(s, task.id) !== mark.previousEstimate) return false
+  const t = s.timer
+  if (t.phase === 'block') return t.taskId === task.id && blockWorkedMs(t, now) < UNDO_EXTRA_BLOCK_MS
+  return true
 }
 
 /**

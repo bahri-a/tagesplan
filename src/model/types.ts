@@ -177,4 +177,15 @@ export interface LocalState {
    * auf „Nein“ geklickt hast. Format 'JJJJ-MM-TT'.
    */
   endDayPromptDismissedOn: string | null
+  /**
+   * Zuletzt per „Noch ein Block“ erhöhte Aufgabe und ihre Schätzung davor – damit man
+   * zurück zur Frage „Erledigt oder noch ein Block?“ kann. Fehlt in älteren Daten.
+   */
+  extraBlock?: ExtraBlockMark | null
+}
+
+/** Merkzettel für „Zurück“ nach „Noch ein Block“ (siehe `canUndoExtraBlock`). */
+export interface ExtraBlockMark {
+  taskId: ID
+  previousEstimate: number
 }
