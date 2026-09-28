@@ -3,21 +3,22 @@
  * ================================
  * Zeigt immer die oberste noch nicht erledigte Hauptaufgabe – groß und ruhig:
  *  - ganz oben: Fortschritt als Symbole (Aufgaben des Tages, Blöcke der Aufgabe)
- *  - vor dem Start: Aufgabe, aktueller Schritt, „Block starten“
+ *  - vor dem Start: Aufgabe, erster offener Schritt („Zum Einstieg: …“), „Block starten“
  *    (bzw. „Lange Pause gemacht – weiter mit …“ ab der zweiten Aufgabe)
  *  - während des Blocks: große Restzeit, dezent „Pausieren“ und „Abbrechen“
  *  - in der kurzen Pause: Restzeit der Pause, danach „Nächsten Block starten“
  *  - nach dem letzten geschätzten Block: „Erledigt oder noch ein Block?“
  */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { STEP_DONE_FEEDBACK_MS } from '../config/defaults'
 import { T } from '../config/texts'
 import { useNow } from '../components/hooks'
 import { StepList } from '../components/StepList'
 import { TimerRing } from '../components/TimerRing'
 import { blockMarks, taskMark, type Mark } from '../logic/progress'
 import * as timer from '../logic/timer'
-import type { Task } from '../model/types'
+import type { ID, Task } from '../model/types'
 import { requestNotificationPermission } from '../signals/notifications'
 import {
   abortCurrentBlock,
@@ -189,7 +190,7 @@ function FocusCard({ task }: { task: Task }) {
 
 interface ProgressRowsProps {
   tasks: Task[]
-  currentId: string
+  currentId: ID
   blocks: Mark[]
   /** Kleiner Zusatz hinter den Block-Punkten, z. B. „je 15 Min.“ – oder `null`. */
   suffix: string | null
@@ -312,27 +313,59 @@ function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: 
   )
 }
 
-/** „Jetzt: …“ – der aktuelle Schritt zum direkten Abhaken, dazu alle Schritte zum Aufklappen. */
+/**
+ * Die ersten Schritte zum Loslegen: „Zum Einstieg: …“ – immer der nächste offene zum direkten
+ * Abhaken, dazu alle Schritte zum Aufklappen. Sie beenden keinen Block.
+ *  - Beim Abhaken bleibt der Haken kurz stehen (kleines Erfolgserlebnis), dann kommt der nächste.
+ *  - Sind alle abgehakt und läuft ein Block, steht dort nur noch ein Satz („Einstieg geschafft! …“)
+ *    – bewusst ohne Kästchen und Haken, damit er nicht wie ein weiterer Schritt aussieht.
+ */
 function CurrentStep({ task }: { task: Task }) {
   const state = useAppState()
   const [showAll, setShowAll] = useState(false)
+  // Der gerade abgehakte Schritt, solange er noch mit Haken zu sehen ist.
+  const [justDoneId, setJustDoneId] = useState<ID | null>(null)
+
+  useEffect(() => {
+    if (justDoneId === null) return
+    const timeout = setTimeout(() => setJustDoneId(null), STEP_DONE_FEEDBACK_MS)
+    return () => clearTimeout(timeout)
+  }, [justDoneId])
+
   const steps = stepsOfTask(state, task.id)
-  const step = currentStep(state, task.id)
+  const next = currentStep(state, task.id)
   if (steps.length === 0) return null
   const doneCount = steps.filter((s) => s.doneAt !== null).length
+  const justDone = steps.find((s) => s.id === justDoneId)
+  const shown = justDone ?? next
+  const blockRunning = state.timer.phase === 'block'
 
   return (
     <div className="current-step">
-      {step && !showAll && (
-        <label className="current-step-row">
-          <input type="checkbox" className="checkbox" checked={false} onChange={() => toggleStep(step.id)} />
-          <span>
-            <span className="current-step-label">{T.today.now}: </span>
-            {step.text}
+      {shown && !showAll && (
+        <label className={`current-step-row${justDone ? ' is-done' : ''}`}>
+          <input
+            type="checkbox"
+            className="checkbox"
+            checked={justDone !== undefined}
+            onChange={() => {
+              if (justDone) return // schon abgehakt, wird gleich ausgeblendet
+              toggleStep(shown.id)
+              setJustDoneId(shown.id)
+            }}
+          />
+          <span className="current-step-text">
+            <span className="current-step-label">{T.today.firstStep}: </span>
+            {shown.text}
           </span>
         </label>
       )}
-      {showAll && <StepList taskId={task.id} editable={false} highlightId={step?.id} />}
+      {!shown && !showAll && blockRunning && (
+        <p className="start-done">
+          <span className="start-done-title">{T.today.startDone}</span> {T.today.keepGoing}
+        </p>
+      )}
+      {showAll && <StepList taskId={task.id} editable={false} highlightId={next?.id} />}
       <button type="button" className="btn btn-quiet btn-small" onClick={() => setShowAll(!showAll)}>
         {showAll ? T.today.hideSteps : T.today.allSteps(doneCount, steps.length)}
       </button>

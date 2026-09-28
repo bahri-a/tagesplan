@@ -158,6 +158,14 @@
   font-weight: 500;
 }
 
+/* Kurze Erklärung unter einer Feldbezeichnung (z. B. bei „Erste Schritte“) */
+.field-hint {
+  margin-top: -0.2rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
 .task-editor-row {
   display: flex;
   flex-wrap: wrap;

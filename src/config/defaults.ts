@@ -56,3 +56,9 @@ export const SOUND_VOLUME = 0.22
 
 /** Wie lange nach dem Tippen der Notizzettel gespeichert wird (Millisekunden). */
 export const NOTE_SAVE_DELAY_MS = 400
+
+/**
+ * Wie lange ein abgehakter Schritt unter dem Timer noch mit Haken zu sehen ist,
+ * bevor der nächste erscheint (Millisekunden) – ein kleines Erfolgserlebnis.
+ */
+export const STEP_DONE_FEEDBACK_MS = 900

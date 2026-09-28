@@ -1,7 +1,7 @@
 /**
  * Eine Hauptaufgabe als Karte im Bildschirm „Planen“.
  * Zugeklappt: Nummer, Titel, Blöcke und Schritte auf einen Blick.
- * Aufgeklappt: Titel, Schritte, Blockanzahl und Blocklänge bearbeiten.
+ * Aufgeklappt: Titel, erste Schritte, Blockanzahl und Blocklänge bearbeiten.
  * Über den Griff links lässt sich die Karte verschieben (Drag & Drop).
  */
 
@@ -98,8 +98,10 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
         />
       </label>
 
+      {/* Erste Schritte: nur zum Loslegen – keine Blöcke, keine Blocknamen. */}
       <div className="field">
         <span className="field-label">{T.plan.steps}</span>
+        <span className="field-hint">{T.plan.stepsHint}</span>
         <StepList taskId={task.id} autoFocusNew={focusStepInput} />
       </div>
 

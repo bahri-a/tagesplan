@@ -1,5 +1,5 @@
 /**
- * Die Schritte einer Hauptaufgabe als Checkliste.
+ * Die ersten Schritte einer Hauptaufgabe als Checkliste – kleine Schritte zum Loslegen.
  * Wird im Bildschirm „Planen“ (bearbeitbar) und „Heute“ (nur abhaken) genutzt.
  */
 
