@@ -59,6 +59,9 @@ export const T = {
     resume: 'Weiter',
     paused: 'Pausiert – die Zeit steht.',
     abort: 'Abbrechen',
+    // Block vorzeitig erfolgreich abschließen – nur dieser Block wird kürzer, die kurze Pause startet.
+    finishEarly: 'Früher fertig',
+    finishEarlyHint: 'Diesen Block jetzt erfolgreich abschließen und in die kurze Pause gehen',
     abortConfirm: 'Block wirklich abbrechen?',
     abortYes: 'Ja, abbrechen',
     abortNo: 'Nein, weiter',
