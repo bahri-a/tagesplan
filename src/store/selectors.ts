@@ -82,7 +82,7 @@ export function runningTimerOfTask(s: AppState, taskId: ID, now: number): 'block
 }
 
 /**
- * Soll vor dieser Aufgabe der Knopf „Lange Pause gemacht – weiter mit …“
+ * Soll vor dieser Aufgabe der Knopf „Lange Pause gemacht? / Weiter mit …“
  * erscheinen? Ja, wenn heute schon an einer ANDEREN Aufgabe gearbeitet wurde,
  * an dieser aber noch nicht. Vor der ersten Aufgabe des Tages also nie.
  */
