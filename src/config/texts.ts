@@ -126,6 +126,8 @@ export const T = {
     stepsMeta: (done: number, total: number) => `${done}/${total} Schritte`,
     // Startsignal (optional): eine einzige Zeile, das Beispiel erklärt sie.
     startCue: 'Ich starte, wenn …',
+    // Kleines, leises Schild hinter „Erste Schritte“ und „Ich starte, wenn …“: nichts davon ist Pflicht.
+    optional: 'optional',
     startCuePlaceholder: 'z. B. der Kaffee auf dem Tisch steht',
     done: 'Erledigt',
     reopen: 'Wieder öffnen',

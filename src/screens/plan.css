@@ -188,6 +188,19 @@
   font-weight: 500;
 }
 
+/* Leises Schild „optional“ hinter der Feldbezeichnung */
+.field-optional {
+  margin-left: 0.5em;
+  padding: 0.1em 0.55em;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  vertical-align: 0.08em;
+}
+
 /* Kurze Erklärung unter einer Feldbezeichnung (z. B. bei „Erste Schritte“) */
 .field-hint {
   margin-top: -0.2rem;

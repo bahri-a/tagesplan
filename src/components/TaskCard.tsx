@@ -112,14 +112,14 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
 
       {/* Erste Schritte: nur zum Loslegen – keine Blöcke, keine Blocknamen. */}
       <div className="field">
-        <span className="field-label">{T.plan.steps}</span>
+        <FieldLabel text={T.plan.steps} optional />
         <span className="field-hint">{T.plan.stepsHint}</span>
         <StepList taskId={task.id} autoFocusNew={focusStepInput} />
       </div>
 
       {/* Startsignal (optional): eine Zeile, das Beispiel im leeren Feld erklärt sie. */}
       <label className="field">
-        <span className="field-label">{T.plan.startCue}</span>
+        <FieldLabel text={T.plan.startCue} optional />
         <input
           className="input"
           value={task.startCue ?? ''}
@@ -170,6 +170,19 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
         </button>
       </div>
     </div>
+  )
+}
+
+/**
+ * Feldbezeichnung. `optional` hängt ein kleines, leises Schild „optional“ an –
+ * damit niemand überlegen muss, ob er hier etwas eintragen muss.
+ */
+function FieldLabel({ text, optional = false }: { text: string; optional?: boolean }) {
+  return (
+    <span className="field-label">
+      {text}
+      {optional && <span className="field-optional">{T.plan.optional}</span>}
+    </span>
   )
 }
 
