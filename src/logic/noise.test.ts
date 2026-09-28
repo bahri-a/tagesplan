@@ -6,6 +6,9 @@ const RATE = 8000
 /** Wie stark sich benachbarte Werte unterscheiden: hell (weiß) groß, tief (braun) klein. */
 function roughness(data: Float32Array, from: number, to: number): number {
   let sum = 0
+  // Auf ganze Stellen runden (z. B. 96000 · 2,2 ergibt sonst 211200,00000000003).
+  from = Math.round(from)
+  to = Math.round(to)
   for (let i = from + 1; i < to; i++) sum += Math.abs(data[i] - data[i - 1])
   return sum / (to - from)
 }
@@ -15,7 +18,7 @@ describe('Rauschen', () => {
     expect(noiseSamples('brown', RATE)).toHaveLength(RATE * NOISE_LOOP_S)
   })
 
-  it('Ultra (Mix): braun, rosa, weiß – je 5 Sekunden hintereinander', () => {
+  it('Ultra (Mix): braun, rosa, weiß – je 12 Sekunden hintereinander', () => {
     const mix = noiseSamples('mix', RATE)
     const seg = RATE * NOISE_MIX_SEGMENT_S
     expect(mix).toHaveLength(3 * seg)

@@ -411,25 +411,32 @@ export function undoExtraBlock(now = Date.now()): void {
 /* ================================================================== */
 
 /** Welche Plätze wären beim Übertrag doppelt belegt? */
-export function getEndDayConflicts(): CarryConflict[] {
+export function getEndDayConflicts(dropped: ReadonlySet<ID> = new Set()): CarryConflict[] {
   const s = getState()
-  return mergeCarryOver(tasksOfDay(s, activeDay(s).id), tasksOfDay(s, plannedDay(s).id)).conflicts
+  return mergeCarryOver(tasksOfDay(s, activeDay(s).id), tasksOfDay(s, plannedDay(s).id), {}, dropped).conflicts
 }
 
 /**
  * Tag beenden:
  *  - ein laufender Block wird gestoppt (Minuten werden gespeichert),
  *  - „morgen“ wird zu „heute“, ein neuer leerer „morgen“ entsteht,
- *  - nicht erledigte Aufgaben wandern auf ihren alten Platz.
+ *  - nicht erledigte Aufgaben wandern auf ihren alten Platz,
+ *  - gestrichene (× bei der Platzwahl): übertragene bleiben beim alten Tag zurück,
+ *    geplante werden gelöscht.
  */
-export function endDay(choices: ConflictChoices = {}): void {
+export function endDay(choices: ConflictChoices = {}, dropped: ReadonlySet<ID> = new Set()): void {
   const now = Date.now()
   checkTimer(now) // ein inzwischen abgelaufener Block zählt noch als durchgehalten
+
+  const plannedId = plannedDay(getState()).id
+  for (const id of dropped) {
+    if (getState().tasks[id]?.dayId === plannedId) deleteTask(id)
+  }
 
   const s = getState()
   const oldDay = activeDay(s)
   const nextDay = plannedDay(s)
-  const { order } = mergeCarryOver(tasksOfDay(s, oldDay.id), tasksOfDay(s, nextDay.id), choices)
+  const { order } = mergeCarryOver(tasksOfDay(s, oldDay.id), tasksOfDay(s, nextDay.id), choices, dropped)
 
   const changes: Changes = s.timer.phase === 'idle' ? {} : stopTimerChanges(now)
   changes.tasks = order.map((task, index) => ({ ...task, dayId: nextDay.id, position: index }))

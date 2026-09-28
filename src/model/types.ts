@@ -106,7 +106,7 @@ export type ThemeSetting = 'system' | 'light' | 'dark'
 
 /**
  * Art des Rauschens im Block: braun (tief, weich), rosa (mittel), weiß (hell) oder
- * 'mix' = „Ultra (Mix)“: braun, rosa, weiß im Wechsel (je 5 Sekunden), damit es nicht monoton wird.
+ * 'mix' = „Ultra (Mix)“: braun, rosa, weiß im Wechsel (je 12 Sekunden), damit es nicht monoton wird.
  */
 export type NoiseColor = 'brown' | 'pink' | 'white' | 'mix'
 
