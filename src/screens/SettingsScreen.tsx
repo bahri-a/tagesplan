@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { SETTINGS_LIMITS } from '../config/defaults'
+import { NOISE_PREVIEW_S, SETTINGS_LIMITS } from '../config/defaults'
 import { T } from '../config/texts'
 import { Dialog } from '../components/Dialog'
 import { NumberStepper } from '../components/NumberStepper'
@@ -15,7 +15,7 @@ import {
   requestNotificationPermission,
   type PermissionState,
 } from '../signals/notifications'
-import { playBlockEnd, playBreakEnd } from '../signals/sounds'
+import { playBlockEnd, playBreakEnd, previewNoise } from '../signals/sounds'
 import { updateSettings } from '../store/actions'
 import { useAppState } from '../store/store'
 import './settings.css'
@@ -40,6 +40,7 @@ const NOISE_COLORS: { value: NoiseColor; label: string }[] = [
   { value: 'brown', label: T.settings.noiseBrown },
   { value: 'pink', label: T.settings.noisePink },
   { value: 'white', label: T.settings.noiseWhite },
+  { value: 'mix', label: T.settings.noiseMix },
 ]
 
 /** Kleiner Umschalter mit 2–3 Möglichkeiten (wie bei Hell/Dunkel). */
@@ -63,6 +64,52 @@ function Segmented<V extends string | boolean>(props: {
           {option.label}
         </button>
       ))}
+    </div>
+  )
+}
+
+/**
+ * Art des Rauschens: Braun / Rosa / Weiß / Ultra (Mix). Direkt unter Braun, Rosa und Weiß je ein
+ * kleiner Lautsprecher zum Probehören (kurz, ein paar Sekunden). Ultra braucht keins – es ist
+ * ja nur der Wechsel der drei.
+ */
+function NoisePicker({ value, onChange }: { value: NoiseColor; onChange: (value: NoiseColor) => void }) {
+  const [playing, setPlaying] = useState<NoiseColor | null>(null)
+  useEffect(() => {
+    if (playing === null) return
+    const id = setTimeout(() => setPlaying(null), NOISE_PREVIEW_S * 1000)
+    return () => clearTimeout(id)
+  }, [playing])
+
+  return (
+    <div className="noise-picker">
+      <Segmented label={T.settings.noiseColor} options={NOISE_COLORS} value={value} onChange={onChange} />
+      <div className="noise-previews">
+        {NOISE_COLORS.map((option) =>
+          option.value === 'mix' ? (
+            <span key={option.value} />
+          ) : (
+            <button
+              key={option.value}
+              type="button"
+              className="noise-preview"
+              aria-pressed={playing === option.value}
+              aria-label={T.settings.noisePreview(option.label)}
+              title={T.settings.noisePreview(option.label)}
+              onClick={() => {
+                previewNoise(option.value)
+                setPlaying(option.value)
+              }}
+            >
+              <svg viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M3 8h3l4-3.5v11L6 12H3z" />
+                <path d="M13 7.5a3.5 3.5 0 0 1 0 5" />
+                <path d="M15.3 5.3a6.6 6.6 0 0 1 0 9.4" />
+              </svg>
+            </button>
+          ),
+        )}
+      </div>
     </div>
   )
 }
@@ -159,12 +206,7 @@ export function SettingsScreen() {
         {settings.sounds && (
           <>
             <SettingRow label={T.settings.noiseColor} hint={T.settings.noiseColorHint}>
-              <Segmented
-                label={T.settings.noiseColor}
-                options={NOISE_COLORS}
-                value={settings.noiseColor}
-                onChange={(noiseColor) => updateSettings({ noiseColor })}
-              />
+              <NoisePicker value={settings.noiseColor} onChange={(noiseColor) => updateSettings({ noiseColor })} />
             </SettingRow>
             <div className="settings-buttons">
               <button type="button" className="btn" onClick={playBlockEnd}>

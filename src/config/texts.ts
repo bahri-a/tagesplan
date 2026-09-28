@@ -237,6 +237,9 @@ export const T = {
     noiseBrown: 'Braun',
     noisePink: 'Rosa',
     noiseWhite: 'Weiß',
+    // Braun, rosa und weiß im Wechsel (je 5 Sekunden) – damit es nicht monoton wird.
+    noiseMix: 'Ultra (Mix)',
+    noisePreview: (name: string) => `${name} probehören`,
     testBlockEnd: '▶ Ton „Block vorbei“',
     testBreakEnd: '▶ Ton „Pause vorbei“',
     notifyGranted: 'Chrome-Benachrichtigungen sind erlaubt.',

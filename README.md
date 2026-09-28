@@ -166,7 +166,7 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   Im Hintergrund schimmert es zart grün (im Block) oder blau (in der Pause).
 - **Rauschen:** Unter dem Ring schaltet ein einziger Knopf **Rauschen an / aus**. Es läuft nur,
   solange der Block läuft (in Pause und pausiert ist es still). Welches Rauschen (braun, rosa,
-  weiß), stellst du unter **Einstellungen** ein.
+  weiß oder Ultra (Mix)), stellst du unter **Einstellungen** ein.
 - **2 Minuten vor dem Ende** kommt ein ganz leiser Ton, und der Ring wird langsam wärmer –
   Zeit, den Gedanken zu Ende zu bringen.
 - Ab und zu steht im Block ganz leise ein Satz wie „Abgeschweift? Macht nichts – einfach
@@ -203,8 +203,10 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
 ### Töne
 - **Einstellungen → Töne:** **An** oder **Aus**. Bei „Aus“ bleibt die App komplett still –
   keine Töne am Block- und Pausenende, keine Vorwarnung, kein Rauschen.
-- Darunter: welches **Rauschen** (Braun = tief und weich, Rosa, Weiß = hell) und Probehören
-  der Töne.
+- Darunter: welches **Rauschen** (Braun = tief und weich, Rosa, Weiß = hell, **Ultra (Mix)** =
+  braun, rosa und weiß im Wechsel, je 5 Sekunden – damit es nicht monoton wird). Unter Braun,
+  Rosa und Weiß spielt ein kleiner **Lautsprecher** das Rauschen ein paar Sekunden zum
+  Probehören. Darunter kannst du die Töne „Block vorbei“ und „Pause vorbei“ anhören.
 
 ### Notizzettel
 - Unten rechts **✎ Notizen**: ein Schmierblatt für alles, was dir durch den Kopf geht –

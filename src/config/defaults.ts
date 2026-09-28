@@ -83,6 +83,9 @@ export const WARNING_VOLUME = 0.08
 /** Lautstärke des Rauschens (0 = stumm, 1 = sehr laut). */
 export const NOISE_VOLUME = 0.12
 
+/** Probehören des Rauschens in den Einstellungen: so lange (Sekunden). */
+export const NOISE_PREVIEW_S = 2.5
+
 /** Wie lange das Rauschen beim Ein- und Ausschalten weich ein-/ausblendet (Sekunden). */
 export const NOISE_FADE_S = 1.5
 

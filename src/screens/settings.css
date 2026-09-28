@@ -72,3 +72,63 @@
 .settings-version {
   text-align: center;
 }
+
+/* Rauschen: Umschalter mit 4 gleich breiten Feldern, darunter die Lautsprecher zum Probehören –
+   jeweils genau unter Braun, Rosa, Weiß (gleiche Spalten wie der Umschalter). */
+.noise-picker {
+  display: inline-grid;
+  gap: 0.3rem;
+}
+
+.noise-picker .segmented {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.noise-picker .segmented-item {
+  white-space: nowrap;
+}
+
+.noise-previews {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.25rem;
+  padding: 0 0.25rem;
+  justify-items: center;
+}
+
+.noise-preview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.noise-preview svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.noise-preview:hover,
+.noise-preview:focus-visible {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* Spielt gerade: salbeigrün */
+.noise-preview[aria-pressed='true'] {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
