@@ -142,6 +142,9 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   Änderst du eine Dauer mit – / +, gilt sie nur für diese Aufgabe („Individuell“);
   **zurücksetzen** holt wieder den Standard. Die Standardwerte – 25 Minuten Block,
   7 Minuten Pause – änderst du unter **Einstellungen**.
+- **Ich starte, wenn …** (optional): dein Startsignal, z. B. „der Kaffee auf dem Tisch steht“.
+  In „Heute“ steht es vor dem ersten Block der Aufgabe über dem Start-Knopf:
+  „Wenn der Kaffee auf dem Tisch steht → los.“ Solche Wenn-dann-Pläne helfen beim Anfangen.
 - Reihenfolge: am Griff **⠿** links ziehen. **Schwerste Aufgabe nach oben.**
 - Planst du mehr als dein Limit, erscheint nur ein sanfter Hinweis.
 - **Löschen:** der kleine Papierkorb rechts auf jeder Karte. Die Aufgabe ist sofort weg;
@@ -157,8 +160,17 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   gefüllter Punkt = jetzt dran). Während eines Blocks ist sie ausgeblendet.
 - Vor dem Start siehst du unter dem Titel deine **ersten Schritte zum Einstieg** – nur zum
   Ansehen. Abhaken kannst du sie erst, wenn der Block läuft.
+- Vor dem ersten Block einer Aufgabe steht über dem Knopf dein **Startsignal** (falls
+  eingetragen) und darunter klein ein Startsatz wie „Du musst nur anfangen.“
 - **Block starten** → der Ring füllt sich langsam. Dezent darunter: **Pausieren** und **Abbrechen**.
   Im Hintergrund schimmert es zart grün (im Block) oder blau (in der Pause).
+- **Rauschen:** Unter dem Ring schaltet ein einziger Knopf **Rauschen an / aus**. Es läuft nur,
+  solange der Block läuft (in Pause und pausiert ist es still). Welches Rauschen (braun, rosa,
+  weiß), stellst du unter **Einstellungen** ein.
+- **2 Minuten vor dem Ende** kommt ein ganz leiser Ton, und der Ring wird langsam wärmer –
+  Zeit, den Gedanken zu Ende zu bringen.
+- Ab und zu steht im Block ganz leise ein Satz wie „Abgeschweift? Macht nichts – einfach
+  zurückkommen.“ Abschweifen passiert – wichtig ist nur das Zurückkommen.
 - Läuft der Block durch → sanfter Ton, die **kurze Pause** startet von selbst.
 - Pause vorbei → Ton und **Nächsten Block starten**. Wann du klickst, ist deine Sache.
 - Nach dem letzten geschätzten Block: **Erledigt** oder **Noch ein Block**.
@@ -166,11 +178,18 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
 - Im laufenden Block steht unter dem Timer **Zum Einstieg: …** – dein nächster erster Schritt zum Abhaken.
   Abhaken beendet keinen Block. Sind alle abgehakt, steht dort „Einstieg geschafft!
   Bleib einfach dran, bis die Zeit um ist.“ **Alle Schritte** klappt die ganze Liste auf.
+- **Tastenkürzel:** **Leertaste** = Block starten / pausieren / weiter.
+  **N** = Gedanke parken (siehe unten).
+- **Mini-Fenster** (unten links): ein kleiner Timer, der immer über allen anderen Fenstern
+  liegt – auch über deinem PDF oder Editor. Mit Ring, Rauschen an/aus und Start/Pausieren.
+  Du kannst es mit der Maus verschieben und größer ziehen. Nochmal auf den Knopf klicken
+  (oder das kleine Fenster schließen) macht es wieder zu.
 - Bist du auf einem anderen Tab, zeigt oben rechts eine kleine Anzeige die Restzeit.
   Auch im Fenstertitel steht die Restzeit.
 
 ### Tag beenden
-- Unten im Tab **Heute**: **Tag beenden**. „Morgen“ wird zu „heute“.
+- Unten im Tab **Heute**: **Tag beenden**. Du siehst kurz, was du heute geschafft hast
+  (Blöcke, Zeit, erledigte Aufgaben). Dann wird „morgen“ zu „heute“.
 - Offene Aufgaben wandern auf ihren alten Platz. Ist der schon belegt, siehst du beide
   Aufgaben nebeneinander und wählst mit einem Klick.
 - Vergessen? Kein Problem: Öffnest du die App am nächsten Tag, fragt sie freundlich nach.
@@ -181,9 +200,18 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   **Pur** (massiv, Standard) oder **Milchglas** (leicht durchscheinend).
 - Hast du in macOS „Bewegung reduzieren“ eingeschaltet, gibt es keine Animationen.
 
+### Töne
+- **Einstellungen → Töne:** **An** oder **Aus**. Bei „Aus“ bleibt die App komplett still –
+  keine Töne am Block- und Pausenende, keine Vorwarnung, kein Rauschen.
+- Darunter: welches **Rauschen** (Braun = tief und weich, Rosa, Weiß = hell) und Probehören
+  der Töne.
+
 ### Notizzettel
 - Unten rechts **✎ Notizen**: ein Schmierblatt für alles, was dir durch den Kopf geht –
   auch während des Timers. Der Text bleibt, bis du ihn selbst löschst.
+- **Gedanke parken mit N:** Schießt dir im Block etwas durch den Kopf, drück **N**, tipp eine
+  Zeile und **Enter**. Der Gedanke steht dann unten im Notizzettel, und du arbeitest einfach
+  weiter. **Escape** schließt die Zeile, ohne etwas zu speichern.
 
 ---
 
