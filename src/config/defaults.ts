@@ -34,6 +34,8 @@ export const DEFAULT_SETTINGS: SettingsValues = {
   noiseOn: false,
   /** Braunes Rauschen: tief und weich. */
   noiseColor: 'brown',
+  /** In „Zuletzt verwendet“ ausgeblendete Aufgaben – am Anfang keine. */
+  recentHidden: {},
 }
 
 /** Erlaubte Bereiche für die Zahlen in den Einstellungen. */

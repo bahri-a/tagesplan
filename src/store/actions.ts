@@ -20,6 +20,7 @@ import {
   extraBlockStartsNow,
   lastBlockEndedAt,
   plannedDay,
+  recentKey,
   shortBreakMinutesFor,
   stepsOfTask,
   tasksOfDay,
@@ -458,6 +459,15 @@ export function updateSettings(patch: Partial<SettingsValues>): void {
     next[key] = clamp(Math.round(Number(next[key]) || min), min, max)
   }
   commit({ settings: next })
+}
+
+/**
+ * × in „Zuletzt verwendet“: diesen Titel dort nicht mehr anbieten. Die Aufgaben selbst bleiben
+ * unverändert. Wird eine Aufgabe mit diesem Titel später wieder benutzt, taucht sie wieder auf.
+ */
+export function hideRecentTask(title: string, now = Date.now()): void {
+  const current = getState().settings
+  commit({ settings: { ...current, recentHidden: { ...current.recentHidden, [recentKey(title)]: now } } })
 }
 
 export function updateNote(text: string): void {
