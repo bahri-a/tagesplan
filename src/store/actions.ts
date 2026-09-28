@@ -15,6 +15,7 @@ import type { Block, BlockStatus, ID, SettingsValues, Step, Task } from '../mode
 import {
   activeDay,
   blockMinutesFor,
+  canUndoExtraBlock,
   plannedDay,
   shortBreakMinutesFor,
   stepsOfTask,
@@ -305,10 +306,33 @@ export function finishTask(taskId: ID): void {
  * Mit `startNow` startet der Block sofort (wenn die Pause schon vorbei ist).
  */
 export function addExtraBlock(taskId: ID, startNow: boolean): void {
-  const task = getState().tasks[taskId]
+  const s = getState()
+  const task = s.tasks[taskId]
   if (!task) return
-  commit({ tasks: [{ ...task, estimatedBlocks: task.estimatedBlocks + 1 }] })
+  commit({
+    tasks: [{ ...task, estimatedBlocks: task.estimatedBlocks + 1 }],
+    // Merken, damit „Zurück“ die Schätzung wieder herstellen kann.
+    local: { ...s.local, extraBlock: { taskId, previousEstimate: task.estimatedBlocks } },
+  })
   if (startNow) startBlock(taskId)
+}
+
+/**
+ * „Zurück“ nach „Noch ein Block“: Die Schätzung wird wieder wie vorher, die Frage
+ * „Erledigt oder noch ein Block?“ ist wieder da. Läuft der zusätzliche Block schon
+ * (erst kurz, siehe `canUndoExtraBlock`), wird er verworfen – er zählt nicht als Block.
+ */
+export function undoExtraBlock(now = Date.now()): void {
+  const s = getState()
+  const mark = s.local.extraBlock
+  const task = mark ? s.tasks[mark.taskId] : undefined
+  if (!mark || !task || !canUndoExtraBlock(s, task, now)) return
+  const changes: Changes = {
+    tasks: [{ ...task, estimatedBlocks: mark.previousEstimate }],
+    local: { ...s.local, extraBlock: null },
+  }
+  if (s.timer.phase === 'block') changes.timer = { phase: 'idle' }
+  commit(changes)
 }
 
 /* ================================================================== */
@@ -343,7 +367,7 @@ export function endDay(choices: ConflictChoices = {}): void {
     { ...nextDay, status: 'active', startedAt: now },
     { ...baseFields(now), status: 'planned', startedAt: null, endedAt: null, firstWorkAt: null },
   ]
-  changes.local = { ...s.local, endDayPromptDismissedOn: null }
+  changes.local = { ...s.local, endDayPromptDismissedOn: null, extraBlock: null }
   commit(changes)
 }
 

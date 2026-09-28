@@ -8,7 +8,8 @@
  *  - während des Blocks: weicher Ring mit Restzeit, dezent „Pausieren“ und „Abbrechen“,
  *    und „Zum Einstieg: …“ zum Abhaken
  *  - in der kurzen Pause: blauer Ring, danach „Nächsten Block starten“
- *  - nach dem letzten geschätzten Block: „Erledigt oder noch ein Block?“
+ *  - nach dem letzten geschätzten Block: „Erledigt oder noch ein Block?“ – nach „Noch ein Block“
+ *    führt oben links ein leises „← Zurück“ wieder zu dieser Frage (falls es ein Versehen war)
  *  - unter der Karte: schlanke Leiste mit den Aufgaben des Tages (nicht während eines Blocks)
  * Im Hintergrund liegt ein sehr zarter Farbschimmer: grünlich im Block, bläulich in der Pause.
  */
@@ -35,11 +36,13 @@ import {
   updateSettings,
   startBlock,
   toggleStep,
+  undoExtraBlock,
 } from '../store/actions'
 import {
   activeDay,
   blockMinutesFor,
   blocksDone,
+  canUndoExtraBlock,
   currentStep,
   currentTask,
   isAskingDone,
@@ -164,6 +167,7 @@ function FocusCard({ task }: { task: Task }) {
 
   return (
     <section className="card focus-card">
+      {canUndoExtraBlock(state, task, now) && <BackToAsk />}
       <BlockDots
         marks={blockMarks(done, task.estimatedBlocks, highlightBlock)}
         suffix={t.phase === 'idle' && !asking ? T.today.perBlock(minutes) : null}
@@ -223,6 +227,28 @@ function FocusCard({ task }: { task: Task }) {
         )}
       </div>
     </section>
+  )
+}
+
+/**
+ * Leises „← Zurück“ oben links in der Karte, nur kurz nach „Noch ein Block“:
+ * Die Schätzung wird wie vorher, die Frage „Erledigt oder noch ein Block?“ ist wieder da.
+ * Ein gerade erst gestarteter Zusatz-Block wird dabei verworfen.
+ */
+function BackToAsk() {
+  return (
+    <button
+      type="button"
+      className="btn btn-quiet btn-small back-to-ask"
+      title={T.today.backToAskHint}
+      aria-label={T.today.backToAskHint}
+      onClick={() => undoExtraBlock()}
+    >
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M10 3.5L5.5 8l4.5 4.5" />
+      </svg>
+      {T.today.backToAsk}
+    </button>
   )
 }
 

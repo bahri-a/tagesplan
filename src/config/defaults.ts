@@ -101,5 +101,12 @@ export const PARKED_TOAST_MS = 2500
 /** Größe des Mini-Fensters (Bild-im-Bild) beim Öffnen – danach frei ziehbar. */
 export const MINI_WINDOW_SIZE = { width: 300, height: 380 }
 
+/**
+ * Nach „Noch ein Block“ gibt es oben links in der Karte „Zurück“ zur Frage „Erledigt oder
+ * noch ein Block?“ – bis der Block startet und danach noch so lange, wie in diesem Block
+ * gearbeitet wurde (ohne Pausen, Millisekunden). Später hilft „Früher fertig“.
+ */
+export const UNDO_EXTRA_BLOCK_MS = 3 * 60_000
+
 /** Wie lange nach dem Löschen einer Aufgabe „Rückgängig“ angeboten wird (Millisekunden). */
 export const UNDO_DELETE_MS = 8000

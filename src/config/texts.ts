@@ -81,6 +81,9 @@ export const T = {
     done: 'Erledigt',
     oneMore: 'Noch ein Block',
     oneMoreStart: 'Noch einen Block starten',
+    // Nach „Noch ein Block“: zurück zur Frage (z. B. nach einem Versehen).
+    backToAsk: 'Zurück',
+    backToAskHint: 'Zurück zur Frage „Erledigt oder noch ein Block?“',
     allDoneTitle: 'Alles erledigt für heute.',
     allDoneText: 'Stark gemacht! Du kannst jetzt morgen planen oder den Tag beenden.',
     allDoneTexts: [
