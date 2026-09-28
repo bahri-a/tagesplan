@@ -4,9 +4,9 @@
  * Zeigt immer die oberste noch nicht erledigte Hauptaufgabe – groß und ruhig:
  *  - oben in der Karte: die Block-Punkte (mit „je 25 Min.“), darunter der Titel
  *  - vor dem Start: die ersten Schritte zum Ansehen (noch nicht abhakbar), „Block starten“
- *    (bzw. „Lange Pause gemacht – weiter mit …“ ab der zweiten Aufgabe)
+ *    (ab der zweiten Aufgabe zweizeilig: „Lange Pause gemacht?“ / „Weiter mit „…““)
  *  - während des Blocks: weicher Ring mit Restzeit, dezent „Pausieren“ und „Abbrechen“,
- *    und „Zum Einstieg: …“ zum Abhaken
+ *    und „Zum Einstieg: …“ zum Abhaken; ab und zu ganz unten, abgesetzt, ein leiser Tipp
  *  - in der kurzen Pause: blauer Ring, danach „Nächsten Block starten“
  *  - nach dem letzten geschätzten Block: „Erledigt oder noch ein Block?“ – nach „Noch ein Block“
  *    führt oben links ein leises „← Zurück“ wieder zu dieser Frage (falls es ein Versehen war)
@@ -14,7 +14,7 @@
  * Im Hintergrund liegt ein sehr zarter Farbschimmer: grünlich im Block, bläulich in der Pause.
  */
 
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { GENTLE_LINE_EVERY, STEP_DONE_FEEDBACK_MS } from '../config/defaults'
 import { T } from '../config/texts'
 import { isTypingOrButton, useNow, WindowContext } from '../components/hooks'
@@ -203,6 +203,11 @@ function FocusCard({ task }: { task: Task }) {
 
         {t.phase === 'block' && <CurrentStep task={task} />}
 
+        {/* Ab und zu (nicht in jedem Block) ganz unten, abgesetzt: ein leiser Tipp – Abschweifen ist okay. */}
+        {t.phase === 'block' && t.pausedAt === null && showsGentleLine(t.startedAt, GENTLE_LINE_EVERY) && (
+          <p className="gentle-line">{pick(T.today.gentleLines, t.startedAt)}</p>
+        )}
+
         {asking ? (
           <div className="ask-done">
             <p className="ask-done-question">{T.today.askDone}</p>
@@ -354,11 +359,21 @@ function StartArea({ task, firstBlock }: { task: Task; firstBlock: boolean }) {
   )
 }
 
-/** Der große Startknopf – vor der ersten Aufgabe des Tages ohne, danach mit „Lange Pause gemacht“. */
+/**
+ * Der große Startknopf. Vor der ersten Aufgabe des Tages „Block starten“, ab der zweiten
+ * zweizeilig: klein die Frage „Lange Pause gemacht?“, darunter „Weiter mit „…““.
+ */
 function StartButton({ task }: { task: Task }) {
   const state = useAppState()
-  let label = state.timer.phase === 'break' ? T.today.nextBlock : T.today.startBlock
-  if (needsLongPause(state, task)) label = T.today.longPauseDone(task.title)
+  let label: ReactNode = state.timer.phase === 'break' ? T.today.nextBlock : T.today.startBlock
+  if (needsLongPause(state, task)) {
+    label = (
+      <span className="long-pause-label">
+        <span className="long-pause-ask">{T.today.longPauseAsk}</span>
+        <span>{T.today.continueWith(task.title)}</span>
+      </span>
+    )
+  }
 
   return (
     <button
@@ -441,11 +456,6 @@ function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: 
           </>
         )}
       </div>
-
-      {/* Ab und zu (nicht in jedem Block) ganz leise: Abschweifen ist okay. */}
-      {!paused && showsGentleLine(timerState.startedAt, GENTLE_LINE_EVERY) && (
-        <p className="gentle-line">{pick(T.today.gentleLines, timerState.startedAt)}</p>
-      )}
     </>
   )
 }

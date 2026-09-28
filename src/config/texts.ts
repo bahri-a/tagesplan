@@ -46,7 +46,7 @@ export const T = {
       'Nur anfangen – der Rest ergibt sich.',
       'Klein anfangen reicht völlig.',
     ],
-    // Ab und zu (nicht in jedem Block) ganz leise unter dem Ring: Abschweifen ist okay.
+    // Ab und zu (nicht in jedem Block) ganz leise ganz unten in der Karte: Abschweifen ist okay.
     gentleLines: [
       'Abgeschweift? Macht nichts – einfach zurückkommen.',
       'Gedanken wandern. Du holst sie einfach zurück.',
@@ -54,7 +54,9 @@ export const T = {
     ],
     startBlock: 'Block starten',
     spaceHint: 'Leertaste',
-    longPauseDone: (title: string) => `Lange Pause gemacht – weiter mit „${title}“`,
+    // Startknopf ab der zweiten Aufgabe – zwei Zeilen: oben die Frage, darunter „Weiter mit …“.
+    longPauseAsk: 'Lange Pause gemacht?',
+    continueWith: (title: string) => `Weiter mit „${title}“`,
     pause: 'Pausieren',
     resume: 'Weiter',
     paused: 'Pausiert – die Zeit steht.',

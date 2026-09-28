@@ -666,6 +666,26 @@
   font-size: 0.9rem;
 }
 
+/* Tipp im Block („Abgeschweift? …“): ganz unten, mit Abstand und feiner Linie darüber –
+   so ist klar, dass er nur ein Tipp ist und nicht zu Timer oder Schritten gehört. */
 .gentle-line {
-  opacity: 0.8;
+  margin-top: 1.1rem;
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--text) 9%, transparent);
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+/* Startknopf ab der zweiten Aufgabe: oben klein die Frage, darunter „Weiter mit „…““ */
+.long-pause-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.long-pause-ask {
+  font-size: 0.85rem;
+  font-weight: 500;
+  opacity: 0.85;
 }
