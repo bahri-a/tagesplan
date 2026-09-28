@@ -117,6 +117,17 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
         <StepList taskId={task.id} autoFocusNew={focusStepInput} />
       </div>
 
+      {/* Startsignal (optional): eine Zeile, das Beispiel im leeren Feld erklärt sie. */}
+      <label className="field">
+        <span className="field-label">{T.plan.startCue}</span>
+        <input
+          className="input"
+          value={task.startCue ?? ''}
+          placeholder={T.plan.startCuePlaceholder}
+          onChange={(e) => updateTask(task.id, { startCue: e.target.value })}
+        />
+      </label>
+
       {/* Zahlen der Aufgabe: immer dieselben drei Zeilen – beim Ändern springt nichts. */}
       <div className="task-numbers">
         <div className="number-row">

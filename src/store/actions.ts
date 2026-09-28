@@ -6,7 +6,7 @@
  * Funktionen auf.
  */
 
-import { SETTINGS_LIMITS, SIGNAL_MAX_DELAY_MS } from '../config/defaults'
+import { BLOCK_WARNING_MS, SETTINGS_LIMITS, SIGNAL_MAX_DELAY_MS } from '../config/defaults'
 import { mergeCarryOver, type CarryConflict, type ConflictChoices } from '../logic/carryOver'
 import { baseFields } from '../logic/records'
 import { dayKey } from '../logic/time'
@@ -38,13 +38,15 @@ export function addTask(dayId: ID, title: string): Task {
     blockMinutesOverride: null,
     shortBreakMinutesOverride: null,
     completedAt: null,
+    startCue: null,
+    firstEstimatedBlocks: null,
   }
   commit({ tasks: [task] })
   return task
 }
 
 type TaskPatch = Partial<
-  Pick<Task, 'title' | 'estimatedBlocks' | 'blockMinutesOverride' | 'shortBreakMinutesOverride'>
+  Pick<Task, 'title' | 'estimatedBlocks' | 'blockMinutesOverride' | 'shortBreakMinutesOverride' | 'startCue'>
 >
 
 /** Titel, Blockanzahl, individuelle Blocklänge oder individuelle kurze Pause ändern. */
@@ -53,6 +55,8 @@ export function updateTask(taskId: ID, patch: TaskPatch): void {
   if (!task) return
   const next = { ...task, ...patch }
   next.estimatedBlocks = Math.max(1, Math.round(next.estimatedBlocks))
+  // Leeres Startsignal = keins.
+  if (next.startCue !== null && next.startCue.trim() === '') next.startCue = null
   if (next.blockMinutesOverride !== null) {
     const { min, max } = SETTINGS_LIMITS.blockMinutes
     next.blockMinutesOverride = clamp(Math.round(next.blockMinutesOverride), min, max)
@@ -197,6 +201,8 @@ export function startBlock(taskId: ID): void {
       pausedMs: 0,
     },
     days: day.firstWorkAt === null ? [{ ...day, firstWorkAt: now }] : undefined,
+    // Beim allerersten Block die damalige Schätzung merken (für Version 2, unsichtbar).
+    tasks: task.firstEstimatedBlocks === null ? [{ ...task, firstEstimatedBlocks: task.estimatedBlocks }] : undefined,
   })
 }
 
@@ -218,7 +224,8 @@ export function abortCurrentBlock(): void {
 
 /** Ein Ereignis, bei dem ein Ton (und evtl. eine Benachrichtigung) kommt. */
 export interface TimerEvent {
-  type: 'blockEnd' | 'breakEnd'
+  /** 'blockWarning' = sanfte Vorwarnung kurz vor dem Blockende (nur ein leiser Ton). */
+  type: 'blockWarning' | 'blockEnd' | 'breakEnd'
   taskTitle: string
   /** false = das Ereignis ist schon länger her (App war zu) → kein Ton. */
   fresh: boolean
@@ -235,6 +242,14 @@ export function checkTimer(now = Date.now()): TimerEvent[] {
   let t = s.timer
   const changes: Changes = {}
   const titleOf = (taskId: ID) => s.tasks[taskId]?.title ?? ''
+
+  // 0. Kurz vor dem Ende: einmal sanft vorwarnen (nicht bei sehr kurzen Blöcken).
+  if (t.phase === 'block' && !t.warned && isInWarningTime(t, now)) {
+    const warnedAt = timer.blockEndsAt(t) - BLOCK_WARNING_MS
+    t = { ...t, warned: true }
+    changes.timer = t
+    events.push({ type: 'blockWarning', taskTitle: titleOf(t.taskId), fresh: now - warnedAt < SIGNAL_MAX_DELAY_MS })
+  }
 
   // 1. Block abgelaufen → gilt als durchgehalten, die kurze Pause startet
   //    (so lang wie bei dieser Aufgabe eingestellt, sonst Standard).
@@ -264,6 +279,16 @@ export function checkTimer(now = Date.now()): TimerEvent[] {
 
   if (changes.timer) commit(changes)
   return events
+}
+
+/**
+ * Läuft der Block gerade in den letzten Minuten (Vorwarnzeit)? Pausiert zählt nicht.
+ * Bei Blöcken, die höchstens doppelt so lang wie die Vorwarnzeit sind, gibt es keine Vorwarnung.
+ */
+export function isInWarningTime(t: timer.BlockTimer, now: number): boolean {
+  if (t.pausedAt !== null || t.plannedMs <= 2 * BLOCK_WARNING_MS) return false
+  const remaining = timer.blockRemainingMs(t, now)
+  return remaining > 0 && remaining <= BLOCK_WARNING_MS
 }
 
 /** „Hauptaufgabe erledigt“ – beendet auch die kurze Pause. */
@@ -339,6 +364,14 @@ export function updateSettings(patch: Partial<SettingsValues>): void {
 
 export function updateNote(text: string): void {
   commit({ note: { ...getState().note, text } })
+}
+
+/** Taste N: einen Gedanken als neue Zeile unten an den Notizzettel hängen. */
+export function parkThought(thought: string): void {
+  const text = thought.trim()
+  if (!text) return
+  const current = getState().note.text.replace(/\s+$/, '')
+  updateNote(current ? `${current}\n${text}` : text)
 }
 
 /* ================================================================== */

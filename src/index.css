@@ -44,6 +44,9 @@
   --ring-track-block: rgb(59 118 103 / 0.1);
   --ring-track-break: rgb(90 134 176 / 0.12);
   --ring-dot: #ffffff;
+  /* Vorwarnung kurz vor Blockende: Ring wird etwas wärmer (Honig, kein Rot) */
+  --ring-warm-a: #ead3a4;
+  --ring-warm-b: #b48a45;
   /* Zarter Farbschimmer im Hintergrund von „Heute“ */
   --glow-idle: rgb(214 192 158 / 0.26);
   --glow-block: rgb(112 176 150 / 0.3);
@@ -103,6 +106,8 @@
     --ring-track-block: rgb(125 189 172 / 0.1);
     --ring-track-break: rgb(143 180 216 / 0.11);
     --ring-dot: #f3fbf8;
+    --ring-warm-a: #7d6436;
+    --ring-warm-b: #ecd3a2;
     --glow-idle: rgb(150 128 96 / 0.1);
     --glow-block: rgb(84 160 134 / 0.17);
     --glow-paused: rgb(84 160 134 / 0.08);
@@ -142,6 +147,8 @@
   --ring-track-block: rgb(125 189 172 / 0.1);
   --ring-track-break: rgb(143 180 216 / 0.11);
   --ring-dot: #f3fbf8;
+  --ring-warm-a: #7d6436;
+  --ring-warm-b: #ecd3a2;
   --glow-idle: rgb(150 128 96 / 0.1);
   --glow-block: rgb(84 160 134 / 0.17);
   --glow-paused: rgb(84 160 134 / 0.08);

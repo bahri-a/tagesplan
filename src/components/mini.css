@@ -1,0 +1,115 @@
+/*
+ * MINI-FENSTER
+ * Dieselbe Karte wie in „Heute“, nur kompakt: Ring, Titel, Start/Pausieren/Weiter,
+ * Rauschen-Knopf und das Startsignal. Alles andere ist hier ausgeblendet.
+ */
+
+/* Knopf unten links (Gegenstück zum Notizzettel unten rechts) */
+.mini-button {
+  position: fixed;
+  left: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.5em 1.05em;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: var(--panel-sheen), var(--panel-bg);
+  -webkit-backdrop-filter: var(--panel-filter);
+  backdrop-filter: var(--panel-filter);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  box-shadow: var(--shadow);
+  opacity: 0.85;
+}
+
+.mini-button:hover,
+.mini-button[aria-pressed='true'] {
+  color: var(--text);
+  opacity: 1;
+}
+
+.mini-button svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+}
+
+.mini-button .mini-button-inner {
+  fill: currentColor;
+  stroke: none;
+}
+
+/* ---------- Inhalt des kleinen Fensters ---------- */
+
+.mini-body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.mini-today {
+  box-sizing: border-box;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 10px;
+  gap: 0;
+}
+
+.mini-today .focus-card {
+  gap: 0.7rem;
+  padding: 1rem 0.9rem;
+  border-radius: 20px;
+  box-shadow: none;
+}
+
+.mini-today .focus-title {
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.mini-today .timer-ring {
+  width: 168px;
+}
+
+.mini-today .timer-ring-time {
+  font-size: 2.6rem;
+}
+
+.mini-today .timer-ring-time.is-long {
+  font-size: 2rem;
+}
+
+.mini-today .btn-big {
+  min-height: 42px;
+  padding: 0.5em 1.1em;
+  font-size: 0.95rem;
+}
+
+.mini-today .start-cue {
+  font-size: 0.9rem;
+}
+
+/* Nicht nötig im kleinen Fenster */
+.mini-today .block-dots,
+.mini-today .steps-preview,
+.mini-today .current-step,
+.mini-today .gentle-line,
+.mini-today .start-nudge,
+.mini-today .phase-note {
+  display: none;
+}
+
+.mini-today .ask-done-actions {
+  gap: 0.5rem;
+}
+
+.mini-message {
+  color: var(--text-muted);
+  text-align: center;
+}

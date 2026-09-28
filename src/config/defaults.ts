@@ -28,6 +28,12 @@ export const DEFAULT_SETTINGS: SettingsValues = {
   theme: 'system',
   /** Flächen: 'pur' (massiv) oder 'glass' (Milchglas). */
   surfaces: 'pur',
+  /** Töne an (Timer-Töne, Vorwarnung, Rauschen). */
+  sounds: true,
+  /** Rauschen im Block – anfangs aus, der Knopf in „Heute“ schaltet es an. */
+  noiseOn: false,
+  /** Braunes Rauschen: tief und weich. */
+  noiseColor: 'brown',
 }
 
 /** Erlaubte Bereiche für die Zahlen in den Einstellungen. */
@@ -64,6 +70,33 @@ export const NOTE_SAVE_DELAY_MS = 400
  * bevor der nächste erscheint (Millisekunden) – ein kleines Erfolgserlebnis.
  */
 export const STEP_DONE_FEEDBACK_MS = 900
+
+/**
+ * Sanfte Vorwarnung: so lange vor dem Blockende (Millisekunden) kommt ein ganz leiser Ton,
+ * und der Ring wird etwas wärmer. Bei sehr kurzen Blöcken (höchstens doppelt so lang) entfällt sie.
+ */
+export const BLOCK_WARNING_MS = 2 * 60_000
+
+/** Lautstärke der Vorwarnung (deutlich leiser als die anderen Töne). */
+export const WARNING_VOLUME = 0.08
+
+/** Lautstärke des Rauschens (0 = stumm, 1 = sehr laut). */
+export const NOISE_VOLUME = 0.12
+
+/** Wie lange das Rauschen beim Ein- und Ausschalten weich ein-/ausblendet (Sekunden). */
+export const NOISE_FADE_S = 1.5
+
+/**
+ * Der Startsatz „Abschweifen ist okay …“ erscheint im Block nicht immer, sondern ab und zu:
+ * ungefähr bei jedem so-vielten Block (gewählt nach der Startzeit – also zufällig, aber stabil).
+ */
+export const GENTLE_LINE_EVERY = 3
+
+/** Wie lange nach Taste N die Meldung „Geparkt“ zu sehen ist (Millisekunden). */
+export const PARKED_TOAST_MS = 2500
+
+/** Größe des Mini-Fensters (Bild-im-Bild) beim Öffnen – danach frei ziehbar. */
+export const MINI_WINDOW_SIZE = { width: 300, height: 380 }
 
 /** Wie lange nach dem Löschen einer Aufgabe „Rückgängig“ angeboten wird (Millisekunden). */
 export const UNDO_DELETE_MS = 8000

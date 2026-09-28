@@ -7,11 +7,13 @@
  */
 
 import { useCallback, useEffect, useState } from 'react'
-import { APP_NAME, UNDO_DELETE_MS } from './config/defaults'
+import { APP_NAME, PARKED_TOAST_MS, UNDO_DELETE_MS } from './config/defaults'
 import { T } from './config/texts'
 import { EndDayDialog } from './components/EndDayDialog'
-import { useNow, useTimerEngine } from './components/hooks'
+import { useNoise, useNow, useTimerEngine } from './components/hooks'
 import { NotePad } from './components/NotePad'
+import { MiniWindow } from './components/MiniWindow'
+import { QuickPark } from './components/QuickPark'
 import { Toast, type ToastAction } from './components/Toast'
 import { UpdateBanner } from './components/UpdateBanner'
 import { WelcomeBackDialog } from './components/WelcomeBackDialog'
@@ -54,7 +56,11 @@ export default function App() {
     void requestPersistentStorage()
     // Chrome erlaubt Töne erst nach einem Klick – daher bei jedem Klick freischalten.
     document.addEventListener('pointerdown', unlockAudio)
-    return () => document.removeEventListener('pointerdown', unlockAudio)
+    document.addEventListener('keydown', unlockAudio) // auch Tastenkürzel (Leertaste) zählen
+    return () => {
+      document.removeEventListener('pointerdown', unlockAudio)
+      document.removeEventListener('keydown', unlockAudio)
+    }
   }, [])
 
   // Kurz leer lassen, bis die Daten geladen sind (dauert nur Millisekunden).
@@ -70,6 +76,7 @@ function Shell() {
   const askEndPrevious = useAskToEndPreviousDay()
 
   useTimerEngine()
+  useNoise()
   useTheme(state.settings.theme)
   useSurfaces(state.settings.surfaces)
   useWindowTitle(state.timer)
@@ -132,6 +139,8 @@ function Shell() {
       </main>
 
       <NotePad />
+      <MiniWindow />
+      <QuickPark onParked={() => showToast(T.park.done, { duration: PARKED_TOAST_MS })} />
 
       {askEndPrevious.visible && endDayDialog === 'closed' && (
         <WelcomeBackDialog onEndDay={endPreviousDay} onKeepWorking={askEndPrevious.hide} />

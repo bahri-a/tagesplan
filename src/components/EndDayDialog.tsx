@@ -10,6 +10,7 @@ import { useState } from 'react'
 import { T } from '../config/texts'
 import type { ConflictChoices } from '../logic/carryOver'
 import { endDay, getEndDayConflicts } from '../store/actions'
+import { activeDay, dayYield } from '../store/selectors'
 import { useAppState } from '../store/store'
 import { Dialog } from './Dialog'
 
@@ -39,6 +40,7 @@ export function EndDayDialog({ skipConfirm = false, onCancel, onEnded }: Props) 
   if (!confirmed) {
     return (
       <Dialog title={T.endDay.title} onClose={onCancel}>
+        <DayYield />
         <p className="dialog-text">{T.endDay.question}</p>
         {state.timer.phase === 'block' && <p className="hint">{T.endDay.runningBlock}</p>}
         <div className="dialog-actions">
@@ -93,5 +95,30 @@ export function EndDayDialog({ skipConfirm = false, onCancel, onEnded }: Props) 
         </button>
       </div>
     </Dialog>
+  )
+}
+
+/**
+ * Kleiner Tagesertrag: „Heute geschafft: 4 Blöcke · 1 Std. 40 Min.“ und darunter die erledigten
+ * Aufgaben mit Haken. Ohne Vergleich, ohne Streak. Wurde nichts gearbeitet, erscheint nichts.
+ */
+function DayYield() {
+  const state = useAppState()
+  const [now] = useState(Date.now)
+  const result = dayYield(state, activeDay(state).id, now)
+  if (result.minutes === 0 && result.doneTitles.length === 0) return null
+  const parts = [T.endDay.yieldBlocks(result.completedBlocks), T.endDay.yieldTime(result.minutes)]
+  return (
+    <div className="day-yield">
+      <p className="day-yield-title">{T.endDay.yieldTitle}</p>
+      <p className="day-yield-numbers">{parts.join(' · ')}</p>
+      {result.doneTitles.length > 0 && (
+        <ul className="day-yield-done">
+          {result.doneTitles.map((title) => (
+            <li key={title}>✓ {title}</li>
+          ))}
+        </ul>
+      )}
+    </div>
   )
 }

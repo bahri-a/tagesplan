@@ -33,7 +33,27 @@ export const T = {
     stepDone: 'erledigt',
     startDone: 'Einstieg geschafft!',
     keepGoing: 'Bleib einfach dran, bis die Zeit um ist.',
+    keepGoingVariants: [
+      'Bleib einfach dran, bis die Zeit um ist.',
+      'Jetzt einfach weitermachen – der Ring zählt für dich.',
+      'Du bist drin. Bleib dabei, bis die Zeit um ist.',
+    ],
+    // Startsignal aus „Planen“ – steht vor dem ersten Block der Aufgabe über dem Start-Knopf.
+    startCue: (cue: string) => `Wenn ${cue} → los.`,
+    // Startsatz: klein unter dem Start-Knopf, nur vor dem ersten Block einer Aufgabe.
+    startNudges: [
+      'Du musst nur anfangen.',
+      'Nur anfangen – der Rest ergibt sich.',
+      'Klein anfangen reicht völlig.',
+    ],
+    // Ab und zu (nicht in jedem Block) ganz leise unter dem Ring: Abschweifen ist okay.
+    gentleLines: [
+      'Abgeschweift? Macht nichts – einfach zurückkommen.',
+      'Gedanken wandern. Du holst sie einfach zurück.',
+      'Ablenkung ist normal. Weiter geht’s, bis der Ring voll ist.',
+    ],
     startBlock: 'Block starten',
+    spaceHint: 'Leertaste',
     longPauseDone: (title: string) => `Lange Pause gemacht – weiter mit „${title}“`,
     pause: 'Pausieren',
     resume: 'Weiter',
@@ -44,6 +64,14 @@ export const T = {
     abortNo: 'Nein, weiter',
     breakTitle: 'Kurze Pause',
     breakHint: 'Steh kurz auf, trink etwas, schau aus dem Fenster.',
+    // Kleine Abwechslung: In der Pause wechselt der Vorschlag (alles ohne Bildschirm).
+    breakHints: [
+      'Steh kurz auf, trink etwas, schau aus dem Fenster.',
+      'Einmal strecken, ein Glas Wasser – der Bildschirm darf warten.',
+      'Geh ein paar Schritte. Bewegung macht den Kopf wieder frei.',
+      'Fenster auf, tief durchatmen. Gleich geht es weiter.',
+      'Kurz weg vom Bildschirm – Augen und Kopf erholen sich.',
+    ],
     breakOver: 'Pause vorbei',
     nextBlock: 'Nächsten Block starten',
     askDone: 'Hauptaufgabe erledigt oder noch ein Block?',
@@ -52,6 +80,11 @@ export const T = {
     oneMoreStart: 'Noch einen Block starten',
     allDoneTitle: 'Alles erledigt für heute.',
     allDoneText: 'Stark gemacht! Du kannst jetzt morgen planen oder den Tag beenden.',
+    allDoneTexts: [
+      'Stark gemacht! Du kannst jetzt morgen planen oder den Tag beenden.',
+      'Alles geschafft – gönn dir was. Morgen planen oder Tag beenden?',
+      'Das war’s für heute. Richtig gut! Plane morgen oder beende den Tag.',
+    ],
     emptyTitle: 'Noch keine Aufgabe für heute.',
     emptyText: 'Plane eine Hauptaufgabe – die schwerste zuerst.',
     goPlan: 'Jetzt planen',
@@ -59,6 +92,12 @@ export const T = {
     endDay: 'Tag beenden',
     allSteps: (done: number, total: number) => `Alle Schritte (${done}/${total})`,
     hideSteps: 'Schritte ausblenden',
+    // Rauschen im Block: ein Knopf, der deutlich zeigt, ob es an oder aus ist.
+    noise: 'Rauschen',
+    noiseOn: 'an',
+    noiseOff: 'aus',
+    noiseTurnOn: 'Rauschen einschalten',
+    noiseTurnOff: 'Rauschen ausschalten',
   },
 
   plan: {
@@ -85,6 +124,9 @@ export const T = {
     minutesShort: 'Min.',
     blocksMeta: (n: number) => (n === 1 ? '1 Block' : `${n} Blöcke`),
     stepsMeta: (done: number, total: number) => `${done}/${total} Schritte`,
+    // Startsignal (optional): eine einzige Zeile, das Beispiel erklärt sie.
+    startCue: 'Ich starte, wenn …',
+    startCuePlaceholder: 'z. B. der Kaffee auf dem Tisch steht',
     done: 'Erledigt',
     reopen: 'Wieder öffnen',
     markDone: 'Als erledigt markieren',
@@ -122,6 +164,15 @@ export const T = {
     confirm: 'Tag beenden',
     cancel: 'Abbrechen',
     finished: 'Neuer Tag – schön, dass du da bist.',
+    // Kleiner Tagesertrag im Dialog – ohne Vergleich, ohne Streak.
+    yieldTitle: 'Heute geschafft',
+    yieldBlocks: (n: number) => (n === 1 ? '1 Block' : `${n} Blöcke`),
+    yieldTime: (minutes: number) => {
+      const h = Math.floor(minutes / 60)
+      const m = minutes % 60
+      if (h === 0) return `${m} Min.`
+      return m === 0 ? `${h} Std.` : `${h} Std. ${m} Min.`
+    },
   },
 
   welcome: {
@@ -129,6 +180,23 @@ export const T = {
     question: (dayName: string) => `Möchtest du den Tag von ${dayName} beenden?`,
     yes: 'Ja, Tag beenden',
     no: 'Nein, ich arbeite noch daran',
+  },
+
+  // Taste N: einen Gedanken parken, ohne den Block zu verlassen (landet im Notizzettel).
+  park: {
+    placeholder: 'Gedanke parken … (Enter)',
+    label: 'Gedanke parken',
+    done: 'Geparkt. Weiter geht’s.',
+    hint: 'N = Gedanke parken',
+  },
+
+  // Mini-Fenster: kleiner Timer, der immer über allen Fenstern liegt.
+  mini: {
+    open: 'Mini-Fenster',
+    close: 'Mini-Fenster schließen',
+    hint: 'Kleiner Timer, der immer im Vordergrund bleibt',
+    title: 'Tagesplan',
+    nothing: 'Gerade ist nichts dran.',
   },
 
   notes: {
@@ -158,6 +226,15 @@ export const T = {
     surfacesPur: 'Pur',
     surfacesGlass: 'Milchglas',
     sounds: 'Töne & Benachrichtigungen',
+    soundsLabel: 'Töne',
+    soundsHint: 'Aus = die App bleibt komplett still, auch Vorwarnung und Rauschen.',
+    soundsOn: 'An',
+    soundsOff: 'Aus',
+    noiseColor: 'Rauschen',
+    noiseColorHint: 'Läuft nur während eines Blocks. Ein- und ausschalten direkt in „Heute“.',
+    noiseBrown: 'Braun',
+    noisePink: 'Rosa',
+    noiseWhite: 'Weiß',
     testBlockEnd: '▶ Ton „Block vorbei“',
     testBreakEnd: '▶ Ton „Pause vorbei“',
     notifyGranted: 'Chrome-Benachrichtigungen sind erlaubt.',

@@ -2,12 +2,19 @@
  * Kleine React-Hilfen, die an mehreren Stellen gebraucht werden.
  */
 
-import { useEffect, useLayoutEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useLayoutEffect, useState } from 'react'
 import { T } from '../config/texts'
 import { checkTimer, type TimerEvent } from '../store/actions'
 import { getState, subscribeToStore } from '../store/store'
 import { appIsInBackground, showNotification } from '../signals/notifications'
-import { playBlockEnd, playBreakEnd } from '../signals/sounds'
+import { playBlockEnd, playBlockWarning, playBreakEnd, setNoise } from '../signals/sounds'
+
+/**
+ * In welchem Fenster wird gerade gezeichnet? Normalerweise im App-Fenster; im Mini-Fenster
+ * (Bild-im-Bild) in diesem. Wichtig für den Takt: Chrome bremst Zeitgeber in verdeckten
+ * Fenstern stark – das Mini-Fenster ist aber immer sichtbar und tickt deshalb selbst.
+ */
+export const WindowContext = createContext<Window>(window)
 
 /**
  * Liefert die aktuelle Uhrzeit (Millisekunden) und aktualisiert sie
@@ -16,26 +23,29 @@ import { playBlockEnd, playBreakEnd } from '../signals/sounds'
  */
 export function useNow(active: boolean, intervalMs = 250): number {
   const [now, setNow] = useState(() => Date.now())
+  const win = useContext(WindowContext)
   // useLayoutEffect: aktualisiert noch bevor Chrome das Bild zeichnet – kein Flackern.
   useLayoutEffect(() => {
     if (!active) return
     const update = () => setNow(Date.now())
     update()
-    const id = setInterval(update, intervalMs)
+    const id = win.setInterval(update, intervalMs)
     // Beim Zurückkehren ins Fenster sofort aktualisieren.
-    document.addEventListener('visibilitychange', update)
+    win.document.addEventListener('visibilitychange', update)
     return () => {
-      clearInterval(id)
-      document.removeEventListener('visibilitychange', update)
+      win.clearInterval(id)
+      win.document.removeEventListener('visibilitychange', update)
     }
-  }, [active, intervalMs])
+  }, [active, intervalMs, win])
   return now
 }
 
 /** Ton + (im Hintergrund) Benachrichtigung für ein Timer-Ereignis. */
 function signal(event: TimerEvent): void {
   if (!event.fresh) return
-  if (event.type === 'blockEnd') {
+  if (event.type === 'blockWarning') {
+    playBlockWarning() // nur ein leiser Ton, keine Benachrichtigung
+  } else if (event.type === 'blockEnd') {
     playBlockEnd()
     if (appIsInBackground()) {
       showNotification(T.notification.blockEndTitle, T.notification.blockEndBody(event.taskTitle))
@@ -85,4 +95,32 @@ export function useTimerEngine(): void {
       window.removeEventListener('focus', check)
     }
   }, [])
+}
+
+/**
+ * Rauschen: läuft nur, solange ein Block läuft (nicht pausiert, nicht in der Pause),
+ * das Rauschen angeschaltet ist und Töne erlaubt sind. Blendet weich ein und aus.
+ */
+export function useNoise(): void {
+  useEffect(() => {
+    const update = () => {
+      const s = getState()
+      const running = s.timer.phase === 'block' && s.timer.pausedAt === null
+      setNoise(running && s.settings.noiseOn, s.settings.noiseColor)
+    }
+    update()
+    const unsubscribe = subscribeToStore(update)
+    return () => {
+      unsubscribe()
+      setNoise(false, getState().settings.noiseColor)
+    }
+  }, [])
+}
+
+/** Tippt jemand gerade in ein Feld – oder hat ein Knopf den Fokus? */
+export function isTypingOrButton(target: EventTarget | null): boolean {
+  // Bewusst ohne `instanceof`: Elemente im Mini-Fenster stammen aus einem anderen Dokument.
+  const el = target as HTMLElement | null
+  if (!el || typeof el.tagName !== 'string') return false
+  return el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(el.tagName)
 }

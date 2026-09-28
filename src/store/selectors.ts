@@ -6,7 +6,7 @@
  */
 
 import { dayKey } from '../logic/time'
-import { isBreakOver } from '../logic/timer'
+import { blockWorkedMs, isBreakOver } from '../logic/timer'
 import { alive, sortByPosition } from '../logic/records'
 import type { Block, Day, ID, Step, Task } from '../model/types'
 import type { AppState } from './store'
@@ -112,4 +112,23 @@ export function shouldAskToEndPreviousDay(s: AppState, now: number): boolean {
   const today = dayKey(now)
   if (dayKey(day.firstWorkAt) >= today) return false
   return s.local.endDayPromptDismissedOn !== today
+}
+
+/**
+ * Kleiner Tagesertrag für „Tag beenden“: durchgehaltene Blöcke, gearbeitete Minuten
+ * (auch aus abgebrochenen und dem gerade laufenden Block, ohne Pausen) und erledigte Aufgaben.
+ */
+export function dayYield(s: AppState, dayId: ID, now: number) {
+  const blocks = Object.values(s.blocks).filter((b) => b.deletedAt === null && b.dayId === dayId)
+  let workedSeconds = blocks.reduce((sum, b) => sum + b.workedSeconds, 0)
+  if (s.timer.phase === 'block' && s.timer.dayId === dayId) {
+    workedSeconds += blockWorkedMs(s.timer, now) / 1000
+  }
+  return {
+    completedBlocks: blocks.filter((b) => b.status === 'completed').length,
+    minutes: Math.round(workedSeconds / 60),
+    doneTitles: tasksOfDay(s, dayId)
+      .filter((t) => t.completedAt !== null)
+      .map((t) => t.title),
+  }
 }

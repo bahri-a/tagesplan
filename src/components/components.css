@@ -337,3 +337,48 @@
   outline: none;
   border-color: var(--accent);
 }
+
+/* Taste N: eine schmale Zeile unten in der Mitte zum Gedanken-Parken */
+.quick-park {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  z-index: 45;
+  width: min(30rem, calc(100vw - 2rem));
+  transform: translateX(-50%);
+}
+
+.quick-park .input {
+  width: 100%;
+  border-color: var(--accent);
+  box-shadow: var(--shadow-lift);
+}
+
+/* Tagesertrag im Dialog „Tag beenden“ */
+.day-yield {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: var(--radius-small);
+  background: var(--accent-soft);
+}
+
+.day-yield-title {
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.day-yield-numbers {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.day-yield-done {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-muted);
+}

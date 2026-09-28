@@ -17,6 +17,8 @@ interface Props {
   variant?: 'block' | 'break'
   /** Pausierter Block: Ring blasser, der Punkt leuchtet nicht. */
   paused?: boolean
+  /** Letzte Minuten des Blocks (Vorwarnung): Ring wird langsam etwas wärmer. */
+  warm?: boolean
   /** Statt der Zeit etwas anderes in der Mitte zeigen (z. B. „Pause vorbei“). */
   center?: ReactNode
 }
@@ -28,13 +30,14 @@ const RADIUS = SIZE / 2 - 18
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 const C = SIZE / 2
 
-export function TimerRing({ remainingMs, totalMs, caption, variant = 'block', paused = false, center }: Props) {
+export function TimerRing({ remainingMs, totalMs, caption, variant = 'block', paused = false, warm = false, center }: Props) {
   // Eindeutige ID für Verlauf und Leuchten (nur Buchstaben/Ziffern, damit url(#…) sicher klappt).
   const id = `ring${useId().replace(/[^a-zA-Z0-9]/g, '')}`
   const done = progress(totalMs, remainingMs)
   const time = formatCountdown(remainingMs)
   const classes = ['timer-ring', `is-${variant}`]
   if (paused) classes.push('is-paused')
+  if (warm) classes.push('is-warm')
 
   return (
     <div className={classes.join(' ')} role="timer" aria-live="off">
