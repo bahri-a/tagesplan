@@ -4,7 +4,7 @@ Eine ruhige Web-App für deine eigene Arbeitsmethode: **Tag → Hauptaufgaben �
 Keine Uhrzeiten, keine Streaks, kein Konto. Alle Daten bleiben nur in deinem Chrome.
 
 - **Tag:** 2–3 Hauptaufgaben, die schwerste zuerst.
-- **Hauptaufgabe:** ein Ziel, zerlegt in kleine Schritte. Der erste Schritt ist sofort machbar.
+- **Hauptaufgabe:** ein Ziel, dazu ein, zwei **erste Schritte** zum Loslegen – sofort machbar.
 - **Arbeitsblock:** feste Zeit mit Timer, danach eine kurze Pause.
 
 ---
@@ -136,20 +136,24 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
 
 ### Planen
 - Tab **Planen**: links **Heute**, rechts **Morgen**.
-- Titel eintippen, Enter → die Aufgabe klappt auf, und du kannst direkt die Schritte
-  eintippen (jeweils Enter).
+- Titel eintippen, Enter → die Aufgabe klappt auf, und du kannst direkt die **ersten Schritte**
+  eintippen (jeweils Enter). Das sind nur winzige Einstiege wie „PDF öffnen“ – keine Blöcke.
 - Pro Aufgabe einstellbar: **Blöcke** (Schätzung) und **Blocklänge** (Standard oder eigene).
 - Reihenfolge: am Griff **⠿** links ziehen. **Schwerste Aufgabe nach oben.**
 - Planst du mehr als dein Limit, erscheint nur ein sanfter Hinweis.
 
 ### Durchführen (Tab **Heute**)
-- Oben steht immer die oberste noch offene Aufgabe mit dem aktuellen Schritt.
+- Oben steht immer die oberste noch offene Aufgabe. Darüber zeigen zwei kleine Zeilen,
+  wo du stehst: **Aufgabe** (✓ = erledigt, hervorgehoben = jetzt dran) und **Block**
+  (voller Punkt = geschafft, breiter Punkt = jetzt dran, leerer Punkt = kommt noch).
 - **Block starten** → der Timer läuft. Dezent darunter: **Pausieren** und **Abbrechen**.
 - Läuft der Block durch → sanfter Ton, die **kurze Pause** startet von selbst.
 - Pause vorbei → Ton und **Nächsten Block starten**. Wann du klickst, ist deine Sache.
 - Nach dem letzten geschätzten Block: **Erledigt** oder **Noch ein Block**.
 - Vor jeder weiteren Aufgabe: **Lange Pause gemacht – weiter mit …** (nicht getimt).
-- Schritte hakst du jederzeit ab. **Alle Schritte** klappt die ganze Liste auf.
+- Unter dem Timer steht **Zum Einstieg: …** – dein nächster erster Schritt zum Abhaken.
+  Abhaken beendet keinen Block. Sind alle abgehakt, steht dort „Einstieg geschafft!
+  Bleib einfach dran, bis die Zeit um ist.“ **Alle Schritte** klappt die ganze Liste auf.
 - Bist du auf einem anderen Tab, zeigt oben rechts eine kleine Anzeige die Restzeit.
   Auch im Fenstertitel steht die Restzeit.
 
