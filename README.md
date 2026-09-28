@@ -176,10 +176,15 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   zurückkommen.“ Abschweifen passiert – wichtig ist nur das Zurückkommen.
 - Läuft der Block durch → sanfter Ton, die **kurze Pause** startet von selbst.
 - Pause vorbei → Ton und **Nächsten Block starten**. Wann du klickst, ist deine Sache.
-- Nach dem letzten geschätzten Block: **Erledigt** oder **Noch ein Block**.
+- Nach dem letzten geschätzten Block kommt **keine** kurze Pause, sondern gleich die Frage:
+  **Erledigt** oder **Noch ein Block**. Nach „Erledigt“ wartet die nächste Aufgabe, bis du sie
+  startest – ob gleich, in zwei Stunden oder erst morgen.
+  „Noch ein Block“ kurz nach dem letzten Block: erst der Rest der kurzen Pause, dann weiter.
   Aus Versehen „Noch ein Block“ geklickt? Oben links in der Karte steht dann kurz **‹ Zurück** –
   damit kommst du wieder zur Frage (bis zum Start des Blocks und noch in seinen ersten 3 Minuten).
 - Vor jeder weiteren Aufgabe: **Lange Pause gemacht? / Weiter mit „…“** (nicht getimt).
+- An einem früheren Tag angefangen, aber noch nicht fertig? Dann fragt die App:
+  **Weitermachen** oder **Abschließen**.
 - Im laufenden Block steht unter dem Timer **Zum Einstieg: …** – dein nächster erster Schritt zum Abhaken.
   Abhaken beendet keinen Block. Sind alle abgehakt, steht dort „Einstieg geschafft!
   Bleib einfach dran, bis die Zeit um ist.“ **Alle Schritte** klappt die ganze Liste auf.

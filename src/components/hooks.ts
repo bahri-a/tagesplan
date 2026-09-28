@@ -48,7 +48,10 @@ function signal(event: TimerEvent): void {
   } else if (event.type === 'blockEnd') {
     playBlockEnd()
     if (appIsInBackground()) {
-      showNotification(T.notification.blockEndTitle, T.notification.blockEndBody(event.taskTitle))
+      showNotification(
+        T.notification.blockEndTitle,
+        event.lastBlock ? T.notification.lastBlockEndBody(event.taskTitle) : T.notification.blockEndBody(event.taskTitle),
+      )
     }
   } else {
     playBreakEnd()

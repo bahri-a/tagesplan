@@ -80,6 +80,10 @@ export const T = {
     breakOver: 'Pause vorbei',
     nextBlock: 'Nächsten Block starten',
     askDone: 'Hauptaufgabe erledigt oder noch ein Block?',
+    // An einem früheren Tag angefangen, aber noch nicht fertig:
+    askResume: 'Hier hast du schon angefangen. Weitermachen oder abschließen?',
+    resumeTask: 'Weitermachen',
+    finishResume: 'Abschließen',
     done: 'Erledigt',
     oneMore: 'Noch ein Block',
     oneMoreStart: 'Noch einen Block starten',
@@ -276,6 +280,7 @@ export const T = {
   notification: {
     blockEndTitle: 'Block geschafft',
     blockEndBody: (title: string) => `Zeit für eine kurze Pause. (${title})`,
+    lastBlockEndBody: (title: string) => `Alle geplanten Blöcke geschafft. Erledigt oder noch einer? (${title})`,
     breakEndTitle: 'Pause vorbei',
     breakEndBody: (title: string) => `Bereit für den nächsten Block? (${title})`,
   },

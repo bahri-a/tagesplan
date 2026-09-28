@@ -11,11 +11,14 @@ import { mergeCarryOver, type CarryConflict, type ConflictChoices } from '../log
 import { baseFields } from '../logic/records'
 import { dayKey } from '../logic/time'
 import * as timer from '../logic/timer'
-import type { Block, BlockStatus, ID, SettingsValues, Step, Task } from '../model/types'
+import type { Block, BlockStatus, ID, SettingsValues, Step, Task, TimerState } from '../model/types'
 import {
   activeDay,
   blockMinutesFor,
+  blocksDone,
   canUndoExtraBlock,
+  extraBlockStartsNow,
+  lastBlockEndedAt,
   plannedDay,
   shortBreakMinutesFor,
   stepsOfTask,
@@ -226,7 +229,8 @@ export function resumeCurrentBlock(): void {
 export function finishBlockEarly(now = Date.now()): void {
   const t = getState().timer
   if (t.phase !== 'block') return
-  commit(completeBlockChanges(t, now))
+  const { blocks, timer: next } = completeBlockChanges(t, now)
+  commit({ blocks, timer: next })
 }
 
 /** Block abbrechen. Die bis dahin gearbeitete Zeit wird gespeichert. */
@@ -242,6 +246,8 @@ export interface TimerEvent {
   taskTitle: string
   /** false = das Ereignis ist schon länger her (App war zu) → kein Ton. */
   fresh: boolean
+  /** Nur bei 'blockEnd': war das der letzte geschätzte Block (dann keine Pause)? */
+  lastBlock?: boolean
 }
 
 /**
@@ -268,10 +274,11 @@ export function checkTimer(now = Date.now()): TimerEvent[] {
   //    (so lang wie bei dieser Aufgabe eingestellt, sonst Standard).
   if (t.phase === 'block' && timer.isBlockFinished(t, now)) {
     const endedAt = timer.blockEndsAt(t)
-    const completed = completeBlockChanges(t, endedAt)
+    const { lastBlock, ...completed } = completeBlockChanges(t, endedAt)
+    const taskTitle = titleOf(t.taskId)
     Object.assign(changes, completed)
     t = completed.timer
-    events.push({ type: 'blockEnd', taskTitle: titleOf(completed.timer.taskId), fresh: now - endedAt < SIGNAL_MAX_DELAY_MS })
+    events.push({ type: 'blockEnd', taskTitle, fresh: now - endedAt < SIGNAL_MAX_DELAY_MS, lastBlock })
   }
 
   // 2. Kurze Pause abgelaufen → Ton, danach erscheint „Nächsten Block starten“.
@@ -303,24 +310,34 @@ export function finishTask(taskId: ID): void {
 
 /**
  * „Noch ein Block“: Die Schätzung wird um einen Block erhöht.
- * Mit `startNow` startet der Block sofort (wenn die Pause schon vorbei ist).
+ *  - Ist der letzte Block erst kurz her, läuft zuerst der Rest der kurzen Pause (gerechnet ab
+ *    dem Blockende), danach kommt wie gewohnt „Nächsten Block starten“.
+ *  - Sonst startet der Block sofort (siehe `extraBlockStartsNow`).
  */
-export function addExtraBlock(taskId: ID, startNow: boolean): void {
+export function addExtraBlock(taskId: ID, now = Date.now()): void {
   const s = getState()
   const task = s.tasks[taskId]
-  if (!task) return
-  commit({
+  if (!task || s.timer.phase === 'block') return
+  const startNow = extraBlockStartsNow(s, task, now)
+  const lastEnd = lastBlockEndedAt(s, taskId)
+  const changes: Changes = {
     tasks: [{ ...task, estimatedBlocks: task.estimatedBlocks + 1 }],
     // Merken, damit „Zurück“ die Schätzung wieder herstellen kann.
     local: { ...s.local, extraBlock: { taskId, previousEstimate: task.estimatedBlocks } },
-  })
+  }
+  if (!startNow && s.timer.phase === 'idle' && lastEnd !== null) {
+    const durationMs = shortBreakMinutesFor(s, task) * 60_000
+    changes.timer = { phase: 'break', taskId, startedAt: lastEnd, durationMs, endSignaled: false }
+  }
+  commit(changes)
   if (startNow) startBlock(taskId)
 }
 
 /**
  * „Zurück“ nach „Noch ein Block“: Die Schätzung wird wieder wie vorher, die Frage
- * „Erledigt oder noch ein Block?“ ist wieder da. Läuft der zusätzliche Block schon
- * (erst kurz, siehe `canUndoExtraBlock`), wird er verworfen – er zählt nicht als Block.
+ * „Erledigt oder noch ein Block?“ ist wieder da. Eine dafür gestartete kurze Pause endet.
+ * Läuft der zusätzliche Block schon (erst kurz, siehe `canUndoExtraBlock`), zählt er nicht
+ * als Block – die darin gearbeiteten Minuten werden aber gespeichert (Status 'undone').
  */
 export function undoExtraBlock(now = Date.now()): void {
   const s = getState()
@@ -331,7 +348,8 @@ export function undoExtraBlock(now = Date.now()): void {
     tasks: [{ ...task, estimatedBlocks: mark.previousEstimate }],
     local: { ...s.local, extraBlock: null },
   }
-  if (s.timer.phase === 'block') changes.timer = { phase: 'idle' }
+  if (s.timer.phase === 'block') changes.blocks = [blockRecord(s.timer, 'undone', now)]
+  if (s.timer.phase !== 'idle') changes.timer = { phase: 'idle' }
   commit(changes)
 }
 
@@ -430,14 +448,22 @@ function blockRecord(t: timer.BlockTimer, status: BlockStatus, endedAt: number):
   }
 }
 
-/** Block als durchgehalten speichern und die kurze Pause (Länge dieser Aufgabe) ab `endedAt` starten. */
-function completeBlockChanges(t: timer.BlockTimer, endedAt: number): Changes & { timer: timer.BreakTimer } {
+/**
+ * Block als durchgehalten speichern. Danach startet die kurze Pause (Länge dieser Aufgabe)
+ * ab `endedAt` – außer nach dem letzten geschätzten Block: Dann gibt es keine Pause, sondern
+ * gleich die Frage „Erledigt oder noch ein Block?“ (`lastBlock` = true).
+ */
+function completeBlockChanges(t: timer.BlockTimer, endedAt: number): Changes & { timer: TimerState; lastBlock: boolean } {
   const s = getState()
   const task = s.tasks[t.taskId]
+  const lastBlock = task !== undefined && blocksDone(s, task.id) + 1 >= task.estimatedBlocks
   const breakMinutes = task ? shortBreakMinutesFor(s, task) : s.settings.shortBreakMinutes
   return {
     blocks: [blockRecord(t, 'completed', endedAt)],
-    timer: { phase: 'break', taskId: t.taskId, startedAt: endedAt, durationMs: breakMinutes * 60_000, endSignaled: false },
+    timer: lastBlock
+      ? { phase: 'idle' }
+      : { phase: 'break', taskId: t.taskId, startedAt: endedAt, durationMs: breakMinutes * 60_000, endSignaled: false },
+    lastBlock,
   }
 }
 
