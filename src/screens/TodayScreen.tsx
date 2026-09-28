@@ -2,12 +2,15 @@
  * BILDSCHIRM „HEUTE“ (Durchführen)
  * ================================
  * Zeigt immer die oberste noch nicht erledigte Hauptaufgabe – groß und ruhig:
- *  - ganz oben: Fortschritt als Symbole (Aufgaben des Tages, Blöcke der Aufgabe)
- *  - vor dem Start: Aufgabe, erster offener Schritt („Zum Einstieg: …“), „Block starten“
+ *  - oben in der Karte: die Block-Punkte (mit „je 25 Min.“), darunter der Titel
+ *  - vor dem Start: die ersten Schritte zum Ansehen (noch nicht abhakbar), „Block starten“
  *    (bzw. „Lange Pause gemacht – weiter mit …“ ab der zweiten Aufgabe)
- *  - während des Blocks: große Restzeit, dezent „Pausieren“ und „Abbrechen“
- *  - in der kurzen Pause: Restzeit der Pause, danach „Nächsten Block starten“
+ *  - während des Blocks: weicher Ring mit Restzeit, dezent „Pausieren“ und „Abbrechen“,
+ *    und „Zum Einstieg: …“ zum Abhaken
+ *  - in der kurzen Pause: blauer Ring, danach „Nächsten Block starten“
  *  - nach dem letzten geschätzten Block: „Erledigt oder noch ein Block?“
+ *  - unter der Karte: schlanke Leiste mit den Aufgaben des Tages (nicht während eines Blocks)
+ * Im Hintergrund liegt ein sehr zarter Farbschimmer: grünlich im Block, bläulich in der Pause.
  */
 
 import { useEffect, useState } from 'react'
@@ -18,7 +21,7 @@ import { StepList } from '../components/StepList'
 import { TimerRing } from '../components/TimerRing'
 import { blockMarks, taskMark, type Mark } from '../logic/progress'
 import * as timer from '../logic/timer'
-import type { ID, Task } from '../model/types'
+import type { ID, Task, TimerState } from '../model/types'
 import { requestNotificationPermission } from '../signals/notifications'
 import {
   abortCurrentBlock,
@@ -57,10 +60,18 @@ export function TodayScreen({ onPlan, onEndDay }: Props) {
 
   return (
     <div className="today">
+      <Ambient timerState={t} />
+
       {tasks.length === 0 ? (
-        <section className="card focus-card focus-card-message">
-          <h1 className="focus-title">{T.today.emptyTitle}</h1>
-          <p className="muted">{T.today.emptyText}</p>
+        <section className="card focus-card is-message">
+          <div className="message-mark" aria-hidden="true">
+            <svg viewBox="0 0 76 76">
+              <circle className="message-mark-dashed" cx="38" cy="38" r="33" />
+              <path className="message-mark-plus" d="M38 29v18M29 38h18" />
+            </svg>
+          </div>
+          <h1 className="message-title">{T.today.emptyTitle}</h1>
+          <p className="message-text">{T.today.emptyText}</p>
           <button type="button" className="btn btn-primary" onClick={onPlan}>
             {T.today.goPlan}
           </button>
@@ -68,31 +79,26 @@ export function TodayScreen({ onPlan, onEndDay }: Props) {
       ) : task ? (
         <FocusCard task={task} />
       ) : (
-        <section className="card focus-card focus-card-message">
-          <div className="all-done-mark" aria-hidden="true">
-            ✓
+        <section className="card focus-card is-message">
+          <div className="message-mark" aria-hidden="true">
+            <svg viewBox="0 0 76 76">
+              <defs>
+                <linearGradient id="all-done-gradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" className="timer-ring-stop-a" />
+                  <stop offset="1" className="timer-ring-stop-b" />
+                </linearGradient>
+              </defs>
+              <circle className="message-mark-ring" cx="38" cy="38" r="33" stroke="url(#all-done-gradient)" />
+              <path className="message-mark-check" d="M27 39l7.5 7.5L50 31" />
+            </svg>
           </div>
-          <h1 className="focus-title">{T.today.allDoneTitle}</h1>
-          <p className="muted">{T.today.allDoneText}</p>
+          <h1 className="message-title">{T.today.allDoneTitle}</h1>
+          <p className="message-text">{T.today.allDoneText}</p>
         </section>
       )}
 
       {/* Während ein Block läuft, bleibt nur das Wichtigste sichtbar. */}
-      {t.phase !== 'block' && tasks.length > 0 && (
-        <section className="day-overview" aria-label={T.today.dayList}>
-          <ol className="day-list">
-            {tasks.map((item, index) => (
-              <li
-                key={item.id}
-                className={`day-list-item${item.completedAt !== null ? ' is-done' : ''}${item.id === task?.id ? ' is-current' : ''}`}
-              >
-                <span className="day-list-number">{item.completedAt !== null ? '✓' : `${index + 1}.`}</span>
-                <span>{item.title}</span>
-              </li>
-            ))}
-          </ol>
-        </section>
-      )}
+      {t.phase !== 'block' && tasks.length > 0 && <DayBar tasks={tasks} currentId={task?.id} />}
 
       {t.phase !== 'block' && (
         <div className="end-day">
@@ -103,6 +109,14 @@ export function TodayScreen({ onPlan, onEndDay }: Props) {
       )}
     </div>
   )
+}
+
+/** Sehr zarter Farbschimmer hinter allem – zeigt die Phase, wechselt langsam (siehe today.css). */
+function Ambient({ timerState }: { timerState: TimerState }) {
+  let phase = 'idle'
+  if (timerState.phase === 'block') phase = timerState.pausedAt === null ? 'block' : 'paused'
+  if (timerState.phase === 'break') phase = 'break'
+  return <div className="ambient" data-phase={phase} aria-hidden="true" />
 }
 
 /** Die große Karte mit der aktuellen Hauptaufgabe. */
@@ -120,7 +134,7 @@ function FocusCard({ task }: { task: Task }) {
   // Starten ist möglich, wenn nichts läuft oder die kurze Pause vorbei ist.
   const canStart = t.phase === 'idle' || breakOver
 
-  // Derselbe Stand als ganzer Satz – für den Hinweis beim Drüberfahren und für Screenreader.
+  // Der ganze Stand als Satz – für den Hinweis beim Drüberfahren und für Screenreader.
   let blockLine: string
   if (t.phase === 'block') blockLine = T.today.blockOf(done + 1, task.estimatedBlocks)
   else if (t.phase === 'break' || asking) blockLine = T.today.blockDoneOf(done, task.estimatedBlocks)
@@ -129,23 +143,33 @@ function FocusCard({ task }: { task: Task }) {
   // „Jetzt dran“ ist ein Block, wenn er läuft oder gleich gestartet werden kann.
   const highlightBlock = t.phase === 'block' || (canStart && !asking)
 
+  // Wechselt die Phase, wird der untere Teil der Karte neu (weich) eingeblendet.
+  const paused = t.phase === 'block' && t.pausedAt !== null
+  const phaseKey = `${t.phase}-${paused}-${breakOver}-${asking}`
+
   return (
-    <section className={`card focus-card is-${t.phase}`}>
-      <ProgressRows
-        tasks={tasks}
-        currentId={task.id}
-        blocks={blockMarks(done, task.estimatedBlocks, highlightBlock)}
+    <section className="card focus-card">
+      <BlockDots
+        marks={blockMarks(done, task.estimatedBlocks, highlightBlock)}
         suffix={t.phase === 'idle' && !asking ? T.today.perBlock(minutes) : null}
         sentence={`${T.today.taskOf(number, tasks.length)} · ${blockLine}`}
       />
       <h1 className="focus-title">{task.title}</h1>
 
-      {t.phase === 'block' && <RunningBlock timerState={t} now={now} />}
+      <div className="focus-phase" key={phaseKey}>
+        {/* Erst ansehen, abhaken erst im Block. */}
+        {t.phase !== 'block' && <StepsPreview task={task} />}
 
-      {t.phase === 'break' && (
-        <div className="break-panel">
-          {breakOver ? (
-            <p className="break-over">{T.today.breakOver}</p>
+        {t.phase === 'block' && <RunningBlock timerState={t} now={now} />}
+
+        {t.phase === 'break' &&
+          (breakOver ? (
+            <TimerRing
+              variant="break"
+              remainingMs={0}
+              totalMs={t.durationMs}
+              center={<span className="timer-ring-label">{T.today.breakOver}</span>}
+            />
           ) : (
             <>
               <TimerRing
@@ -154,84 +178,98 @@ function FocusCard({ task }: { task: Task }) {
                 totalMs={t.durationMs}
                 caption={T.today.breakTitle}
               />
-              <p className="muted">{T.today.breakHint}</p>
+              <p className="phase-note">{T.today.breakHint}</p>
             </>
-          )}
-        </div>
-      )}
+          ))}
 
-      <CurrentStep task={task} />
+        {t.phase === 'block' && <CurrentStep task={task} />}
 
-      {asking ? (
-        <div className="ask-done">
-          <p className="ask-done-question">{T.today.askDone}</p>
-          <div className="ask-done-actions">
-            <button type="button" className="btn btn-primary btn-big" onClick={() => finishTask(task.id)}>
-              {T.today.done}
-            </button>
-            <button
-              type="button"
-              className="btn btn-big"
-              onClick={() => {
-                if (canStart) void requestNotificationPermission()
-                addExtraBlock(task.id, canStart)
-              }}
-            >
-              {canStart ? T.today.oneMoreStart : T.today.oneMore}
-            </button>
+        {asking ? (
+          <div className="ask-done">
+            <p className="ask-done-question">{T.today.askDone}</p>
+            <div className="ask-done-actions">
+              <button type="button" className="btn btn-primary btn-big" onClick={() => finishTask(task.id)}>
+                {T.today.done}
+              </button>
+              <button
+                type="button"
+                className="btn btn-big"
+                onClick={() => {
+                  if (canStart) void requestNotificationPermission()
+                  addExtraBlock(task.id, canStart)
+                }}
+              >
+                {canStart ? T.today.oneMoreStart : T.today.oneMore}
+              </button>
+            </div>
           </div>
-        </div>
-      ) : (
-        canStart && <StartButton task={task} />
-      )}
+        ) : (
+          canStart && <StartButton task={task} />
+        )}
+      </div>
     </section>
   )
 }
 
-interface ProgressRowsProps {
-  tasks: Task[]
-  currentId: ID
-  blocks: Mark[]
-  /** Kleiner Zusatz hinter den Block-Punkten, z. B. „je 15 Min.“ – oder `null`. */
+interface BlockDotsProps {
+  marks: Mark[]
+  /** Kleiner Zusatz hinter den Punkten, z. B. „je 25 Min.“ – oder `null`. */
   suffix: string | null
   sentence: string
 }
 
 /**
- * Oben in der Karte: wo du gerade stehst – zwei kurze Zeilen mit Symbolen statt eines langen Satzes.
- *  - Aufgabe: ✓ = erledigt, hervorgehoben = jetzt dran, nur Umriss = kommt noch
- *  - Block:   voller Punkt = geschafft, breiter Punkt = jetzt dran, nur Umriss = kommt noch
+ * Oben in der Karte: die Blöcke der Aufgabe als Punkte.
+ * Voller Punkt = geschafft, breiter Punkt = jetzt dran, nur Umriss = kommt noch.
  * Abgebrochene Blöcke sehen aus wie geschaffte (sie zählen mit, nichts soll nach Fehler aussehen).
+ * Der ganze Satz („Aufgabe 1 von 2 · Block 1 von 3 …“) steht im Tooltip und für Screenreader.
  */
-function ProgressRows({ tasks, currentId, blocks, suffix, sentence }: ProgressRowsProps) {
+function BlockDots({ marks, suffix, sentence }: BlockDotsProps) {
   return (
-    <div className="progress" title={sentence}>
+    <div className="block-dots" title={sentence}>
       <span className="visually-hidden">{sentence}</span>
-
-      <span className="progress-label" aria-hidden="true">
-        {T.today.progressTask}
-      </span>
-      <span className="progress-marks" aria-hidden="true">
-        {tasks.map((item, index) => {
-          const mark = taskMark(item.completedAt !== null, item.id === currentId)
-          return (
-            <span key={item.id} className={`task-mark is-${mark}`}>
-              {mark === 'done' ? '✓' : index + 1}
-            </span>
-          )
-        })}
-      </span>
-
-      <span className="progress-label" aria-hidden="true">
-        {T.today.progressBlock}
-      </span>
-      <span className="progress-marks" aria-hidden="true">
-        {blocks.map((mark, index) => (
+      <span className="block-dots-marks" aria-hidden="true">
+        {marks.map((mark, index) => (
           <span key={index} className={`block-mark is-${mark}`} />
         ))}
-        {suffix && <span className="progress-suffix">{suffix}</span>}
       </span>
+      {suffix && <span aria-hidden="true">{suffix}</span>}
     </div>
+  )
+}
+
+/** Schlanke Leiste unter der Karte: alle Aufgaben des Tages. ✓ = erledigt, Punkt = jetzt dran. */
+function DayBar({ tasks, currentId }: { tasks: Task[]; currentId: ID | undefined }) {
+  return (
+    <nav className="day-bar" aria-label={T.today.dayList}>
+      <ol className="surface">
+        {tasks.map((item) => {
+          const mark = taskMark(item.completedAt !== null, item.id === currentId)
+          return (
+            <li
+              key={item.id}
+              className={`is-${mark}`}
+              title={item.title}
+              aria-current={mark === 'current' ? 'step' : undefined}
+            >
+              <span className="day-mark" aria-hidden="true">
+                {mark === 'done' && <CheckIcon />}
+              </span>
+              <span className="day-title">{item.title}</span>
+              {mark === 'done' && <span className="visually-hidden"> ({T.today.stepDone})</span>}
+            </li>
+          )
+        })}
+      </ol>
+    </nav>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 16 16">
+      <path d="M4.2 8.4l2.4 2.4 5.2-5.4" />
+    </svg>
   )
 }
 
@@ -244,7 +282,7 @@ function StartButton({ task }: { task: Task }) {
   return (
     <button
       type="button"
-      className="btn btn-primary btn-big start-button"
+      className="btn btn-primary btn-big"
       onClick={() => {
         // Beim ersten Mal fragt Chrome, ob Benachrichtigungen erlaubt sind.
         void requestNotificationPermission()
@@ -256,22 +294,23 @@ function StartButton({ task }: { task: Task }) {
   )
 }
 
-/** Der laufende (oder pausierte) Block: Restzeit, Pausieren, Abbrechen. */
+/** Der laufende (oder pausierte) Block: Ring mit Restzeit, Pausieren, Abbrechen. */
 function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: number }) {
   const [confirmAbort, setConfirmAbort] = useState(false)
   const paused = timerState.pausedAt !== null
 
   return (
-    <div className="running-block">
+    <>
       <TimerRing
         remainingMs={timer.blockRemainingMs(timerState, now)}
         totalMs={timerState.plannedMs}
         caption={paused ? T.nav.timerPaused : T.today.remaining}
+        paused={paused}
       />
 
       {paused && (
         <>
-          <p className="muted">{T.today.paused}</p>
+          <p className="phase-note">{T.today.paused}</p>
           <button type="button" className="btn btn-primary btn-big" onClick={resumeCurrentBlock}>
             {T.today.resume}
           </button>
@@ -309,15 +348,41 @@ function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: 
           </>
         )}
       </div>
+    </>
+  )
+}
+
+/**
+ * Vor dem Start und in der Pause: die ersten Schritte nur zum Ansehen – ohne Kästchen.
+ * Deutlich als „Erste Schritte zum Einstieg“ gekennzeichnet (kein Thema des Blocks).
+ * Abhaken geht erst, wenn der Block läuft (siehe CurrentStep). Sind alle erledigt, steht hier nichts.
+ */
+function StepsPreview({ task }: { task: Task }) {
+  const state = useAppState()
+  const steps = stepsOfTask(state, task.id)
+  if (!steps.some((s) => s.doneAt === null)) return null
+  return (
+    <div className="steps-preview">
+      <p className="steps-preview-label">{T.today.firstStepsPreview}</p>
+      <ol className="steps-preview-list">
+        {steps.map((step) => (
+          <li key={step.id} className={step.doneAt !== null ? 'is-done' : undefined}>
+            {step.text}
+            {step.doneAt !== null && <span className="visually-hidden"> ({T.today.stepDone})</span>}
+          </li>
+        ))}
+      </ol>
+      <p className="steps-preview-hint">{T.today.firstStepsPreviewHint}</p>
     </div>
   )
 }
 
 /**
- * Die ersten Schritte zum Loslegen: „Zum Einstieg: …“ – immer der nächste offene zum direkten
+ * Im laufenden Block: „Zum Einstieg: …“ – immer der nächste offene Schritt zum direkten
  * Abhaken, dazu alle Schritte zum Aufklappen. Sie beenden keinen Block.
- *  - Beim Abhaken bleibt der Haken kurz stehen (kleines Erfolgserlebnis), dann kommt der nächste.
- *  - Sind alle abgehakt und läuft ein Block, steht dort nur noch ein Satz („Einstieg geschafft! …“)
+ *  - Beim Abhaken bleibt der Haken kurz stehen (kleines Erfolgserlebnis), dann gleitet die
+ *    Zeile weg und der nächste Schritt gleitet herein (Zeiten passend zu STEP_DONE_FEEDBACK_MS).
+ *  - Sind alle abgehakt, steht dort nur noch ein Satz („Einstieg geschafft! …“)
  *    – bewusst ohne Kästchen und Haken, damit er nicht wie ein weiterer Schritt aussieht.
  */
 function CurrentStep({ task }: { task: Task }) {
@@ -338,18 +403,17 @@ function CurrentStep({ task }: { task: Task }) {
   const doneCount = steps.filter((s) => s.doneAt !== null).length
   const justDone = steps.find((s) => s.id === justDoneId)
   const shown = justDone ?? next
-  const blockRunning = state.timer.phase === 'block'
 
   return (
     <div className="current-step">
       {shown && !showAll && (
-        <label className={`current-step-row${justDone ? ' is-done' : ''}`}>
+        <label key={shown.id} className={`current-step-row${justDone ? ' is-done' : ''}`}>
           <input
             type="checkbox"
-            className="checkbox"
+            className="checkbox is-round"
             checked={justDone !== undefined}
             onChange={() => {
-              if (justDone) return // schon abgehakt, wird gleich ausgeblendet
+              if (justDone) return // schon abgehakt, gleitet gleich weg
               toggleStep(shown.id)
               setJustDoneId(shown.id)
             }}
@@ -360,7 +424,7 @@ function CurrentStep({ task }: { task: Task }) {
           </span>
         </label>
       )}
-      {!shown && !showAll && blockRunning && (
+      {!shown && !showAll && (
         <p className="start-done">
           <span className="start-done-title">{T.today.startDone}</span> {T.today.keepGoing}
         </p>
