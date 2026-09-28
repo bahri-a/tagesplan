@@ -531,3 +531,16 @@ describe('Nach dem letzten Block und am nächsten Tag', () => {
     expect(sel.isAskingResume(getState(), getState().tasks[started.id])).toBe(false)
   })
 })
+
+describe('Erledigte Hauptaufgaben', () => {
+  it('zählt Blöcke und echte Minuten einer Aufgabe – auch abgebrochene', () => {
+    const task = actions.addTask(today(), 'A')
+    actions.startBlock(task.id)
+    actions.checkTimer(at(BLOCK))
+    actions.checkTimer(at(BLOCK + BREAK))
+    actions.startBlock(task.id)
+    at(BLOCK + BREAK + 10 * MIN)
+    actions.abortCurrentBlock()
+    expect(sel.taskWork(getState(), task.id)).toEqual({ blocks: 2, minutes: BLOCK / MIN + 10 })
+  })
+})

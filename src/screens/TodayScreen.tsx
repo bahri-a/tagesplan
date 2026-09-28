@@ -11,6 +11,7 @@
  *  - nach dem letzten geschätzten Block: KEINE kurze Pause, gleich „Erledigt oder noch ein Block?“
  *  - an einem früheren Tag angefangen, noch nicht fertig: „Weitermachen oder abschließen?“ – nach „Noch ein Block“
  *    führt oben links ein leises „← Zurück“ wieder zu dieser Frage (falls es ein Versehen war)
+ *  - über der Karte: für jede heute erledigte Hauptaufgabe eine kleine Karte mit ✓ (motiviert)
  *  - unter der Karte: schlanke Leiste mit den Aufgaben des Tages (nicht während eines Blocks)
  * Im Hintergrund liegt ein sehr zarter Farbschimmer: grünlich im Block, bläulich in der Pause.
  */
@@ -52,6 +53,7 @@ import {
   needsLongPause,
   stepsOfTask,
   tasksOfDay,
+  taskWork,
 } from '../store/selectors'
 import { useAppState } from '../store/store'
 import './today.css'
@@ -71,6 +73,9 @@ export function TodayScreen({ onPlan, onEndDay }: Props) {
   return (
     <div className="today">
       <Ambient timerState={t} />
+
+      {/* Schon geschafft: erledigte Hauptaufgaben stehen als eigene Karten oben (nicht im Block). */}
+      {t.phase !== 'block' && <DoneCards tasks={tasks.filter((x) => x.completedAt !== null)} />}
 
       {tasks.length === 0 ? (
         <section className="card focus-card is-message">
@@ -118,6 +123,36 @@ export function TodayScreen({ onPlan, onEndDay }: Props) {
         </div>
       )}
     </div>
+  )
+}
+
+/**
+ * Heute erledigte Hauptaufgaben: je eine ruhige Karte mit Haken, Titel und dem, was du daran
+ * gearbeitet hast („Erledigt · 3 Blöcke · 1 Std. 15 Min.“). Die aktuelle Aufgabe steht darunter.
+ */
+function DoneCards({ tasks }: { tasks: Task[] }) {
+  const state = useAppState()
+  if (tasks.length === 0) return null
+  return (
+    <ul className="done-cards" aria-label={T.today.doneCardsLabel}>
+      {tasks.map((task) => {
+        const work = taskWork(state, task.id)
+        const parts = [T.today.doneCard]
+        if (work.blocks > 0) parts.push(T.endDay.yieldBlocks(work.blocks))
+        if (work.minutes > 0) parts.push(T.endDay.yieldTime(work.minutes))
+        return (
+          <li key={task.id} className="card done-card">
+            <span className="done-card-mark" aria-hidden="true">
+              <CheckIcon />
+            </span>
+            <span className="done-card-text">
+              <span className="done-card-title">{task.title}</span>
+              <span className="done-card-meta">{parts.join(' · ')}</span>
+            </span>
+          </li>
+        )
+      })}
+    </ul>
   )
 }
 
