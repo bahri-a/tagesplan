@@ -41,12 +41,23 @@ export function blocksOfTask(s: AppState, taskId: ID): Block[] {
   return alive(Object.values(s.blocks)).filter((b) => b.taskId === taskId)
 }
 
+/** Blöcke, die für „Block n von m“ zählen: durchgehaltene und abgebrochene (nicht zurückgenommene). */
+function countedBlocks(s: AppState, taskId: ID): Block[] {
+  return blocksOfTask(s, taskId).filter((b) => b.status !== 'undone')
+}
+
+/** Wann der letzte Block dieser Aufgabe geendet hat (oder `null`). */
+export function lastBlockEndedAt(s: AppState, taskId: ID): number | null {
+  const ends = countedBlocks(s, taskId).map((b) => b.endedAt)
+  return ends.length > 0 ? Math.max(...ends) : null
+}
+
 /**
  * Wie viele Blöcke für diese Aufgabe schon gemacht wurden.
  * Durchgehaltene UND abgebrochene Blöcke zählen mit.
  */
 export function blocksDone(s: AppState, taskId: ID): number {
-  return blocksOfTask(s, taskId).length
+  return countedBlocks(s, taskId).length
 }
 
 /** Blocklänge für diese Aufgabe in Minuten (individuell oder Standard). */
@@ -98,6 +109,30 @@ export function needsLongPause(s: AppState, task: Task): boolean {
  */
 export function isAskingDone(s: AppState, task: Task): boolean {
   return task.completedAt === null && blocksDone(s, task.id) >= task.estimatedBlocks
+}
+
+/**
+ * An einem FRÜHEREN Tag angefangen (mindestens ein Block, auch abgebrochen), aber nicht alle
+ * Blöcke geschafft und heute noch nicht weitergemacht? Dann fragt die App:
+ * „Hier hast du schon angefangen. Weitermachen oder abschließen?“
+ */
+export function isAskingResume(s: AppState, task: Task): boolean {
+  if (task.completedAt !== null || isAskingDone(s, task)) return false
+  if (s.timer.phase !== 'idle' && s.timer.taskId === task.id) return false // schon weitergemacht
+  const blocks = countedBlocks(s, task.id)
+  const today = activeDay(s).id
+  return blocks.length > 0 && blocks.every((b) => b.dayId !== today)
+}
+
+/**
+ * Startet „Noch ein Block“ sofort einen Block? Nein, wenn der letzte Block erst so kurz her ist,
+ * dass die kurze Pause noch laufen würde – dann kommt zuerst der Rest dieser Pause.
+ */
+export function extraBlockStartsNow(s: AppState, task: Task, now: number): boolean {
+  if (s.timer.phase === 'block') return false
+  if (s.timer.phase === 'break') return s.timer.endSignaled || isBreakOver(s.timer, now)
+  const lastEnd = lastBlockEndedAt(s, task.id)
+  return lastEnd === null || now - lastEnd >= shortBreakMinutesFor(s, task) * 60_000
 }
 
 /**

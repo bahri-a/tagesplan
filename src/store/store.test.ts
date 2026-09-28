@@ -71,7 +71,7 @@ describe('Block und kurze Pause', () => {
     expect(actions.checkTimer(at(BLOCK - MIN / 2))).toEqual([])
 
     const events = actions.checkTimer(at(BLOCK + 500))
-    expect(events).toEqual([{ type: 'blockEnd', taskTitle: 'A', fresh: true }])
+    expect(events).toEqual([{ type: 'blockEnd', taskTitle: 'A', fresh: true, lastBlock: false }])
     const [block] = sel.blocksOfTask(getState(), task.id)
     expect(block.status).toBe('completed')
     expect(block.workedSeconds).toBe(BLOCK / 1000)
@@ -160,7 +160,7 @@ describe('Hauptaufgabe erledigt, lange Pause', () => {
     actions.abortCurrentBlock()
     expect(sel.isAskingDone(getState(), getState().tasks[task.id])).toBe(true)
 
-    actions.addExtraBlock(task.id, false)
+    actions.addExtraBlock(task.id)
     expect(sel.isAskingDone(getState(), getState().tasks[task.id])).toBe(false)
   })
 
@@ -380,7 +380,7 @@ describe('Startsignal und erste Schätzung', () => {
     const first = getState().tasks[task.id].estimatedBlocks
     expect(getState().tasks[task.id].firstEstimatedBlocks).toBe(first)
     actions.abortCurrentBlock()
-    actions.addExtraBlock(task.id, true)
+    actions.addExtraBlock(task.id)
     expect(getState().tasks[task.id].estimatedBlocks).toBe(first + 1)
     expect(getState().tasks[task.id].firstEstimatedBlocks).toBe(first)
   })
@@ -437,35 +437,40 @@ describe('Zurück nach „Noch ein Block“', () => {
   }
   const fresh = (id: string) => getState().tasks[id]
 
-  it('in der Pause: Schätzung wie vorher, die Frage ist wieder da', () => {
+  it('kurz nach dem letzten Block: erst der Rest der Pause – „Zurück“ beendet sie wieder', () => {
     const task = askingTask()
-    actions.addExtraBlock(task.id, false)
-    expect(sel.canUndoExtraBlock(getState(), fresh(task.id), at(BLOCK + MIN))).toBe(true)
-    actions.undoExtraBlock(at(BLOCK + MIN))
+    expect(getState().timer.phase).toBe('idle') // nach dem letzten Block keine Pause
+    at(BLOCK + MIN)
+    expect(sel.extraBlockStartsNow(getState(), fresh(task.id), Date.now())).toBe(false)
+    actions.addExtraBlock(task.id)
+    const t = getState().timer
+    expect(t.phase).toBe('break')
+    if (t.phase === 'break') expect(t.startedAt).toBe(at(BLOCK)) // Pause zählt ab dem Blockende
+    expect(sel.canUndoExtraBlock(getState(), fresh(task.id), at(BLOCK + 2 * MIN))).toBe(true)
+    actions.undoExtraBlock(at(BLOCK + 2 * MIN))
     expect(fresh(task.id).estimatedBlocks).toBe(1)
     expect(sel.isAskingDone(getState(), fresh(task.id))).toBe(true)
-    expect(getState().timer.phase).toBe('break') // die Pause läuft einfach weiter
-    expect(sel.canUndoExtraBlock(getState(), fresh(task.id), at(BLOCK + MIN))).toBe(false)
+    expect(getState().timer.phase).toBe('idle')
+    expect(sel.canUndoExtraBlock(getState(), fresh(task.id), at(BLOCK + 2 * MIN))).toBe(false)
   })
 
-  it('gerade gestarteter Zusatz-Block wird verworfen und zählt nicht', () => {
+  it('gerade gestarteter Zusatz-Block zählt nicht als Block – seine Minuten zählen trotzdem', () => {
     const task = askingTask()
     at(BLOCK + BREAK + 100)
-    actions.checkTimer()
-    actions.addExtraBlock(task.id, true)
+    actions.addExtraBlock(task.id)
     expect(getState().timer.phase).toBe('block')
-    actions.undoExtraBlock(at(BLOCK + BREAK + MIN))
+    actions.undoExtraBlock(at(BLOCK + BREAK + 100 + 2 * MIN))
     expect(getState().timer.phase).toBe('idle')
     expect(sel.blocksDone(getState(), task.id)).toBe(1)
     expect(sel.isAskingDone(getState(), fresh(task.id))).toBe(true)
+    expect(sel.dayYield(getState(), today(), Date.now()).minutes).toBe(BLOCK / MIN + 2)
   })
 
   it('nicht mehr nach längerer Arbeit im Zusatz-Block oder wenn er geschafft ist', () => {
     const task = askingTask()
     const start = BLOCK + BREAK + 100
     at(start)
-    actions.checkTimer()
-    actions.addExtraBlock(task.id, true)
+    actions.addExtraBlock(task.id)
     expect(sel.canUndoExtraBlock(getState(), fresh(task.id), at(start + 5 * MIN))).toBe(false)
     actions.undoExtraBlock(at(start + 5 * MIN))
     expect(getState().timer.phase).toBe('block')
@@ -475,12 +480,54 @@ describe('Zurück nach „Noch ein Block“', () => {
 
   it('verschwindet mit „Erledigt“ und nach dem Tageswechsel', () => {
     const task = askingTask()
-    actions.addExtraBlock(task.id, false)
+    actions.addExtraBlock(task.id)
     actions.endDay()
     expect(sel.canUndoExtraBlock(getState(), fresh(task.id), Date.now())).toBe(false)
     const other = askingTask()
-    actions.addExtraBlock(other.id, false)
+    actions.addExtraBlock(other.id)
     actions.finishTask(other.id)
     expect(sel.canUndoExtraBlock(getState(), fresh(other.id), Date.now())).toBe(false)
+  })
+})
+
+describe('Nach dem letzten Block und am nächsten Tag', () => {
+  it('nach dem letzten geschätzten Block keine kurze Pause, sondern gleich die Frage', () => {
+    const task = actions.addTask(today(), 'A')
+    actions.updateTask(task.id, { estimatedBlocks: 2 })
+    actions.startBlock(task.id)
+    actions.checkTimer(at(BLOCK))
+    expect(getState().timer.phase).toBe('break') // zwischen den Blöcken wie gewohnt
+    actions.checkTimer(at(BLOCK + BREAK))
+    actions.startBlock(task.id)
+    const events = actions.checkTimer(at(2 * BLOCK + BREAK))
+    expect(events).toEqual([{ type: 'blockEnd', taskTitle: 'A', fresh: true, lastBlock: true }])
+    expect(getState().timer.phase).toBe('idle')
+    expect(sel.isAskingDone(getState(), getState().tasks[task.id])).toBe(true)
+  })
+
+  it('„Früher fertig“ beim letzten Block: ebenfalls keine Pause', () => {
+    const task = actions.addTask(today(), 'A')
+    actions.updateTask(task.id, { estimatedBlocks: 1 })
+    actions.startBlock(task.id)
+    actions.finishBlockEarly(at(10 * MIN))
+    expect(getState().timer.phase).toBe('idle')
+    expect(sel.isAskingDone(getState(), getState().tasks[task.id])).toBe(true)
+  })
+
+  it('angefangen, aber nicht fertig → am nächsten Tag „Weitermachen oder abschließen?“', () => {
+    const started = actions.addTask(today(), 'Angefangen')
+    const untouched = actions.addTask(today(), 'Nicht angefangen')
+    actions.startBlock(started.id)
+    at(10 * MIN)
+    actions.abortCurrentBlock() // auch ein halber Block zählt als angefangen
+    expect(sel.isAskingResume(getState(), getState().tasks[started.id])).toBe(false) // heute nicht
+    actions.endDay()
+
+    const s = getState()
+    expect(sel.isAskingResume(s, s.tasks[started.id])).toBe(true)
+    expect(sel.isAskingResume(s, s.tasks[untouched.id])).toBe(false)
+    // Weitermachen = Block starten → die Frage ist weg.
+    actions.startBlock(started.id)
+    expect(sel.isAskingResume(getState(), getState().tasks[started.id])).toBe(false)
   })
 })

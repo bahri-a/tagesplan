@@ -8,7 +8,8 @@
  *  - während des Blocks: weicher Ring mit Restzeit, dezent „Pausieren“ und „Abbrechen“,
  *    und „Zum Einstieg: …“ zum Abhaken; ab und zu ganz unten, abgesetzt, ein leiser Tipp
  *  - in der kurzen Pause: blauer Ring, danach „Nächsten Block starten“
- *  - nach dem letzten geschätzten Block: „Erledigt oder noch ein Block?“ – nach „Noch ein Block“
+ *  - nach dem letzten geschätzten Block: KEINE kurze Pause, gleich „Erledigt oder noch ein Block?“
+ *  - an einem früheren Tag angefangen, noch nicht fertig: „Weitermachen oder abschließen?“ – nach „Noch ein Block“
  *    führt oben links ein leises „← Zurück“ wieder zu dieser Frage (falls es ein Versehen war)
  *  - unter der Karte: schlanke Leiste mit den Aufgaben des Tages (nicht während eines Blocks)
  * Im Hintergrund liegt ein sehr zarter Farbschimmer: grünlich im Block, bläulich in der Pause.
@@ -45,7 +46,9 @@ import {
   canUndoExtraBlock,
   currentStep,
   currentTask,
+  extraBlockStartsNow,
   isAskingDone,
+  isAskingResume,
   needsLongPause,
   stepsOfTask,
   tasksOfDay,
@@ -130,14 +133,17 @@ function Ambient({ timerState }: { timerState: TimerState }) {
 function FocusCard({ task }: { task: Task }) {
   const state = useAppState()
   const t = state.timer
-  const now = useNow(t.phase !== 'idle')
+  const asking = t.phase !== 'block' && isAskingDone(state, task)
+  // Auch bei der Frage nach dem letzten Block tickt die Uhr (Knopf „Noch ein Block“ hängt von der Zeit ab).
+  const now = useNow(t.phase !== 'idle' || asking)
 
   const tasks = tasksOfDay(state, activeDay(state).id)
   const number = tasks.findIndex((x) => x.id === task.id) + 1
   const done = blocksDone(state, task.id)
   const minutes = blockMinutesFor(state, task)
   const breakOver = t.phase === 'break' && (t.endSignaled || timer.isBreakOver(t, now))
-  const asking = t.phase !== 'block' && isAskingDone(state, task)
+  // An einem früheren Tag angefangen, noch nicht fertig: „Weitermachen oder abschließen?“
+  const askingResume = t.phase === 'idle' && isAskingResume(state, task)
   // Starten ist möglich, wenn nichts läuft oder die kurze Pause vorbei ist.
   const canStart = t.phase === 'idle' || breakOver
 
@@ -147,12 +153,15 @@ function FocusCard({ task }: { task: Task }) {
   else if (t.phase === 'break' || asking) blockLine = T.today.blockDoneOf(done, task.estimatedBlocks)
   else blockLine = `${T.today.blockOf(done + 1, task.estimatedBlocks)} · ${T.today.minutes(minutes)}`
 
+  // Nach dem letzten Block: Startet „Noch ein Block“ sofort oder erst nach dem Rest der Pause?
+  const startsNow = asking && extraBlockStartsNow(state, task, now)
+
   // „Jetzt dran“ ist ein Block, wenn er läuft oder gleich gestartet werden kann.
   const highlightBlock = t.phase === 'block' || (canStart && !asking)
 
   // Wechselt die Phase, wird der untere Teil der Karte neu (weich) eingeblendet.
   const paused = t.phase === 'block' && t.pausedAt !== null
-  const phaseKey = `${t.phase}-${paused}-${breakOver}-${asking}`
+  const phaseKey = `${t.phase}-${paused}-${breakOver}-${asking}-${askingResume}`
 
   // Leertaste: Start / Pausieren / Weiter – je nachdem, was gerade dran ist.
   useSpaceKey(() => {
@@ -219,11 +228,21 @@ function FocusCard({ task }: { task: Task }) {
                 type="button"
                 className="btn btn-big"
                 onClick={() => {
-                  if (canStart) void requestNotificationPermission()
-                  addExtraBlock(task.id, canStart)
+                  if (startsNow) void requestNotificationPermission()
+                  addExtraBlock(task.id)
                 }}
               >
-                {canStart ? T.today.oneMoreStart : T.today.oneMore}
+                {startsNow ? T.today.oneMoreStart : T.today.oneMore}
+              </button>
+            </div>
+          </div>
+        ) : askingResume ? (
+          <div className="ask-done">
+            <p className="ask-done-question">{T.today.askResume}</p>
+            <div className="ask-done-actions">
+              <StartButton task={task} label={T.today.resumeTask} />
+              <button type="button" className="btn btn-big" onClick={() => finishTask(task.id)}>
+                {T.today.finishResume}
               </button>
             </div>
           </div>
@@ -362,11 +381,13 @@ function StartArea({ task, firstBlock }: { task: Task; firstBlock: boolean }) {
 /**
  * Der große Startknopf. Vor der ersten Aufgabe des Tages „Block starten“, ab der zweiten
  * zweizeilig: klein die Frage „Lange Pause gemacht?“, darunter „Weiter mit „…““.
+ * Mit `label` (z. B. „Weitermachen“ bei der Frage „Weitermachen oder abschließen?“) nur dieser Text.
  */
-function StartButton({ task }: { task: Task }) {
+function StartButton({ task, label: ownLabel }: { task: Task; label?: string }) {
   const state = useAppState()
-  let label: ReactNode = state.timer.phase === 'break' ? T.today.nextBlock : T.today.startBlock
-  if (needsLongPause(state, task)) {
+  let label: ReactNode = ownLabel ?? (state.timer.phase === 'break' ? T.today.nextBlock : T.today.startBlock)
+  // Mit eigener Beschriftung (z. B. „Weitermachen“) bleibt der Knopf bewusst einzeilig.
+  if (!ownLabel && needsLongPause(state, task)) {
     label = (
       <span className="long-pause-label">
         <span className="long-pause-ask">{T.today.longPauseAsk}</span>
