@@ -210,7 +210,7 @@ export const T = {
 
   settings: {
     title: 'Einstellungen',
-    blocksSection: 'Arbeitsblöcke',
+    blocksSection: 'Arbeitszeit',
     blockMinutes: 'Blocklänge',
     blockMinutesHint: 'So lange arbeitest du am Stück.',
     shortBreak: 'Kurze Pause',

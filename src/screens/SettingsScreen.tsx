@@ -72,6 +72,8 @@ function Segmented<V extends string | boolean>(props: {
  * Art des Rauschens: Braun / Rosa / Weiß / Ultra (Mix). Direkt unter Braun, Rosa und Weiß je ein
  * kleiner Lautsprecher zum Probehören (kurz, ein paar Sekunden). Ultra braucht keins – es ist
  * ja nur der Wechsel der drei.
+ * Umschalter und Lautsprecher liegen im selben Raster (4 Spalten): So steht jeder Lautsprecher
+ * genau mittig unter seiner Option, egal wie breit die Wörter sind.
  */
 function NoisePicker({ value, onChange }: { value: NoiseColor; onChange: (value: NoiseColor) => void }) {
   const [playing, setPlaying] = useState<NoiseColor | null>(null)
@@ -83,33 +85,46 @@ function NoisePicker({ value, onChange }: { value: NoiseColor; onChange: (value:
 
   return (
     <div className="noise-picker">
-      <Segmented label={T.settings.noiseColor} options={NOISE_COLORS} value={value} onChange={onChange} />
-      <div className="noise-previews">
-        {NOISE_COLORS.map((option) =>
-          option.value === 'mix' ? (
-            <span key={option.value} />
-          ) : (
-            <button
-              key={option.value}
-              type="button"
-              className="noise-preview"
-              aria-pressed={playing === option.value}
-              aria-label={T.settings.noisePreview(option.label)}
-              title={T.settings.noisePreview(option.label)}
-              onClick={() => {
-                previewNoise(option.value)
-                setPlaying(option.value)
-              }}
-            >
-              <svg viewBox="0 0 20 20" aria-hidden="true">
-                <path d="M3 8h3l4-3.5v11L6 12H3z" />
-                <path d="M13 7.5a3.5 3.5 0 0 1 0 5" />
-                <path d="M15.3 5.3a6.6 6.6 0 0 1 0 9.4" />
-              </svg>
-            </button>
-          ),
-        )}
+      {/* Der graue Hintergrund des Umschalters – nur hinter der ersten Zeile */}
+      <span className="noise-picker-track" aria-hidden="true" />
+      <div className="noise-picker-options" role="radiogroup" aria-label={T.settings.noiseColor}>
+        {NOISE_COLORS.map((option, index) => (
+          <button
+            key={option.value}
+            type="button"
+            role="radio"
+            aria-checked={value === option.value}
+            className="segmented-item"
+            style={{ gridColumn: index + 1 }}
+            onClick={() => onChange(option.value)}
+          >
+            {option.label}
+          </button>
+        ))}
       </div>
+      {NOISE_COLORS.map((option, index) =>
+        option.value === 'mix' ? null : (
+          <button
+            key={option.value}
+            type="button"
+            className="noise-preview"
+            style={{ gridColumn: index + 1 }}
+            aria-pressed={playing === option.value}
+            aria-label={T.settings.noisePreview(option.label)}
+            title={T.settings.noisePreview(option.label)}
+            onClick={() => {
+              previewNoise(option.value)
+              setPlaying(option.value)
+            }}
+          >
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M3 8h3l4-3.5v11L6 12H3z" />
+              <path d="M13 7.5a3.5 3.5 0 0 1 0 5" />
+              <path d="M15.3 5.3a6.6 6.6 0 0 1 0 9.4" />
+            </svg>
+          </button>
+        ),
+      )}
     </div>
   )
 }
@@ -124,6 +139,22 @@ export function SettingsScreen() {
 
       <section className="card settings-section">
         <h2>{T.settings.blocksSection}</h2>
+        <SettingRow label={T.settings.maxTasks} hint={T.settings.maxTasksHint}>
+          <NumberStepper
+            label={T.settings.maxTasks}
+            value={settings.maxTasksPerDay}
+            {...SETTINGS_LIMITS.maxTasksPerDay}
+            onChange={(v) => updateSettings({ maxTasksPerDay: v })}
+          />
+        </SettingRow>
+        <SettingRow label={T.settings.defaultBlocks} hint={T.settings.defaultBlocksHint}>
+          <NumberStepper
+            label={T.settings.defaultBlocks}
+            value={settings.defaultBlocksPerTask}
+            {...SETTINGS_LIMITS.defaultBlocksPerTask}
+            onChange={(v) => updateSettings({ defaultBlocksPerTask: v })}
+          />
+        </SettingRow>
         <SettingRow label={T.settings.blockMinutes} hint={T.settings.blockMinutesHint}>
           <NumberStepper
             label={T.settings.blockMinutes}
@@ -140,22 +171,6 @@ export function SettingsScreen() {
             {...SETTINGS_LIMITS.shortBreakMinutes}
             unit={T.settings.minutes}
             onChange={(v) => updateSettings({ shortBreakMinutes: v })}
-          />
-        </SettingRow>
-        <SettingRow label={T.settings.defaultBlocks} hint={T.settings.defaultBlocksHint}>
-          <NumberStepper
-            label={T.settings.defaultBlocks}
-            value={settings.defaultBlocksPerTask}
-            {...SETTINGS_LIMITS.defaultBlocksPerTask}
-            onChange={(v) => updateSettings({ defaultBlocksPerTask: v })}
-          />
-        </SettingRow>
-        <SettingRow label={T.settings.maxTasks} hint={T.settings.maxTasksHint}>
-          <NumberStepper
-            label={T.settings.maxTasks}
-            value={settings.maxTasksPerDay}
-            {...SETTINGS_LIMITS.maxTasksPerDay}
-            onChange={(v) => updateSettings({ maxTasksPerDay: v })}
           />
         </SettingRow>
       </section>
