@@ -142,9 +142,10 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   Änderst du eine Dauer mit – / +, gilt sie nur für diese Aufgabe („Individuell“);
   **zurücksetzen** holt wieder den Standard. Die Standardwerte – 25 Minuten Block,
   7 Minuten Pause – änderst du unter **Einstellungen**.
-- **Ich starte, wenn …** (optional): dein Startsignal, z. B. „der Kaffee auf dem Tisch steht“.
-  In „Heute“ steht es vor dem ersten Block der Aufgabe über dem Start-Knopf:
-  „Wenn der Kaffee auf dem Tisch steht → los.“ Solche Wenn-dann-Pläne helfen beim Anfangen.
+- **Startsignal** (optional): „Ich starte, wenn“ steht schon im Feld – du tippst nur den Rest,
+  z. B. „der Kaffee auf dem Tisch steht“. In „Heute“ steht es vor dem ersten Block der Aufgabe
+  über dem Start-Knopf: „Ich starte, wenn der Kaffee auf dem Tisch steht.“ Solche
+  Wenn-dann-Pläne helfen beim Anfangen.
 - Reihenfolge: am Griff **⠿** links ziehen. **Schwerste Aufgabe nach oben.**
   Ziehst du eine Karte hinüber in die andere Spalte, liegt sie danach bei **Morgen** (oder
   **Heute**) – praktisch, wenn du heute etwas nicht schaffst.
@@ -163,10 +164,12 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
 - In der großen Karte steht immer die oberste noch offene Aufgabe. Darüber zeigen Punkte
   deine **Blöcke** (voller Punkt = geschafft, breiter Punkt = jetzt dran, leerer Punkt =
   kommt noch). Fährst du mit der Maus darüber, steht dort der ganze Stand als Satz.
-- Unter der Karte zeigt eine schmale Leiste alle Aufgaben des Tages (✓ = erledigt,
-  gefüllter Punkt = jetzt dran). Während eines Blocks ist sie ausgeblendet.
+- Unter der Karte stehen alle Aufgaben des Tages als kleine Pillen: **grün mit ✓** = erledigt,
+  **mildes Orange** = jetzt dran, **durchscheinend** = kommt noch. Ein Klick auf eine Pille zeigt
+  darunter eine kurze Übersicht (Blöcke, Startsignal, erste Schritte); nochmal klicken oder ×
+  schließt sie. Während eines Blocks ist die Leiste ausgeblendet.
 - Vor dem Start siehst du unter dem Titel deine **ersten Schritte zum Einstieg** – nur zum
-  Ansehen. Abhaken kannst du sie erst, wenn der Block läuft.
+  Ansehen. Abhaken kannst du sie, sobald der Block läuft.
 - Vor dem ersten Block einer Aufgabe steht über dem Knopf dein **Startsignal** (falls
   eingetragen) und darunter klein ein Startsatz wie „Du musst nur anfangen.“
 - **Starten** → der Ring füllt sich langsam. Dezent darunter: **Pausieren**, **Früher fertig**

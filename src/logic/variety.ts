@@ -18,12 +18,21 @@ export function showsGentleLine(blockStartedAt: number, every: number): boolean 
 }
 
 /**
+ * Ein am Anfang mitgetipptes „Ich starte, wenn“ entfernen – das steht im Planer schon fest vor
+ * dem Feld (für ältere Einträge, damit es dort nicht doppelt steht).
+ */
+export function stripStartCuePrefix(cue: string): string {
+  return cue.replace(/^\s*ich\s+starte,?\s+wenn\s+/i, '')
+}
+
+/**
  * Startsignal für die Anzeige aufräumen: ein vorangestelltes „wenn“ und Satzzeichen am Ende
  * weg, damit „Wenn … → los.“ immer sauber aussieht. Beispiel: „Wenn der Kaffee steht.“ → „der Kaffee steht“.
  */
 export function cleanStartCue(cue: string): string {
   return cue
     .trim()
-    .replace(/^wenn\s+/i, '')
+    // auch ein mitgetipptes „Ich starte, wenn“ – das steht schon fest davor
+    .replace(/^(ich\s+starte,?\s+)?wenn\s+/i, '')
     .replace(/[\s.!,;:…]+$/, '')
 }

@@ -352,6 +352,39 @@ textarea::placeholder {
   opacity: 0.8;
 }
 
+/* Feld mit festem Anfang, z. B. „Ich starte, wenn“ + getippter Rest */
+.input-with-prefix {
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+  cursor: text;
+}
+
+.input-with-prefix:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.input-prefix {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.input-with-prefix input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.input-with-prefix input:focus {
+  outline: none;
+}
+
 /* Kästchen zum Abhaken – eigene, ruhige Form (Planen, Liste aller Schritte) */
 .checkbox {
   appearance: none;

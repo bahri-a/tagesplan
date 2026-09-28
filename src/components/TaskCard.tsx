@@ -12,6 +12,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { SETTINGS_LIMITS } from '../config/defaults'
 import { T } from '../config/texts'
 import type { Task } from '../model/types'
+import { stripStartCuePrefix } from '../logic/variety'
 import { setTaskCompleted, updateTask } from '../store/actions'
 import { blockMinutesFor, stepsOfTask } from '../store/selectors'
 import { useAppState } from '../store/store'
@@ -131,15 +132,20 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
         <StepList taskId={task.id} autoFocusNew={focusStepInput} />
       </div>
 
-      {/* Startsignal (optional): eine Zeile, das Beispiel im leeren Feld erklärt sie. */}
+      {/* Startsignal (optional): „Ich starte, wenn“ steht fest vorn im Feld, getippt wird nur der Rest. */}
       <label className="field">
         <FieldLabel text={T.plan.startCue} optional />
-        <input
-          className="input"
-          value={task.startCue ?? ''}
-          placeholder={T.plan.startCuePlaceholder}
-          onChange={(e) => updateTask(task.id, { startCue: e.target.value })}
-        />
+        <span className="input input-with-prefix">
+          <span className="input-prefix" aria-hidden="true">
+            {T.plan.startCuePrefix}
+          </span>
+          <input
+            value={stripStartCuePrefix(task.startCue ?? '')}
+            placeholder={T.plan.startCuePlaceholder}
+            aria-label={`${T.plan.startCue}: ${T.plan.startCuePrefix} …`}
+            onChange={(e) => updateTask(task.id, { startCue: e.target.value })}
+          />
+        </span>
       </label>
 
       {/* Zahlen der Aufgabe: immer dieselben drei Zeilen – beim Ändern springt nichts. */}

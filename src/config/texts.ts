@@ -29,7 +29,6 @@ export const T = {
     firstStep: 'Zum Einstieg',
     // Vor dem Start (und in der Pause): die ersten Schritte nur ansehen, noch nicht abhaken.
     firstStepsPreview: 'Erste Schritte zum Einstieg',
-    firstStepsPreviewHint: 'Abhaken kannst du sie, sobald der Block läuft.',
     stepDone: 'erledigt',
     startDone: 'Einstieg geschafft!',
     keepGoing: 'Bleib einfach dran, bis die Zeit um ist.',
@@ -38,8 +37,8 @@ export const T = {
       'Jetzt einfach weitermachen – der Ring zählt für dich.',
       'Du bist drin. Bleib dabei, bis die Zeit um ist.',
     ],
-    // Startsignal aus „Planen“ – steht vor dem ersten Block der Aufgabe über dem Start-Knopf.
-    startCue: (cue: string) => `Wenn ${cue} → los.`,
+    // Startsignal aus dem Planer – steht vor dem ersten Block der Aufgabe über dem Start-Knopf.
+    startCue: (cue: string) => `Ich starte, wenn ${cue}.`,
     // Startsatz: klein unter dem Start-Knopf, nur vor dem ersten Block einer Aufgabe.
     startNudges: [
       'Du musst nur anfangen.',
@@ -104,6 +103,12 @@ export const T = {
     emptyText: 'Plane eine Hauptaufgabe – die schwerste zuerst.',
     goPlan: 'Jetzt planen',
     dayList: 'Heute',
+    // Klick auf eine Aufgabe in der Leiste unter der Karte: kurze Übersicht
+    peekHint: (title: string) => `Übersicht: ${title}`,
+    peekCurrent: 'Jetzt dran',
+    peekUpcoming: 'Kommt noch',
+    peekWorked: (blocks: number, time: string) => `${blocks} geschafft (${time})`,
+    peekClose: 'Übersicht schließen',
     endDay: 'Tag beenden',
     allSteps: (done: number, total: number) => `Alle Schritte (${done}/${total})`,
     hideSteps: 'Schritte ausblenden',
@@ -139,11 +144,12 @@ export const T = {
     minutesShort: 'Min.',
     blocksMeta: (n: number) => (n === 1 ? '1 Block' : `${n} Blöcke`),
     stepsMeta: (done: number, total: number) => `${done}/${total} Schritte`,
-    // Startsignal (optional): eine einzige Zeile, das Beispiel erklärt sie.
-    startCue: 'Ich starte, wenn …',
+    // Startsignal (optional): „Ich starte, wenn“ steht fest im Feld, getippt wird nur der Rest.
+    startCue: 'Startsignal',
+    startCuePrefix: 'Ich starte, wenn',
     // Kleines, leises Schild hinter „Erste Schritte“ und „Ich starte, wenn …“: nichts davon ist Pflicht.
     optional: 'optional',
-    startCuePlaceholder: 'z. B. der Kaffee auf dem Tisch steht',
+    startCuePlaceholder: 'der Kaffee auf dem Tisch steht',
     done: 'Erledigt',
     reopen: 'Wieder öffnen',
     markDone: 'Als erledigt markieren',
