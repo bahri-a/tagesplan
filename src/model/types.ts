@@ -102,8 +102,11 @@ export interface Block extends BaseRecord {
 
 export type ThemeSetting = 'system' | 'light' | 'dark'
 
-/** Art des Rauschens im Block: braun (tief, weich), rosa (mittel), weiß (hell). */
-export type NoiseColor = 'brown' | 'pink' | 'white'
+/**
+ * Art des Rauschens im Block: braun (tief, weich), rosa (mittel), weiß (hell) oder
+ * 'mix' = „Ultra (Mix)“: braun, rosa, weiß im Wechsel (je 5 Sekunden), damit es nicht monoton wird.
+ */
+export type NoiseColor = 'brown' | 'pink' | 'white' | 'mix'
 
 /** Aussehen der Flächen: 'pur' (massiv) oder 'glass' (Milchglas, leicht durchscheinend). */
 export type SurfaceSetting = 'pur' | 'glass'

@@ -10,7 +10,8 @@
  * in config/defaults.ts.
  */
 
-import { NOISE_FADE_S, NOISE_VOLUME, SOUND_VOLUME, WARNING_VOLUME } from '../config/defaults'
+import { NOISE_FADE_S, NOISE_PREVIEW_S, NOISE_VOLUME, SOUND_VOLUME, WARNING_VOLUME } from '../config/defaults'
+import { noiseSamples } from '../logic/noise'
 import type { NoiseColor } from '../model/types'
 import { getState } from '../store/store'
 
@@ -120,47 +121,54 @@ export function playBlockWarning(): void {
 /* ------------------------------------------------------------------ */
 
 /**
- * Das Rauschen wird einmal als 12 Sekunden langes Stück berechnet und dann endlos
- * wiederholt (keine Tondatei). Braun = tief und weich, rosa = mittel, weiß = hell.
+ * Das Rauschen wird einmal berechnet (siehe logic/noise.ts) und dann endlos wiederholt –
+ * keine Tondatei. Braun = tief und weich, rosa = mittel, weiß = hell,
+ * Ultra (Mix) = alle drei im Wechsel.
  */
-const NOISE_SECONDS = 12
 const noiseBuffers = new Map<NoiseColor, AudioBuffer>()
 let noiseSource: AudioBufferSourceNode | null = null
 let noiseGain: GainNode | null = null
 let noiseColorPlaying: NoiseColor | null = null
 
 function makeNoise(audio: AudioContext, color: NoiseColor): AudioBuffer {
-  const length = audio.sampleRate * NOISE_SECONDS
-  const buffer = audio.createBuffer(1, length, audio.sampleRate)
-  const data = buffer.getChannelData(0)
-  // Werte für die Filter von rosa (Paul Kellet) und braun (aufsummiert)
-  let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0
-  let brown = 0
-  for (let i = 0; i < length; i++) {
-    const white = Math.random() * 2 - 1
-    if (color === 'white') {
-      data[i] = white * 0.35
-    } else if (color === 'pink') {
-      b0 = 0.99886 * b0 + white * 0.0555179
-      b1 = 0.99332 * b1 + white * 0.0750759
-      b2 = 0.969 * b2 + white * 0.153852
-      b3 = 0.8665 * b3 + white * 0.3104856
-      b4 = 0.55 * b4 + white * 0.5329522
-      b5 = -0.7616 * b5 - white * 0.016898
-      data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.09
-      b6 = white * 0.115926
-    } else {
-      brown = (brown + 0.02 * white) / 1.02
-      data[i] = brown * 3.2
-    }
-  }
-  // Anfang und Ende weich ineinander übergehen lassen, damit beim Wiederholen nichts knackt.
-  const fade = Math.floor(audio.sampleRate * 0.05)
-  for (let i = 0; i < fade; i++) {
-    const k = i / fade
-    data[i] = data[i] * k + data[length - fade + i] * (1 - k)
+  const samples = noiseSamples(color, audio.sampleRate)
+  const buffer = audio.createBuffer(1, samples.length, audio.sampleRate)
+  buffer.copyToChannel(samples, 0)
+  return buffer
+}
+
+function noiseBuffer(audio: AudioContext, color: NoiseColor): AudioBuffer {
+  let buffer = noiseBuffers.get(color)
+  if (!buffer) {
+    buffer = makeNoise(audio, color)
+    noiseBuffers.set(color, buffer)
   }
   return buffer
+}
+
+let previewSource: AudioBufferSourceNode | null = null
+
+/**
+ * Einstellungen: ein Rauschen kurz probehören (NOISE_PREVIEW_S Sekunden, weich ein- und
+ * ausgeblendet). Ein neuer Klick beendet ein noch laufendes Probehören.
+ */
+export function previewNoise(color: NoiseColor): void {
+  if (!soundsEnabled()) return
+  unlockAudio()
+  if (!ctx) return
+  previewSource?.stop()
+  const source = ctx.createBufferSource()
+  source.buffer = noiseBuffer(ctx, color)
+  const gain = ctx.createGain()
+  const now = ctx.currentTime
+  gain.gain.setValueAtTime(0, now)
+  gain.gain.linearRampToValueAtTime(NOISE_VOLUME, now + 0.15)
+  gain.gain.setValueAtTime(NOISE_VOLUME, now + NOISE_PREVIEW_S - 0.5)
+  gain.gain.linearRampToValueAtTime(0, now + NOISE_PREVIEW_S)
+  source.connect(gain).connect(ctx.destination)
+  source.start(now)
+  source.stop(now + NOISE_PREVIEW_S + 0.05)
+  previewSource = source
 }
 
 /**
@@ -178,13 +186,8 @@ export function setNoise(play: boolean, color: NoiseColor): void {
   if (noiseSource && noiseColorPlaying === color) return
   stopNoise()
 
-  let buffer = noiseBuffers.get(color)
-  if (!buffer) {
-    buffer = makeNoise(ctx, color)
-    noiseBuffers.set(color, buffer)
-  }
   const source = ctx.createBufferSource()
-  source.buffer = buffer
+  source.buffer = noiseBuffer(ctx, color)
   source.loop = true
   const gain = ctx.createGain()
   const now = ctx.currentTime
