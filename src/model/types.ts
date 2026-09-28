@@ -57,6 +57,17 @@ export interface Task extends BaseRecord {
   shortBreakMinutesOverride: number | null
   /** Wann die Aufgabe als erledigt markiert wurde – oder `null`. */
   completedAt: number | null
+  /**
+   * Startsignal „Ich starte, wenn …“ (z. B. „der Kaffee auf dem Tisch steht“) – oder `null`.
+   * Seit 2026-09-28. Fehlt in älteren Daten → `null` (ergänzt beim Laden).
+   */
+  startCue: string | null
+  /**
+   * Die Blockanzahl, die beim Start des ersten Blocks geschätzt war – oder `null` (noch nicht
+   * gestartet). „Noch ein Block“ ändert nur `estimatedBlocks`, dieser Wert bleibt. Für die
+   * Statistik in Version 2 („geschätzt 3 · gebraucht 5“); wird jetzt nirgends angezeigt.
+   */
+  firstEstimatedBlocks: number | null
 }
 
 /** Ein kleiner Schritt einer Hauptaufgabe (Checkliste). */
@@ -91,6 +102,9 @@ export interface Block extends BaseRecord {
 
 export type ThemeSetting = 'system' | 'light' | 'dark'
 
+/** Art des Rauschens im Block: braun (tief, weich), rosa (mittel), weiß (hell). */
+export type NoiseColor = 'brown' | 'pink' | 'white'
+
 /** Aussehen der Flächen: 'pur' (massiv) oder 'glass' (Milchglas, leicht durchscheinend). */
 export type SurfaceSetting = 'pur' | 'glass'
 
@@ -103,6 +117,12 @@ export interface SettingsValues {
   theme: ThemeSetting
   /** Seit 2026-09-28. Fehlt in älteren Daten → Standard aus DEFAULT_SETTINGS. */
   surfaces: SurfaceSetting
+  /** Töne überhaupt an? `false` = komplett still (Timer-Töne, Vorwarnung, Rauschen). Seit 2026-09-28. */
+  sounds: boolean
+  /** Rauschen während eines laufenden Blocks an? (Knopf in „Heute“ und im Mini-Fenster) */
+  noiseOn: boolean
+  /** Welches Rauschen. */
+  noiseColor: NoiseColor
 }
 
 /** Einstellungen als gespeicherter Eintrag (es gibt genau einen). */
@@ -135,6 +155,8 @@ export type TimerState =
       pausedAt: number | null
       /** Summe aller bisherigen (abgeschlossenen) Pausen. */
       pausedMs: number
+      /** Kam die sanfte Vorwarnung kurz vor dem Ende schon? (Fehlt in älteren Daten = nein.) */
+      warned?: boolean
     }
   | {
       phase: 'break'

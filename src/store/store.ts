@@ -165,7 +165,8 @@ async function loadFromDatabase(): Promise<void> {
 
   state = {
     days: indexById(data.days),
-    tasks: indexById(data.tasks),
+    // Ältere Aufgaben kennen Startsignal und erste Schätzung noch nicht → `null` ergänzen.
+    tasks: indexById(data.tasks.map((t) => ({ ...t, startCue: t.startCue ?? null, firstEstimatedBlocks: t.firstEstimatedBlocks ?? null }))),
     steps: indexById(data.steps),
     blocks: indexById(data.blocks),
     // Standardwerte zuerst: So bekommen ältere Daten neue Einstellungen (z. B. „Flächen“) automatisch.

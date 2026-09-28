@@ -15,6 +15,8 @@ function task(id: string, position: number, done = false): Task {
     blockMinutesOverride: null,
     shortBreakMinutesOverride: null,
     completedAt: done ? 1 : null,
+    startCue: null,
+    firstEstimatedBlocks: null,
   }
 }
 

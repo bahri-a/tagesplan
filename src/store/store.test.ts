@@ -65,7 +65,10 @@ describe('Block und kurze Pause', () => {
   it('Block läuft ab → durchgehalten, kurze Pause startet, danach Ton', () => {
     const task = actions.addTask(today(), 'A')
     actions.startBlock(task.id)
-    expect(actions.checkTimer(at(BLOCK - MIN))).toEqual([])
+    expect(actions.checkTimer(at(BLOCK - 3 * MIN))).toEqual([])
+    // Kurz vor dem Ende: einmal die sanfte Vorwarnung.
+    expect(actions.checkTimer(at(BLOCK - MIN))).toEqual([{ type: 'blockWarning', taskTitle: 'A', fresh: true }])
+    expect(actions.checkTimer(at(BLOCK - MIN / 2))).toEqual([])
 
     const events = actions.checkTimer(at(BLOCK + 500))
     expect(events).toEqual([{ type: 'blockEnd', taskTitle: 'A', fresh: true }])
@@ -357,5 +360,28 @@ describe('Planen', () => {
     actions.updateSettings({ blockMinutes: 0, shortBreakMinutes: 999 })
     expect(getState().settings.blockMinutes).toBe(1)
     expect(getState().settings.shortBreakMinutes).toBe(60)
+  })
+})
+
+describe('Startsignal und erste Schätzung', () => {
+  it('merkt sich das Startsignal, leer bedeutet keins', () => {
+    const task = actions.addTask(today(), 'A')
+    expect(getState().tasks[task.id].startCue).toBeNull()
+    actions.updateTask(task.id, { startCue: 'der Kaffee auf dem Tisch steht' })
+    expect(getState().tasks[task.id].startCue).toBe('der Kaffee auf dem Tisch steht')
+    actions.updateTask(task.id, { startCue: '   ' })
+    expect(getState().tasks[task.id].startCue).toBeNull()
+  })
+
+  it('merkt sich beim ersten Block die damalige Schätzung – „Noch ein Block“ ändert sie nicht', () => {
+    const task = actions.addTask(today(), 'A')
+    expect(getState().tasks[task.id].firstEstimatedBlocks).toBeNull()
+    actions.startBlock(task.id)
+    const first = getState().tasks[task.id].estimatedBlocks
+    expect(getState().tasks[task.id].firstEstimatedBlocks).toBe(first)
+    actions.abortCurrentBlock()
+    actions.addExtraBlock(task.id, true)
+    expect(getState().tasks[task.id].estimatedBlocks).toBe(first + 1)
+    expect(getState().tasks[task.id].firstEstimatedBlocks).toBe(first)
   })
 })

@@ -14,6 +14,9 @@ function settings(blockMinutes: number, shortBreakMinutes: number): Settings {
     maxTasksPerDay: 3,
     theme: 'system',
     surfaces: 'pur',
+    sounds: true,
+    noiseOn: false,
+    noiseColor: 'brown',
   }
 }
 
@@ -30,6 +33,8 @@ function task(shortBreakMinutesOverride: number | null): Task {
     blockMinutesOverride: 10,
     shortBreakMinutesOverride,
     completedAt: null,
+    startCue: null,
+    firstEstimatedBlocks: null,
   }
 }
 
