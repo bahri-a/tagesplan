@@ -17,6 +17,11 @@ export const T = {
   },
 
   today: {
+    // Fortschritt oben: zwei kurze Zeilen mit Symbolen …
+    progressTask: 'Aufgabe',
+    progressBlock: 'Block',
+    perBlock: (m: number) => `je ${m} Min.`,
+    // … und derselbe Stand als ganzer Satz (beim Drüberfahren mit der Maus und für Screenreader).
     taskOf: (n: number, total: number) => `Aufgabe ${n} von ${total}`,
     blockOf: (n: number, total: number) => `Block ${n} von ${total}`,
     blockDoneOf: (n: number, total: number) => `Block ${n} von ${total} geschafft`,

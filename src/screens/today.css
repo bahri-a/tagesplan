@@ -23,10 +23,84 @@
   padding: 2.5rem 2rem;
 }
 
-.focus-label {
+/* ---------- Fortschritt oben: Aufgabe und Block als Symbole ---------- */
+
+.progress {
+  /* Farbe für „kommt noch“: nur ein zarter Umriss */
+  --mark-open: color-mix(in srgb, var(--text-muted) 45%, transparent);
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  justify-items: start;
+  gap: 0.45rem 0.75rem;
+}
+
+.progress-label {
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+}
+
+.progress-marks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Aufgaben: kleine Kreise mit Nummer, erledigte mit ✓ */
+.task-mark {
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 1.5px solid var(--mark-open);
+  border-radius: 50%;
+  color: var(--text-muted);
+  font-size: 0.8rem;
   font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.task-mark.is-done {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.task-mark.is-current {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Blöcke: Punkte, der aktuelle ist breiter */
+.block-mark {
+  width: 0.8rem;
+  height: 0.8rem;
+  border: 1.5px solid var(--mark-open);
+  border-radius: 999px;
+  transition:
+    width 0.3s,
+    background 0.3s;
+}
+
+.block-mark.is-done {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.block-mark.is-current {
+  width: 1.9rem;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.progress-suffix {
+  margin-left: 0.3rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
 }
 
 .focus-title {

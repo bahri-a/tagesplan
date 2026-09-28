@@ -2,6 +2,7 @@
  * BILDSCHIRM „HEUTE“ (Durchführen)
  * ================================
  * Zeigt immer die oberste noch nicht erledigte Hauptaufgabe – groß und ruhig:
+ *  - ganz oben: Fortschritt als Symbole (Aufgaben des Tages, Blöcke der Aufgabe)
  *  - vor dem Start: Aufgabe, aktueller Schritt, „Block starten“
  *    (bzw. „Lange Pause gemacht – weiter mit …“ ab der zweiten Aufgabe)
  *  - während des Blocks: große Restzeit, dezent „Pausieren“ und „Abbrechen“
@@ -14,6 +15,7 @@ import { T } from '../config/texts'
 import { useNow } from '../components/hooks'
 import { StepList } from '../components/StepList'
 import { TimerRing } from '../components/TimerRing'
+import { blockMarks, taskMark, type Mark } from '../logic/progress'
 import * as timer from '../logic/timer'
 import type { Task } from '../model/types'
 import { requestNotificationPermission } from '../signals/notifications'
@@ -117,16 +119,24 @@ function FocusCard({ task }: { task: Task }) {
   // Starten ist möglich, wenn nichts läuft oder die kurze Pause vorbei ist.
   const canStart = t.phase === 'idle' || breakOver
 
+  // Derselbe Stand als ganzer Satz – für den Hinweis beim Drüberfahren und für Screenreader.
   let blockLine: string
   if (t.phase === 'block') blockLine = T.today.blockOf(done + 1, task.estimatedBlocks)
   else if (t.phase === 'break' || asking) blockLine = T.today.blockDoneOf(done, task.estimatedBlocks)
   else blockLine = `${T.today.blockOf(done + 1, task.estimatedBlocks)} · ${T.today.minutes(minutes)}`
 
+  // „Jetzt dran“ ist ein Block, wenn er läuft oder gleich gestartet werden kann.
+  const highlightBlock = t.phase === 'block' || (canStart && !asking)
+
   return (
     <section className={`card focus-card is-${t.phase}`}>
-      <p className="focus-label">
-        {T.today.taskOf(number, tasks.length)} · {blockLine}
-      </p>
+      <ProgressRows
+        tasks={tasks}
+        currentId={task.id}
+        blocks={blockMarks(done, task.estimatedBlocks, highlightBlock)}
+        suffix={t.phase === 'idle' && !asking ? T.today.perBlock(minutes) : null}
+        sentence={`${T.today.taskOf(number, tasks.length)} · ${blockLine}`}
+      />
       <h1 className="focus-title">{task.title}</h1>
 
       {t.phase === 'block' && <RunningBlock timerState={t} now={now} />}
@@ -174,6 +184,53 @@ function FocusCard({ task }: { task: Task }) {
         canStart && <StartButton task={task} />
       )}
     </section>
+  )
+}
+
+interface ProgressRowsProps {
+  tasks: Task[]
+  currentId: string
+  blocks: Mark[]
+  /** Kleiner Zusatz hinter den Block-Punkten, z. B. „je 15 Min.“ – oder `null`. */
+  suffix: string | null
+  sentence: string
+}
+
+/**
+ * Oben in der Karte: wo du gerade stehst – zwei kurze Zeilen mit Symbolen statt eines langen Satzes.
+ *  - Aufgabe: ✓ = erledigt, hervorgehoben = jetzt dran, nur Umriss = kommt noch
+ *  - Block:   voller Punkt = geschafft, breiter Punkt = jetzt dran, nur Umriss = kommt noch
+ * Abgebrochene Blöcke sehen aus wie geschaffte (sie zählen mit, nichts soll nach Fehler aussehen).
+ */
+function ProgressRows({ tasks, currentId, blocks, suffix, sentence }: ProgressRowsProps) {
+  return (
+    <div className="progress" title={sentence}>
+      <span className="visually-hidden">{sentence}</span>
+
+      <span className="progress-label" aria-hidden="true">
+        {T.today.progressTask}
+      </span>
+      <span className="progress-marks" aria-hidden="true">
+        {tasks.map((item, index) => {
+          const mark = taskMark(item.completedAt !== null, item.id === currentId)
+          return (
+            <span key={item.id} className={`task-mark is-${mark}`}>
+              {mark === 'done' ? '✓' : index + 1}
+            </span>
+          )
+        })}
+      </span>
+
+      <span className="progress-label" aria-hidden="true">
+        {T.today.progressBlock}
+      </span>
+      <span className="progress-marks" aria-hidden="true">
+        {blocks.map((mark, index) => (
+          <span key={index} className={`block-mark is-${mark}`} />
+        ))}
+        {suffix && <span className="progress-suffix">{suffix}</span>}
+      </span>
+    </div>
   )
 }
 
