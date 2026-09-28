@@ -26,6 +26,8 @@ export const DEFAULT_SETTINGS: SettingsValues = {
   maxTasksPerDay: 3,
   /** Aussehen: 'system' (wie macOS), 'light' (hell) oder 'dark' (dunkel). */
   theme: 'system',
+  /** Flächen: 'pur' (massiv) oder 'glass' (Milchglas). */
+  surfaces: 'pur',
 }
 
 /** Erlaubte Bereiche für die Zahlen in den Einstellungen. */

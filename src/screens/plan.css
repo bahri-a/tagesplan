@@ -31,7 +31,8 @@
 }
 
 .plan-column-title {
-  font-size: 1.2rem;
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
 .plan-empty {
@@ -56,12 +57,12 @@
 
 .task-card {
   position: relative;
-  box-shadow: none;
-  transition: box-shadow 0.15s;
+  border-radius: 16px;
+  transition: box-shadow 0.2s;
 }
 
 .task-card.is-expanded {
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-lift);
 }
 
 .task-card.is-dragging {

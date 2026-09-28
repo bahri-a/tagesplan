@@ -18,7 +18,7 @@ import { WelcomeBackDialog } from './components/WelcomeBackDialog'
 import { requestPersistentStorage } from './db/database'
 import { formatCountdown } from './logic/time'
 import * as timer from './logic/timer'
-import type { ID, ThemeSetting, TimerState } from './model/types'
+import type { ID, SurfaceSetting, ThemeSetting, TimerState } from './model/types'
 import { PlanScreen } from './screens/PlanScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
 import { TodayScreen } from './screens/TodayScreen'
@@ -71,6 +71,7 @@ function Shell() {
 
   useTimerEngine()
   useTheme(state.settings.theme)
+  useSurfaces(state.settings.surfaces)
   useWindowTitle(state.timer)
 
   const clearToast = useCallback(() => setToast(null), [])
@@ -198,6 +199,13 @@ function useTheme(theme: ThemeSetting) {
     darkMode.addEventListener('change', updateTitleBar)
     return () => darkMode.removeEventListener('change', updateTitleBar)
   }, [theme])
+}
+
+/** Pur oder Milchglas: steuert die Flächen-Variablen in index.css. */
+function useSurfaces(surfaces: SurfaceSetting) {
+  useEffect(() => {
+    document.documentElement.dataset.surfaces = surfaces
+  }, [surfaces])
 }
 
 /** Zeigt die Restzeit im Fenstertitel – praktisch, wenn die App im Hintergrund ist. */

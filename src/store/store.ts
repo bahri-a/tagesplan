@@ -168,7 +168,10 @@ async function loadFromDatabase(): Promise<void> {
     tasks: indexById(data.tasks),
     steps: indexById(data.steps),
     blocks: indexById(data.blocks),
-    settings: data.settings[0] ?? { ...baseFields(now), id: 'settings', ...DEFAULT_SETTINGS },
+    // Standardwerte zuerst: So bekommen ältere Daten neue Einstellungen (z. B. „Flächen“) automatisch.
+    settings: data.settings[0]
+      ? { ...DEFAULT_SETTINGS, ...data.settings[0] }
+      : { ...baseFields(now), id: 'settings', ...DEFAULT_SETTINGS },
     note: data.notes[0] ?? { ...baseFields(now), id: 'note', text: '' },
     timer: data.timer ?? { phase: 'idle' },
     local: data.local ?? { endDayPromptDismissedOn: null },

@@ -32,6 +32,7 @@ async function createVersion1Database(blockMinutes: number, shortBreakMinutes: n
     defaultBlocksPerTask: 3,
     maxTasksPerDay: 3,
     theme: 'system',
+    surfaces: 'pur',
   })
   // Aufgabe ohne das Feld für die individuelle Pause (gab es in Version 1 noch nicht)
   await db.put('tasks', {

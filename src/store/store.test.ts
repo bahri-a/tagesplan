@@ -8,6 +8,7 @@ import { IDBFactory } from 'fake-indexeddb'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DEFAULT_SETTINGS } from '../config/defaults'
 import { resetDatabaseForTests } from '../db/database'
+import type { Settings } from '../model/types'
 import * as actions from './actions'
 import * as sel from './selectors'
 import { flushSaves, getState, initStore, resetStoreForTests } from './store'
@@ -338,6 +339,18 @@ describe('Planen', () => {
   it('neue Aufgaben bekommen die Standard-Blockanzahl', () => {
     actions.updateSettings({ defaultBlocksPerTask: 4 })
     expect(actions.addTask(today(), 'A').estimatedBlocks).toBe(4)
+  })
+
+  it('ältere Einstellungen ohne „Flächen“ bekommen den Standard „pur“', async () => {
+    const { surfaces: _ignored, ...old } = getState().settings
+    const db = await import('../db/database')
+    await flushSaves()
+    await db.putRecords('settings', [old as Settings])
+    resetStoreForTests()
+    await initStore()
+    expect(getState().settings.surfaces).toBe('pur')
+    actions.updateSettings({ surfaces: 'glass' })
+    expect(getState().settings.surfaces).toBe('glass')
   })
 
   it('hält Einstellungen in sinnvollen Grenzen', () => {
