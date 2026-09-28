@@ -190,6 +190,15 @@ export const T = {
     hint: 'N = Gedanke parken',
   },
 
+  // Mini-Fenster: kleiner Timer, der immer über allen Fenstern liegt.
+  mini: {
+    open: 'Mini-Fenster',
+    close: 'Mini-Fenster schließen',
+    hint: 'Kleiner Timer, der immer im Vordergrund bleibt',
+    title: 'Tagesplan',
+    nothing: 'Gerade ist nichts dran.',
+  },
+
   notes: {
     open: 'Notizen',
     title: 'Notizzettel',

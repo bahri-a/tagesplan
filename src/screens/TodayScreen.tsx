@@ -13,10 +13,10 @@
  * Im Hintergrund liegt ein sehr zarter Farbschimmer: grünlich im Block, bläulich in der Pause.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import { GENTLE_LINE_EVERY, STEP_DONE_FEEDBACK_MS } from '../config/defaults'
 import { T } from '../config/texts'
-import { isTypingOrButton, useNow } from '../components/hooks'
+import { isTypingOrButton, useNow, WindowContext } from '../components/hooks'
 import { StepList } from '../components/StepList'
 import { TimerRing } from '../components/TimerRing'
 import { blockMarks, taskMark, type Mark } from '../logic/progress'
@@ -293,6 +293,8 @@ function CheckIcon() {
  */
 function useSpaceKey(action: () => void) {
   const latest = useRef(action)
+  // Im Mini-Fenster gilt die Leertaste dort (eigenes Dokument), sonst im App-Fenster.
+  const { document } = useContext(WindowContext)
   useEffect(() => {
     latest.current = action
   })
@@ -305,7 +307,7 @@ function useSpaceKey(action: () => void) {
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [])
+  }, [document])
 }
 
 /**
@@ -532,5 +534,22 @@ export function NoiseToggle() {
         {T.today.noise} <span className="noise-toggle-state">{on ? T.today.noiseOn : T.today.noiseOff}</span>
       </span>
     </button>
+  )
+}
+
+/**
+ * Inhalt des Mini-Fensters: dieselbe Karte wie in „Heute“, nur kompakt (siehe mini.css –
+ * erste Schritte, Punkte und leise Sätze sind dort ausgeblendet). Ring, Rauschen-Knopf,
+ * Start/Pausieren/Weiter und das Startsignal bleiben.
+ */
+export function MiniToday() {
+  const state = useAppState()
+  const t = state.timer
+  const task = t.phase === 'block' ? state.tasks[t.taskId] : currentTask(state)
+  return (
+    <div className="today mini-today">
+      <Ambient timerState={t} />
+      {task ? <FocusCard task={task} /> : <p className="mini-message">{T.mini.nothing}</p>}
+    </div>
   )
 }

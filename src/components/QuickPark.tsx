@@ -18,7 +18,7 @@ export function QuickPark({ onParked }: { onParked: () => void }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() !== 'n' || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return
-      if (isTypingOrButton(e.target) && !(e.target instanceof HTMLButtonElement)) return
+      if (isTypingOrButton(e.target) && (e.target as HTMLElement).tagName !== 'BUTTON') return
       if (document.querySelector('[role="dialog"]')) return
       e.preventDefault()
       // Ist der Notizzettel schon offen, einfach dort weiterschreiben.

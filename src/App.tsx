@@ -12,6 +12,7 @@ import { T } from './config/texts'
 import { EndDayDialog } from './components/EndDayDialog'
 import { useNoise, useNow, useTimerEngine } from './components/hooks'
 import { NotePad } from './components/NotePad'
+import { MiniWindow } from './components/MiniWindow'
 import { QuickPark } from './components/QuickPark'
 import { Toast, type ToastAction } from './components/Toast'
 import { UpdateBanner } from './components/UpdateBanner'
@@ -138,6 +139,7 @@ function Shell() {
       </main>
 
       <NotePad />
+      <MiniWindow />
       <QuickPark onParked={() => showToast(T.park.done, { duration: PARKED_TOAST_MS })} />
 
       {askEndPrevious.visible && endDayDialog === 'closed' && (
