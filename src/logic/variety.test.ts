@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cleanStartCue, pick, showsGentleLine } from './variety'
+import { cleanStartCue, pick, showsGentleLine, stripStartCuePrefix } from './variety'
 
 describe('kleine Abwechslung', () => {
   it('wählt für dieselbe Zahl immer denselben Satz', () => {
@@ -16,5 +16,7 @@ describe('kleine Abwechslung', () => {
   it('räumt das Startsignal auf', () => {
     expect(cleanStartCue('Wenn der Kaffee auf dem Tisch steht.')).toBe('der Kaffee auf dem Tisch steht')
     expect(cleanStartCue('  ich am Schreibtisch sitze ')).toBe('ich am Schreibtisch sitze')
+    expect(cleanStartCue('Ich starte, wenn das Handy weg ist!')).toBe('das Handy weg ist')
+    expect(stripStartCuePrefix('Ich starte wenn das Handy weg ist.')).toBe('das Handy weg ist.')
   })
 })
