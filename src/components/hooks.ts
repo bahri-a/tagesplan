@@ -108,3 +108,9 @@ export function useNoise(): void {
     }
   }, [])
 }
+
+/** Tippt jemand gerade in ein Feld – oder hat ein Knopf den Fokus? */
+export function isTypingOrButton(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(target.tagName)
+}

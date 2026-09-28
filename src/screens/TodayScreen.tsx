@@ -13,14 +13,15 @@
  * Im Hintergrund liegt ein sehr zarter Farbschimmer: grünlich im Block, bläulich in der Pause.
  */
 
-import { useEffect, useState } from 'react'
-import { STEP_DONE_FEEDBACK_MS } from '../config/defaults'
+import { useEffect, useRef, useState } from 'react'
+import { GENTLE_LINE_EVERY, STEP_DONE_FEEDBACK_MS } from '../config/defaults'
 import { T } from '../config/texts'
-import { useNow } from '../components/hooks'
+import { isTypingOrButton, useNow } from '../components/hooks'
 import { StepList } from '../components/StepList'
 import { TimerRing } from '../components/TimerRing'
 import { blockMarks, taskMark, type Mark } from '../logic/progress'
 import * as timer from '../logic/timer'
+import { cleanStartCue, pick, showsGentleLine } from '../logic/variety'
 import type { ID, Task, TimerState } from '../model/types'
 import { requestNotificationPermission } from '../signals/notifications'
 import {
@@ -95,7 +96,7 @@ export function TodayScreen({ onPlan, onEndDay }: Props) {
             </svg>
           </div>
           <h1 className="message-title">{T.today.allDoneTitle}</h1>
-          <p className="message-text">{T.today.allDoneText}</p>
+          <p className="message-text">{pick(T.today.allDoneTexts, activeDay(state).createdAt)}</p>
         </section>
       )}
 
@@ -149,6 +150,17 @@ function FocusCard({ task }: { task: Task }) {
   const paused = t.phase === 'block' && t.pausedAt !== null
   const phaseKey = `${t.phase}-${paused}-${breakOver}-${asking}`
 
+  // Leertaste: Start / Pausieren / Weiter – je nachdem, was gerade dran ist.
+  useSpaceKey(() => {
+    if (t.phase === 'block') {
+      if (t.pausedAt === null) pauseCurrentBlock()
+      else resumeCurrentBlock()
+    } else if (canStart && !asking) {
+      void requestNotificationPermission()
+      startBlock(task.id)
+    }
+  })
+
   return (
     <section className="card focus-card">
       <BlockDots
@@ -180,7 +192,7 @@ function FocusCard({ task }: { task: Task }) {
                 totalMs={t.durationMs}
                 caption={T.today.breakTitle}
               />
-              <p className="phase-note">{T.today.breakHint}</p>
+              <p className="phase-note">{pick(T.today.breakHints, t.startedAt)}</p>
             </>
           ))}
 
@@ -206,7 +218,7 @@ function FocusCard({ task }: { task: Task }) {
             </div>
           </div>
         ) : (
-          canStart && <StartButton task={task} />
+          canStart && <StartArea task={task} firstBlock={t.phase === 'idle' && done === 0} />
         )}
       </div>
     </section>
@@ -275,6 +287,44 @@ function CheckIcon() {
   )
 }
 
+/**
+ * Leertaste als Abkürzung für den Hauptknopf. Nicht, während du in ein Feld tippst,
+ * und nicht, wenn gerade ein Knopf den Fokus hat (dann drückt die Leertaste ohnehin ihn).
+ */
+function useSpaceKey(action: () => void) {
+  const latest = useRef(action)
+  useEffect(() => {
+    latest.current = action
+  })
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== 'Space' || e.repeat || e.metaKey || e.ctrlKey || e.altKey) return
+      if (isTypingOrButton(e.target) || document.querySelector('[role="dialog"]')) return
+      e.preventDefault()
+      latest.current()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
+}
+
+/**
+ * Rund um den Startknopf. Vor dem ersten Block einer Aufgabe:
+ *  - darüber das Startsignal aus „Planen“ („Wenn der Kaffee auf dem Tisch steht → los.“), falls eingetragen,
+ *  - darunter klein ein Startsatz („Du musst nur anfangen.“).
+ * Danach nur noch der Knopf.
+ */
+function StartArea({ task, firstBlock }: { task: Task; firstBlock: boolean }) {
+  const cue = task.startCue ? cleanStartCue(task.startCue) : ''
+  return (
+    <div className="start-area">
+      {firstBlock && cue && <p className="start-cue">{T.today.startCue(cue)}</p>}
+      <StartButton task={task} />
+      {firstBlock && <p className="start-nudge">{pick(T.today.startNudges, task.createdAt)}</p>}
+    </div>
+  )
+}
+
 /** Der große Startknopf – vor der ersten Aufgabe des Tages ohne, danach mit „Lange Pause gemacht“. */
 function StartButton({ task }: { task: Task }) {
   const state = useAppState()
@@ -285,6 +335,7 @@ function StartButton({ task }: { task: Task }) {
     <button
       type="button"
       className="btn btn-primary btn-big"
+      title={T.today.spaceHint}
       onClick={() => {
         // Beim ersten Mal fragt Chrome, ob Benachrichtigungen erlaubt sind.
         void requestNotificationPermission()
@@ -353,6 +404,11 @@ function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: 
           </>
         )}
       </div>
+
+      {/* Ab und zu (nicht in jedem Block) ganz leise: Abschweifen ist okay. */}
+      {!paused && showsGentleLine(timerState.startedAt, GENTLE_LINE_EVERY) && (
+        <p className="gentle-line">{pick(T.today.gentleLines, timerState.startedAt)}</p>
+      )}
     </>
   )
 }
@@ -431,7 +487,8 @@ function CurrentStep({ task }: { task: Task }) {
       )}
       {!shown && !showAll && (
         <p className="start-done">
-          <span className="start-done-title">{T.today.startDone}</span> {T.today.keepGoing}
+          <span className="start-done-title">{T.today.startDone}</span>{' '}
+          {pick(T.today.keepGoingVariants, state.timer.phase === 'block' ? state.timer.startedAt : 0)}
         </p>
       )}
       {showAll && <StepList taskId={task.id} editable={false} highlightId={next?.id} />}

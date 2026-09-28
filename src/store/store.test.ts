@@ -385,3 +385,23 @@ describe('Startsignal und erste Schätzung', () => {
     expect(getState().tasks[task.id].firstEstimatedBlocks).toBe(first)
   })
 })
+
+describe('Gedanken parken und Tagesertrag', () => {
+  it('hängt geparkte Gedanken als neue Zeile an den Notizzettel', () => {
+    actions.parkThought('Mama anrufen')
+    actions.parkThought('  ')
+    actions.parkThought('Buch zurückgeben')
+    expect(getState().note.text).toBe('Mama anrufen\nBuch zurückgeben')
+  })
+
+  it('zählt durchgehaltene Blöcke, alle Minuten und erledigte Aufgaben des Tages', () => {
+    const task = actions.addTask(today(), 'Kapitel 3')
+    actions.startBlock(task.id)
+    actions.checkTimer(at(BLOCK + 500))
+    actions.finishTask(task.id)
+    const result = sel.dayYield(getState(), today(), at(BLOCK + MIN))
+    expect(result.completedBlocks).toBe(1)
+    expect(result.minutes).toBe(BLOCK / 60_000)
+    expect(result.doneTitles).toEqual(['Kapitel 3'])
+  })
+})

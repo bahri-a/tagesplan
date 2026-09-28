@@ -617,3 +617,31 @@
 .noise-toggle:focus-visible {
   border-color: var(--accent);
 }
+
+/* ---------- Startsignal und Startsatz rund um den Startknopf ---------- */
+
+.start-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+/* „Wenn der Kaffee auf dem Tisch steht → los.“ – ruhig, aber gut lesbar */
+.start-cue {
+  max-width: 26rem;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* „Du musst nur anfangen.“ – klein und leise */
+.start-nudge,
+.gentle-line {
+  max-width: 24rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.gentle-line {
+  opacity: 0.8;
+}

@@ -366,6 +366,14 @@ export function updateNote(text: string): void {
   commit({ note: { ...getState().note, text } })
 }
 
+/** Taste N: einen Gedanken als neue Zeile unten an den Notizzettel hängen. */
+export function parkThought(thought: string): void {
+  const text = thought.trim()
+  if (!text) return
+  const current = getState().note.text.replace(/\s+$/, '')
+  updateNote(current ? `${current}\n${text}` : text)
+}
+
 /* ================================================================== */
 /* Hilfsfunktionen                                                    */
 /* ================================================================== */

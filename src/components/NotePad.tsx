@@ -22,7 +22,7 @@ export function NotePad() {
   return open ? (
     <NotePanel onClose={() => setOpen(false)} />
   ) : (
-    <button type="button" className="notes-button" onClick={() => setOpen(true)}>
+    <button type="button" className="notes-button" title={T.park.hint} onClick={() => setOpen(true)}>
       ✎ {T.notes.open}
     </button>
   )

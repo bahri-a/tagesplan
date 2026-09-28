@@ -7,11 +7,12 @@
  */
 
 import { useCallback, useEffect, useState } from 'react'
-import { APP_NAME, UNDO_DELETE_MS } from './config/defaults'
+import { APP_NAME, PARKED_TOAST_MS, UNDO_DELETE_MS } from './config/defaults'
 import { T } from './config/texts'
 import { EndDayDialog } from './components/EndDayDialog'
 import { useNoise, useNow, useTimerEngine } from './components/hooks'
 import { NotePad } from './components/NotePad'
+import { QuickPark } from './components/QuickPark'
 import { Toast, type ToastAction } from './components/Toast'
 import { UpdateBanner } from './components/UpdateBanner'
 import { WelcomeBackDialog } from './components/WelcomeBackDialog'
@@ -137,6 +138,7 @@ function Shell() {
       </main>
 
       <NotePad />
+      <QuickPark onParked={() => showToast(T.park.done, { duration: PARKED_TOAST_MS })} />
 
       {askEndPrevious.visible && endDayDialog === 'closed' && (
         <WelcomeBackDialog onEndDay={endPreviousDay} onKeepWorking={askEndPrevious.hide} />
