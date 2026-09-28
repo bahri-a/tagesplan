@@ -264,24 +264,24 @@
   bottom: 1.25rem;
   z-index: 20;
   padding: 0.5em 1.05em;
-  border: 1px solid var(--panel-border);
+  border: 1px solid var(--accent-line);
   border-radius: 999px;
   background: var(--panel-sheen), var(--panel-bg);
   -webkit-backdrop-filter: var(--panel-filter);
   backdrop-filter: var(--panel-filter);
-  color: var(--text-muted);
+  color: var(--accent);
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
+  font-weight: 500;
   box-shadow: var(--shadow);
-  opacity: 0.85;
   transition:
     opacity 0.15s,
     color 0.15s;
 }
 
 .notes-button:hover {
-  color: var(--text);
-  opacity: 1;
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 /* Ist das Fenster breit genug, rückt der Inhalt neben den Zettel statt darunter. */

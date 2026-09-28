@@ -28,6 +28,8 @@
   /* Oberes Ende des sanften Verlaufs auf Hauptknöpfen */
   --accent-top: #5b9483;
   --accent-soft: #e1ede8;
+  /* dezente Akzent-Linie, z. B. um „Mini-Fenster“ und „Notizen“ */
+  --accent-line: color-mix(in srgb, var(--accent) 35%, transparent);
   --accent-shadow: rgb(59 118 103 / 0.55);
   --on-accent: #ffffff;
   --break: #4f7ca6;
@@ -92,6 +94,8 @@
     --accent-hover: #93cbbc;
     --accent-top: #9ad0c1;
     --accent-soft: #20302b;
+    /* dezente Akzent-Linie, z. B. um „Mini-Fenster“ und „Notizen“ */
+    --accent-line: color-mix(in srgb, var(--accent) 35%, transparent);
     --accent-shadow: rgb(0 0 0 / 0.55);
     --on-accent: #0f201b;
     --break: #8fb4d8;
@@ -133,6 +137,8 @@
   --accent-hover: #93cbbc;
   --accent-top: #9ad0c1;
   --accent-soft: #20302b;
+  /* dezente Akzent-Linie, z. B. um „Mini-Fenster“ und „Notizen“ */
+  --accent-line: color-mix(in srgb, var(--accent) 35%, transparent);
   --accent-shadow: rgb(0 0 0 / 0.55);
   --on-accent: #0f201b;
   --break: #8fb4d8;
