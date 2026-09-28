@@ -588,4 +588,18 @@ describe('Planen: kopieren, verschieben, zuletzt verwendet', () => {
     expect(titles(today())).toEqual([])
     expect(sel.recentTasks(getState(), 'anderer-tag', 2).map((t) => t.title)).toEqual(['Physik', 'mathe'])
   })
+
+  it('× blendet einen Titel aus – bis die Aufgabe wieder benutzt wird', () => {
+    at(0)
+    actions.addTask(today(), 'Mathe')
+    at(MIN)
+    actions.addTask(today(), 'Physik')
+    const titles = () => sel.recentTasks(getState(), tomorrow(), 5).map((t) => t.title)
+    at(2 * MIN)
+    actions.hideRecentTask(' physik')
+    expect(titles()).toEqual(['Mathe'])
+    at(3 * MIN)
+    actions.addTask(today(), 'Physik') // wieder benutzt → taucht wieder auf
+    expect(titles()).toEqual(['Physik', 'Mathe'])
+  })
 })

@@ -120,12 +120,18 @@
   list-style: none;
 }
 
+.recent-item {
+  position: relative;
+  display: flex;
+}
+
 .recent-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
   max-width: 18rem;
-  padding: 0.45em 0.95em 0.45em 0.7em;
+  /* rechts Platz für das kleine × */
+  padding: 0.45em 2em 0.45em 0.7em;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--surface);
@@ -142,6 +148,48 @@
 .recent-chip:focus-visible {
   border-color: var(--accent-line);
   background: var(--accent-soft);
+}
+
+/* Das × sitzt rechts IN der Pille – leise, beim Drüberfahren über die Pille deutlicher. */
+.recent-hide {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0.35;
+  transform: translateY(-50%);
+  transition:
+    opacity 0.15s,
+    background 0.15s;
+}
+
+.recent-item:hover .recent-hide {
+  opacity: 0.75;
+}
+
+.recent-hide:hover,
+.recent-hide:focus-visible {
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+  color: var(--text);
+  opacity: 1;
+}
+
+.recent-hide svg {
+  width: 10px;
+  height: 10px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
 }
 
 .recent-plus {

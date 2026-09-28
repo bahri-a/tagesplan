@@ -125,7 +125,7 @@ https://DEIN-NAME.github.io/tagesplan/
 Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch ohne Internet.
 
 **Benachrichtigungen erlauben** (damit du das Block- und Pausenende auch im Hintergrund mitbekommst):
-- Beim ersten „Block starten“ fragt Chrome → **Zulassen**.
+- Beim ersten „Starten“ fragt Chrome → **Zulassen**.
 - Außerdem in macOS: **Systemeinstellungen → Mitteilungen → Google Chrome →
   „Mitteilungen erlauben“** einschalten.
 - Du kannst den Ton in der App unter **Einstellungen → Töne** probehören.
@@ -134,8 +134,8 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
 
 ## 4. So benutzt du die App
 
-### Planen
-- Tab **Planen**: links **Heute**, rechts **Morgen**.
+### Planer
+- Tab **Planer**: links **Heute**, rechts **Morgen**.
 - Titel eintippen, Enter → die Aufgabe klappt auf, und du kannst direkt die **ersten Schritte**
   eintippen (jeweils Enter). Das sind nur winzige Einstiege wie „PDF öffnen“ – keine Blöcke.
 - Pro Aufgabe einstellbar: **Blöcke** (Schätzung), **Blocklänge** und **Kurze Pause**.
@@ -152,6 +152,7 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   Aufgabe steht mit ihren ersten Schritten und Einstellungen auch bei Morgen.
 - **Zuletzt verwendet** (ganz unten): deine letzten 5 Hauptaufgaben. Ein Klick legt sie wieder
   an – rechts wählst du, ob für **Heute** oder **Morgen** (Standard: Morgen).
+  Das kleine **×** in einer Pille nimmt sie aus der Liste (die Aufgabe selbst bleibt).
 - Planst du mehr als dein Limit, erscheint nur ein sanfter Hinweis.
 - **Löschen:** der kleine Papierkorb rechts auf jeder Karte. Die Aufgabe ist sofort weg;
   unten steht 8 Sekunden lang **Aufgabe gelöscht · Rückgängig** – ein Klick holt sie mit
@@ -168,7 +169,7 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   Ansehen. Abhaken kannst du sie erst, wenn der Block läuft.
 - Vor dem ersten Block einer Aufgabe steht über dem Knopf dein **Startsignal** (falls
   eingetragen) und darunter klein ein Startsatz wie „Du musst nur anfangen.“
-- **Block starten** → der Ring füllt sich langsam. Dezent darunter: **Pausieren**, **Früher fertig**
+- **Starten** → der Ring füllt sich langsam. Dezent darunter: **Pausieren**, **Früher fertig**
   und **Abbrechen**. „Früher fertig“ ist für Tage, an denen es schneller ging als gedacht: Der Block
   zählt als geschafft, die kurze Pause beginnt sofort. Nur dieser eine Block wird kürzer – die
   nächsten Blöcke sind wieder so lang wie eingestellt.
@@ -196,7 +197,7 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
 - Im laufenden Block steht unter dem Timer **Zum Einstieg: …** – dein nächster erster Schritt zum Abhaken.
   Abhaken beendet keinen Block. Sind alle abgehakt, steht dort „Einstieg geschafft!
   Bleib einfach dran, bis die Zeit um ist.“ **Alle Schritte** klappt die ganze Liste auf.
-- **Tastenkürzel:** **Leertaste** = Block starten / pausieren / weiter.
+- **Tastenkürzel:** **Leertaste** = starten / pausieren / weiter.
   **N** = Gedanke parken (siehe unten).
 - **Mini-Fenster** (unten links): ein kleiner Timer, der immer über allen anderen Fenstern
   liegt – auch über deinem PDF oder Editor. Mit Ring, Rauschen an/aus und Start/Pausieren.
@@ -282,7 +283,7 @@ src/
   db/backup.ts         ← Sichern und Wiederherstellen
   logic/               ← reine Logik: Timer-Rechnung, Tageswechsel, Übertrag, Daten-Updates (+ Tests)
   store/               ← App-Zustand, Aktionen (addTask, startBlock, endDay …), Abfragen
-  screens/             ← die drei Bildschirme: Heute, Planen, Einstellungen
+  screens/             ← die drei Bildschirme: Heute, Planer, Einstellungen
   components/          ← Bausteine: Timer-Ring, Aufgaben-Karte, Dialoge, Notizzettel …
   signals/             ← sanfte Töne und Chrome-Benachrichtigungen
 scripts/make-icons.mjs ← erzeugt die App-Icons (node scripts/make-icons.mjs)

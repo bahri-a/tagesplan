@@ -36,7 +36,7 @@ import { T } from '../config/texts'
 import { Dialog } from '../components/Dialog'
 import { TaskCard } from '../components/TaskCard'
 import type { ID, Task } from '../model/types'
-import { addTask, copyTask, deleteTask, moveTask, reorderTasks } from '../store/actions'
+import { addTask, copyTask, deleteTask, hideRecentTask, moveTask, reorderTasks } from '../store/actions'
 import { activeDay, plannedDay, recentTasks, runningTimerOfTask, tasksOfDay } from '../store/selectors'
 import { getState, useAppState } from '../store/store'
 import './plan.css'
@@ -297,6 +297,7 @@ function DayColumn(props: DayColumnProps) {
  * Ganz unten, leise: die zuletzt benutzten Hauptaufgaben als kleine Knöpfe. Ein Klick legt sie
  * (mit ihren ersten Schritten und Einstellungen) wieder an – standardmäßig für morgen, per
  * Umschalter auch für heute. Was auf dem gewählten Tag schon steht, wird nicht angeboten.
+ * Das kleine × in der Pille nimmt eine Aufgabe aus der Liste (sie selbst bleibt unverändert).
  */
 function RecentTasks({ days, onNotice }: { days: { day: { id: ID }; label: string }[]; onNotice: (m: string) => void }) {
   const state = useAppState()
@@ -327,7 +328,7 @@ function RecentTasks({ days, onNotice }: { days: { day: { id: ID }; label: strin
       {recent.length === 0 && <p className="muted small">{T.plan.recentNone(target.label)}</p>}
       <ul className="recent-list">
         {recent.map((task) => (
-          <li key={task.id}>
+          <li key={task.id} className="recent-item">
             <button
               type="button"
               className="recent-chip"
@@ -342,6 +343,18 @@ function RecentTasks({ days, onNotice }: { days: { day: { id: ID }; label: strin
                 +
               </span>
               <span className="recent-chip-title">{task.title}</span>
+            </button>
+            {/* Kleines × rechts in der Pille: nur leise sichtbar, deutlicher beim Drüberfahren. */}
+            <button
+              type="button"
+              className="recent-hide"
+              aria-label={T.plan.recentHide(task.title)}
+              title={T.plan.recentHide(task.title)}
+              onClick={() => hideRecentTask(task.title)}
+            >
+              <svg viewBox="0 0 12 12" aria-hidden="true">
+                <path d="M3.5 3.5l5 5M8.5 3.5l-5 5" />
+              </svg>
             </button>
           </li>
         ))}

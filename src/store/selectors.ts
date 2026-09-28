@@ -59,9 +59,16 @@ export function taskWork(s: AppState, taskId: ID): { blocks: number; minutes: nu
  * „Zuletzt verwendet“ in „Planen“: die zuletzt benutzten Hauptaufgaben, jeder Titel nur einmal
  * (die jüngste Aufgabe mit diesem Titel), ohne Titel, die auf `dayId` schon stehen.
  * „Benutzt“ = angelegt, daran gearbeitet oder erledigt – je nachdem, was zuletzt war.
+ * Per × ausgeblendete Titel fehlen, bis sie wieder benutzt werden.
  */
+/** Vergleichsschlüssel für Titel in „Zuletzt verwendet“ (ohne Leerzeichen am Rand, klein). */
+export function recentKey(title: string): string {
+  return title.trim().toLocaleLowerCase('de')
+}
+
 export function recentTasks(s: AppState, dayId: ID, limit: number): Task[] {
-  const key = (title: string) => title.trim().toLocaleLowerCase('de')
+  const key = recentKey
+  const hidden = s.settings.recentHidden ?? {}
   const lastWork = new Map<ID, number>()
   for (const b of alive(Object.values(s.blocks))) {
     lastWork.set(b.taskId, Math.max(lastWork.get(b.taskId) ?? 0, b.endedAt))
@@ -74,6 +81,8 @@ export function recentTasks(s: AppState, dayId: ID, limit: number): Task[] {
   for (const task of tasks) {
     const k = key(task.title)
     if (!k || onDay.has(k) || seen.has(k)) continue
+    // Per × ausgeblendet – außer die Aufgabe wurde danach wieder benutzt.
+    if (hidden[k] !== undefined && usedAt(task) <= hidden[k]) continue
     seen.add(k)
     result.push(task)
     if (result.length === limit) break

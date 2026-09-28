@@ -128,6 +128,11 @@ export interface SettingsValues {
   noiseOn: boolean
   /** Welches Rauschen. */
   noiseColor: NoiseColor
+  /**
+   * In „Zuletzt verwendet“ per × ausgeblendete Titel (klein geschrieben) → wann. Wird die Aufgabe
+   * danach wieder benutzt, taucht sie wieder auf. Seit 2026-09-28; fehlt in älteren Daten → {}.
+   */
+  recentHidden: Record<string, number>
 }
 
 /** Einstellungen als gespeicherter Eintrag (es gibt genau einen). */

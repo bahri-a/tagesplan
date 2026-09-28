@@ -9,7 +9,7 @@
 export const T = {
   nav: {
     today: 'Heute',
-    plan: 'Planen',
+    plan: 'Planer',
     settings: 'Einstellungen',
     timerBlock: 'Block',
     timerPaused: 'Pausiert',
@@ -52,7 +52,7 @@ export const T = {
       'Gedanken wandern. Du holst sie einfach zurück.',
       'Ablenkung ist normal. Weiter geht’s, bis der Ring voll ist.',
     ],
-    startBlock: 'Block starten',
+    startBlock: 'Starten',
     spaceHint: 'Leertaste',
     // Startknopf ab der zweiten Aufgabe – zwei Zeilen: oben die Frage, darunter „Weiter mit …“.
     longPauseAsk: 'Lange Pause gemacht?',
@@ -162,6 +162,7 @@ export const T = {
     recentTitle: 'Zuletzt verwendet',
     recentTarget: 'Hinzufügen zu',
     recentAdd: (title: string, day: string) => `„${title}“ zu ${day} hinzufügen`,
+    recentHide: (title: string) => `„${title}“ aus „Zuletzt verwendet“ entfernen`,
     recentNone: (day: string) => `Steht alles schon bei ${day}.`,
     recentAdded: (title: string, day: string) => `„${title}“ steht jetzt bei ${day}.`,
     undo: 'Rückgängig',
