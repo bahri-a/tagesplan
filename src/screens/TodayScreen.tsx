@@ -27,6 +27,7 @@ import { requestNotificationPermission } from '../signals/notifications'
 import {
   abortCurrentBlock,
   addExtraBlock,
+  finishBlockEarly,
   finishTask,
   isInWarningTime,
   pauseCurrentBlock,
@@ -400,6 +401,14 @@ function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: 
                 {T.today.pause}
               </button>
             )}
+            <button
+              type="button"
+              className="btn btn-quiet btn-small"
+              title={T.today.finishEarlyHint}
+              onClick={() => finishBlockEarly()}
+            >
+              {T.today.finishEarly}
+            </button>
             <button type="button" className="btn btn-quiet btn-small" onClick={() => setConfirmAbort(true)}>
               {T.today.abort}
             </button>

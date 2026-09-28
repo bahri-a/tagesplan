@@ -405,3 +405,23 @@ describe('Gedanken parken und Tagesertrag', () => {
     expect(result.doneTitles).toEqual(['Kapitel 3'])
   })
 })
+
+describe('Früher fertig', () => {
+  it('schließt den Block vorzeitig als durchgehalten ab, die Pause startet sofort', () => {
+    const task = actions.addTask(today(), 'A')
+    actions.startBlock(task.id)
+    actions.finishBlockEarly(at(10 * MIN))
+    const [block] = sel.blocksOfTask(getState(), task.id)
+    expect(block.status).toBe('completed')
+    expect(block.workedSeconds).toBe(10 * 60)
+    const t = getState().timer
+    expect(t.phase).toBe('break')
+    if (t.phase === 'break') expect(t.startedAt).toBe(at(10 * MIN))
+    // Die Einstellungen der Aufgabe bleiben gleich – der nächste Block ist wieder normal lang.
+    expect(getState().tasks[task.id].blockMinutesOverride).toBeNull()
+    actions.checkTimer(at(10 * MIN + BREAK + 100))
+    actions.startBlock(task.id)
+    const next = getState().timer
+    expect(next.phase === 'block' && next.plannedMs).toBe(BLOCK)
+  })
+})

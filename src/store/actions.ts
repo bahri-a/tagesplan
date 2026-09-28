@@ -216,6 +216,18 @@ export function resumeCurrentBlock(): void {
   if (t.phase === 'block') commit({ timer: timer.resumeBlock(t, Date.now()) })
 }
 
+/**
+ * „Früher fertig“: Der laufende (oder pausierte) Block wird jetzt erfolgreich abgeschlossen –
+ * als Ausnahme nur für diesen einen Block. Er zählt als durchgehalten, gespeichert wird die
+ * wirklich gearbeitete Zeit, und die kurze Pause startet sofort. Die Blocklänge der Aufgabe
+ * und die nächsten Blöcke bleiben unverändert.
+ */
+export function finishBlockEarly(now = Date.now()): void {
+  const t = getState().timer
+  if (t.phase !== 'block') return
+  commit(completeBlockChanges(t, now))
+}
+
 /** Block abbrechen. Die bis dahin gearbeitete Zeit wird gespeichert. */
 export function abortCurrentBlock(): void {
   if (getState().timer.phase !== 'block') return
@@ -255,18 +267,10 @@ export function checkTimer(now = Date.now()): TimerEvent[] {
   //    (so lang wie bei dieser Aufgabe eingestellt, sonst Standard).
   if (t.phase === 'block' && timer.isBlockFinished(t, now)) {
     const endedAt = timer.blockEndsAt(t)
-    const task = s.tasks[t.taskId]
-    const breakMinutes = task ? shortBreakMinutesFor(s, task) : s.settings.shortBreakMinutes
-    changes.blocks = [blockRecord(t, 'completed', endedAt)]
-    t = {
-      phase: 'break',
-      taskId: t.taskId,
-      startedAt: endedAt,
-      durationMs: breakMinutes * 60_000,
-      endSignaled: false,
-    }
-    changes.timer = t
-    events.push({ type: 'blockEnd', taskTitle: titleOf(t.taskId), fresh: now - endedAt < SIGNAL_MAX_DELAY_MS })
+    const completed = completeBlockChanges(t, endedAt)
+    Object.assign(changes, completed)
+    t = completed.timer
+    events.push({ type: 'blockEnd', taskTitle: titleOf(completed.timer.taskId), fresh: now - endedAt < SIGNAL_MAX_DELAY_MS })
   }
 
   // 2. Kurze Pause abgelaufen → Ton, danach erscheint „Nächsten Block starten“.
@@ -399,6 +403,17 @@ function blockRecord(t: timer.BlockTimer, status: BlockStatus, endedAt: number):
     pausedMs: timer.blockPausedMs(t, endedAt),
     workedSeconds: Math.round(timer.blockWorkedMs(t, endedAt) / 1000),
     status,
+  }
+}
+
+/** Block als durchgehalten speichern und die kurze Pause (Länge dieser Aufgabe) ab `endedAt` starten. */
+function completeBlockChanges(t: timer.BlockTimer, endedAt: number): Changes & { timer: timer.BreakTimer } {
+  const s = getState()
+  const task = s.tasks[t.taskId]
+  const breakMinutes = task ? shortBreakMinutesFor(s, task) : s.settings.shortBreakMinutes
+  return {
+    blocks: [blockRecord(t, 'completed', endedAt)],
+    timer: { phase: 'break', taskId: t.taskId, startedAt: endedAt, durationMs: breakMinutes * 60_000, endSignaled: false },
   }
 }
 

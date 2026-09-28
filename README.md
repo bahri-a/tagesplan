@@ -162,7 +162,10 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   Ansehen. Abhaken kannst du sie erst, wenn der Block läuft.
 - Vor dem ersten Block einer Aufgabe steht über dem Knopf dein **Startsignal** (falls
   eingetragen) und darunter klein ein Startsatz wie „Du musst nur anfangen.“
-- **Block starten** → der Ring füllt sich langsam. Dezent darunter: **Pausieren** und **Abbrechen**.
+- **Block starten** → der Ring füllt sich langsam. Dezent darunter: **Pausieren**, **Früher fertig**
+  und **Abbrechen**. „Früher fertig“ ist für Tage, an denen es schneller ging als gedacht: Der Block
+  zählt als geschafft, die kurze Pause beginnt sofort. Nur dieser eine Block wird kürzer – die
+  nächsten Blöcke sind wieder so lang wie eingestellt.
   Im Hintergrund schimmert es zart grün (im Block) oder blau (in der Pause).
 - **Rauschen:** Unter dem Ring schaltet ein einziger Knopf **Rauschen an / aus**. Es läuft nur,
   solange der Block läuft (in Pause und pausiert ist es still). Welches Rauschen (braun, rosa,
