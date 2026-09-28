@@ -9,7 +9,7 @@ import { T } from '../config/texts'
 import { Dialog } from '../components/Dialog'
 import { NumberStepper } from '../components/NumberStepper'
 import { downloadBackup, parseBackup, restoreBackup, type BackupFile } from '../db/backup'
-import type { ThemeSetting } from '../model/types'
+import type { SurfaceSetting, ThemeSetting } from '../model/types'
 import {
   notificationPermission,
   requestNotificationPermission,
@@ -24,6 +24,11 @@ const THEMES: { value: ThemeSetting; label: string }[] = [
   { value: 'system', label: T.settings.themeSystem },
   { value: 'light', label: T.settings.themeLight },
   { value: 'dark', label: T.settings.themeDark },
+]
+
+const SURFACES: { value: SurfaceSetting; label: string }[] = [
+  { value: 'pur', label: T.settings.surfacesPur },
+  { value: 'glass', label: T.settings.surfacesGlass },
 ]
 
 export function SettingsScreen() {
@@ -85,6 +90,21 @@ export function SettingsScreen() {
               onClick={() => updateSettings({ theme: theme.value })}
             >
               {theme.label}
+            </button>
+          ))}
+        </div>
+        {/* Pur = massive Flächen, Milchglas = leicht durchscheinend */}
+        <div className="segmented" role="radiogroup" aria-label={T.settings.surfaces}>
+          {SURFACES.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="radio"
+              aria-checked={settings.surfaces === option.value}
+              className="segmented-item"
+              onClick={() => updateSettings({ surfaces: option.value })}
+            >
+              {option.label}
             </button>
           ))}
         </div>

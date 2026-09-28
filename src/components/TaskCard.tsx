@@ -2,16 +2,16 @@
  * Eine Hauptaufgabe als Karte im Bildschirm „Planen“.
  * Zugeklappt: Nummer, Titel, Blöcke und Schritte auf einen Blick.
  * Aufgeklappt: Titel, erste Schritte, Blockanzahl, Blocklänge und kurze Pause bearbeiten.
- * Über den Griff links lässt sich die Karte verschieben (Drag & Drop).
+ * Über den Griff links lässt sich die Karte verschieben (Drag & Drop),
+ * über den Papierkorb rechts löschen (danach kurz „Rückgängig“, siehe PlanScreen).
  */
 
-import { useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { SETTINGS_LIMITS } from '../config/defaults'
 import { T } from '../config/texts'
 import type { Task } from '../model/types'
-import { deleteTask, setTaskCompleted, updateTask } from '../store/actions'
+import { setTaskCompleted, updateTask } from '../store/actions'
 import { blockMinutesFor, stepsOfTask } from '../store/selectors'
 import { useAppState } from '../store/store'
 import { NumberStepper } from './NumberStepper'
@@ -24,9 +24,11 @@ interface Props {
   /** Bei einer neuen Aufgabe gleich ins Feld für den ersten Schritt springen. */
   focusStepInput: boolean
   onToggle: () => void
+  /** Papierkorb geklickt – was dann passiert (Rückfrage, Löschen, „Rückgängig“), regelt „Planen“. */
+  onDelete: () => void
 }
 
-export function TaskCard({ task, number, expanded, focusStepInput, onToggle }: Props) {
+export function TaskCard({ task, number, expanded, focusStepInput, onToggle, onDelete }: Props) {
   const state = useAppState()
   const steps = stepsOfTask(state, task.id)
   const stepsDone = steps.filter((s) => s.doneAt !== null).length
@@ -75,6 +77,17 @@ export function TaskCard({ task, number, expanded, focusStepInput, onToggle }: P
             {steps.length > 0 && <> · {T.plan.stepsMeta(stepsDone, steps.length)}</>}
           </span>
         </button>
+
+        {/* Eigener Knopf neben der Zusammenfassung: klappt nichts auf und zieht nichts. */}
+        <button
+          type="button"
+          className="task-delete"
+          aria-label={T.plan.deleteLabel(task.title || '…')}
+          title={T.plan.delete}
+          onClick={onDelete}
+        >
+          <TrashIcon />
+        </button>
       </div>
 
       {expanded && <TaskEditor task={task} focusStepInput={focusStepInput} onClose={onToggle} />}
@@ -84,7 +97,6 @@ export function TaskCard({ task, number, expanded, focusStepInput, onToggle }: P
 
 function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepInput: boolean; onClose: () => void }) {
   const state = useAppState()
-  const [confirmDelete, setConfirmDelete] = useState(false)
   const isDone = task.completedAt !== null
 
   return (
@@ -137,27 +149,11 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
         />
       </div>
 
+      {/* Gelöscht wird nur über den Papierkorb oben in der Karte – überall gleich. */}
       <div className="task-editor-footer">
-        {confirmDelete ? (
-          <span className="confirm-inline">
-            {T.plan.deleteConfirm}
-            <button type="button" className="btn btn-small" onClick={() => deleteTask(task.id)}>
-              {T.plan.yes}
-            </button>
-            <button type="button" className="btn btn-small btn-quiet" onClick={() => setConfirmDelete(false)}>
-              {T.plan.no}
-            </button>
-          </span>
-        ) : (
-          <>
-            <button type="button" className="btn btn-small btn-quiet" onClick={() => setTaskCompleted(task.id, !isDone)}>
-              {isDone ? T.plan.reopen : T.plan.markDone}
-            </button>
-            <button type="button" className="btn btn-small btn-quiet" onClick={() => setConfirmDelete(true)}>
-              {T.plan.delete}
-            </button>
-          </>
-        )}
+        <button type="button" className="btn btn-small btn-quiet" onClick={() => setTaskCompleted(task.id, !isDone)}>
+          {isDone ? T.plan.reopen : T.plan.markDone}
+        </button>
         <button type="button" className="btn btn-small task-editor-close" onClick={onClose}>
           {T.plan.close}
         </button>
@@ -213,5 +209,27 @@ function DurationRow({ label, standardMinutes, override, limits, onChange }: Dur
         onChange={(v) => onChange(v === standardMinutes ? null : v)}
       />
     </div>
+  )
+}
+
+/** Kleiner Papierkorb (eigenes SVG, keine Bibliothek). Farbe kommt vom Knopf (currentColor). */
+function TrashIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M2.75 4.25h10.5" />
+      <path d="M6.25 4.25V3a1 1 0 0 1 1-1h1.5a1 1 0 0 1 1 1v1.25" />
+      <path d="M4 4.25l.65 8.6a1.2 1.2 0 0 0 1.2 1.15h4.3a1.2 1.2 0 0 0 1.2-1.15l.65-8.6" />
+      <path d="M6.6 6.9v4.4M9.4 6.9v4.4" />
+    </svg>
   )
 }

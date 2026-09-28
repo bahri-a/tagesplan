@@ -91,6 +91,9 @@ export interface Block extends BaseRecord {
 
 export type ThemeSetting = 'system' | 'light' | 'dark'
 
+/** Aussehen der Flächen: 'pur' (massiv) oder 'glass' (Milchglas, leicht durchscheinend). */
+export type SurfaceSetting = 'pur' | 'glass'
+
 /** Die änderbaren Einstellungen. */
 export interface SettingsValues {
   blockMinutes: number
@@ -98,6 +101,8 @@ export interface SettingsValues {
   defaultBlocksPerTask: number
   maxTasksPerDay: number
   theme: ThemeSetting
+  /** Seit 2026-09-28. Fehlt in älteren Daten → Standard aus DEFAULT_SETTINGS. */
+  surfaces: SurfaceSetting
 }
 
 /** Einstellungen als gespeicherter Eintrag (es gibt genau einen). */

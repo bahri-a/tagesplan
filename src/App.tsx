@@ -7,28 +7,38 @@
  */
 
 import { useCallback, useEffect, useState } from 'react'
-import { APP_NAME } from './config/defaults'
+import { APP_NAME, UNDO_DELETE_MS } from './config/defaults'
 import { T } from './config/texts'
 import { EndDayDialog } from './components/EndDayDialog'
 import { useNow, useTimerEngine } from './components/hooks'
 import { NotePad } from './components/NotePad'
-import { Toast } from './components/Toast'
+import { Toast, type ToastAction } from './components/Toast'
 import { UpdateBanner } from './components/UpdateBanner'
 import { WelcomeBackDialog } from './components/WelcomeBackDialog'
 import { requestPersistentStorage } from './db/database'
 import { formatCountdown } from './logic/time'
 import * as timer from './logic/timer'
-import type { ThemeSetting, TimerState } from './model/types'
+import type { ID, SurfaceSetting, ThemeSetting, TimerState } from './model/types'
 import { PlanScreen } from './screens/PlanScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
 import { TodayScreen } from './screens/TodayScreen'
 import { unlockAudio } from './signals/sounds'
-import { endDay, getEndDayConflicts } from './store/actions'
+import { endDay, getEndDayConflicts, restoreTask } from './store/actions'
 import { shouldAskToEndPreviousDay } from './store/selectors'
 import { getState, initStore, useAppState } from './store/store'
 import './components/components.css'
 
 type Screen = 'today' | 'plan' | 'settings'
+
+/** Eine Meldung unten. `id` ist bei jeder Meldung neu – so startet ihre Anzeigezeit neu. */
+interface ToastInfo {
+  id: number
+  message: string
+  duration?: number
+  action?: ToastAction
+}
+
+let nextToastId = 1
 
 const SCREENS: { id: Screen; label: string }[] = [
   { id: 'today', label: T.nav.today },
@@ -56,20 +66,31 @@ function Shell() {
   const state = useAppState()
   const [screen, setScreen] = useState<Screen>('today')
   const [endDayDialog, setEndDayDialog] = useState<'closed' | 'confirm' | 'conflicts'>('closed')
-  const [toast, setToast] = useState<string | null>(null)
+  const [toast, setToast] = useState<ToastInfo | null>(null)
   const askEndPrevious = useAskToEndPreviousDay()
 
   useTimerEngine()
   useTheme(state.settings.theme)
+  useSurfaces(state.settings.surfaces)
   useWindowTitle(state.timer)
 
   const clearToast = useCallback(() => setToast(null), [])
+  const showToast = (message: string, extra: Omit<ToastInfo, 'id' | 'message'> = {}) =>
+    setToast({ id: nextToastId++, message, ...extra })
+
+  // Nach dem Löschen: 8 Sekunden „Aufgabe gelöscht · Rückgängig“. Eine neue Meldung ersetzt
+  // die alte – nach mehreren Löschungen lässt sich also nur die letzte zurückholen.
+  const taskDeleted = (taskId: ID) =>
+    showToast(T.plan.deleted, {
+      duration: UNDO_DELETE_MS,
+      action: { label: T.plan.undo, onClick: () => restoreTask(taskId) },
+    })
 
   const dayEnded = () => {
     setEndDayDialog('closed')
     askEndPrevious.hide()
     setScreen('today')
-    setToast(T.endDay.finished)
+    showToast(T.endDay.finished)
   }
 
   // „Ja, Tag beenden“ aus „Willkommen zurück“: ohne weitere Rückfrage.
@@ -106,7 +127,7 @@ function Shell() {
         {screen === 'today' && (
           <TodayScreen onPlan={() => setScreen('plan')} onEndDay={() => setEndDayDialog('confirm')} />
         )}
-        {screen === 'plan' && <PlanScreen />}
+        {screen === 'plan' && <PlanScreen onTaskDeleted={taskDeleted} />}
         {screen === 'settings' && <SettingsScreen />}
       </main>
 
@@ -122,7 +143,15 @@ function Shell() {
           onEnded={dayEnded}
         />
       )}
-      {toast && <Toast message={toast} onDone={clearToast} />}
+      {toast && (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          duration={toast.duration}
+          action={toast.action}
+          onDone={clearToast}
+        />
+      )}
       <UpdateBanner />
     </>
   )
@@ -170,6 +199,13 @@ function useTheme(theme: ThemeSetting) {
     darkMode.addEventListener('change', updateTitleBar)
     return () => darkMode.removeEventListener('change', updateTitleBar)
   }, [theme])
+}
+
+/** Pur oder Milchglas: steuert die Flächen-Variablen in index.css. */
+function useSurfaces(surfaces: SurfaceSetting) {
+  useEffect(() => {
+    document.documentElement.dataset.surfaces = surfaces
+  }, [surfaces])
 }
 
 /** Zeigt die Restzeit im Fenstertitel – praktisch, wenn die App im Hintergrund ist. */

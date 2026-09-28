@@ -13,6 +13,7 @@ function settings(blockMinutes: number, shortBreakMinutes: number): Settings {
     defaultBlocksPerTask: 3,
     maxTasksPerDay: 3,
     theme: 'system',
+    surfaces: 'pur',
   }
 }
 

@@ -6,6 +6,7 @@
  */
 
 import { dayKey } from '../logic/time'
+import { isBreakOver } from '../logic/timer'
 import { alive, sortByPosition } from '../logic/records'
 import type { Block, Day, ID, Step, Task } from '../model/types'
 import type { AppState } from './store'
@@ -65,6 +66,18 @@ export function currentTask(s: AppState): Task | undefined {
 /** Der aktuelle Schritt: der erste noch nicht abgehakte. */
 export function currentStep(s: AppState, taskId: ID): Step | undefined {
   return stepsOfTask(s, taskId).find((st) => st.doneAt === null)
+}
+
+/**
+ * Läuft für diese Aufgabe gerade etwas, das beim Löschen verloren ginge?
+ * 'block' = ein Block (auch pausiert), 'break' = eine kurze Pause, die noch nicht vorbei ist.
+ * Sonst `null`. (Danach fragt „Planen“ vor dem Löschen nach.)
+ */
+export function runningTimerOfTask(s: AppState, taskId: ID, now: number): 'block' | 'break' | null {
+  const t = s.timer
+  if (t.phase === 'idle' || t.taskId !== taskId) return null
+  if (t.phase === 'block') return 'block'
+  return isBreakOver(t, now) ? null : 'break'
 }
 
 /**

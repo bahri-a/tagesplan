@@ -10,30 +10,34 @@
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  padding: 0.75rem 1rem;
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(10px);
+  padding: 0.9rem 1rem 0.5rem;
 }
 
+/* Reiter als ruhige Leiste – die aktive Seite salbeigrün hinterlegt */
 .nav {
   display: flex;
-  gap: 0.25rem;
-  padding: 0.25rem;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--panel-border);
   border-radius: 999px;
-  background: var(--surface-2);
+  background: var(--panel-sheen), var(--panel-bg);
+  -webkit-backdrop-filter: var(--panel-filter);
+  backdrop-filter: var(--panel-filter);
+  box-shadow: var(--shadow);
 }
 
 .nav-item {
-  padding: 0.4em 1.1em;
+  padding: 0.45em 1.15em;
   border: none;
   border-radius: 999px;
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
+  font-size: 0.95rem;
   font-weight: 500;
   transition:
-    background 0.15s,
-    color 0.15s;
+    background 0.2s,
+    color 0.2s;
 }
 
 .nav-item:hover {
@@ -41,9 +45,8 @@
 }
 
 .nav-item[aria-current='page'] {
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: var(--shadow);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 /* Kleine Timer-Anzeige in der Kopfleiste, wenn du nicht auf „Heute“ bist. */
@@ -53,7 +56,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4em;
-  padding: 0.3em 0.85em;
+  padding: 0.35em 0.95em;
   border: none;
   border-radius: 999px;
   background: var(--accent-soft);
@@ -61,6 +64,7 @@
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   cursor: pointer;
+  box-shadow: var(--shadow);
 }
 
 .timer-pill.is-break {
@@ -69,19 +73,21 @@
 }
 
 .main {
-  padding: 1rem 1.25rem 6rem;
+  position: relative;
+  z-index: 1;
+  padding: 1.25rem 1.25rem 6rem;
 }
 
 /* ---------- Dialog ---------- */
 
 .dialog {
   width: min(460px, calc(100vw - 2rem));
-  padding: 1.6rem;
-  border: 1px solid var(--border);
+  padding: 1.75rem;
+  border: 1px solid var(--panel-edge);
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 20px 60px rgb(0 0 0 / 0.2);
+  box-shadow: var(--shadow-lift);
 }
 
 .dialog-wide {
@@ -89,8 +95,8 @@
 }
 
 .dialog::backdrop {
-  background: rgb(20 22 25 / 0.35);
-  backdrop-filter: blur(2px);
+  background: rgb(20 20 18 / 0.3);
+  backdrop-filter: blur(4px);
 }
 
 .dialog-title {
@@ -165,13 +171,35 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.7em 1.1em;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  padding: 0.75em 1.25em;
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  background: var(--panel-sheen), var(--panel-bg);
+  -webkit-backdrop-filter: var(--panel-filter);
+  backdrop-filter: var(--panel-filter);
+  box-shadow: var(--shadow-lift);
   transform: translateX(-50%);
-  animation: toast-in 0.25s ease-out;
+  animation: toast-in 0.3s ease-out;
+}
+
+/* „Rückgängig“ in der Meldung – ruhig, in der Akzentfarbe */
+.toast-separator {
+  margin: 0 -0.5rem;
+  color: var(--text-muted);
+}
+
+.toast-action {
+  padding: 0.2em 0.5em;
+  border: none;
+  border-radius: var(--radius-small);
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.toast-action:hover {
+  background: var(--accent-soft);
 }
 
 @keyframes toast-in {
@@ -235,14 +263,17 @@
   right: 1.25rem;
   bottom: 1.25rem;
   z-index: 20;
-  padding: 0.45em 0.95em;
-  border: 1px solid var(--border);
+  padding: 0.5em 1.05em;
+  border: 1px solid var(--panel-border);
   border-radius: 999px;
-  background: var(--surface);
+  background: var(--panel-sheen), var(--panel-bg);
+  -webkit-backdrop-filter: var(--panel-filter);
+  backdrop-filter: var(--panel-filter);
   color: var(--text-muted);
   cursor: pointer;
   font-size: 0.9rem;
-  opacity: 0.75;
+  box-shadow: var(--shadow);
+  opacity: 0.85;
   transition:
     opacity 0.15s,
     color 0.15s;

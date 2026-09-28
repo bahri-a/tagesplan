@@ -17,11 +17,9 @@ export const T = {
   },
 
   today: {
-    // Fortschritt oben: zwei kurze Zeilen mit Symbolen …
-    progressTask: 'Aufgabe',
-    progressBlock: 'Block',
+    // Fortschritt oben: nur die Block-Punkte (die Aufgaben stehen unten in der Leiste) …
     perBlock: (m: number) => `je ${m} Min.`,
-    // … und derselbe Stand als ganzer Satz (beim Drüberfahren mit der Maus und für Screenreader).
+    // … und der ganze Stand als Satz (beim Drüberfahren mit der Maus und für Screenreader).
     taskOf: (n: number, total: number) => `Aufgabe ${n} von ${total}`,
     blockOf: (n: number, total: number) => `Block ${n} von ${total}`,
     blockDoneOf: (n: number, total: number) => `Block ${n} von ${total} geschafft`,
@@ -29,6 +27,10 @@ export const T = {
     minutes: (m: number) => (m === 1 ? '1 Minute' : `${m} Minuten`),
     // Die ersten Schritte unter dem Timer – nur zum Loslegen, sie beenden keinen Block.
     firstStep: 'Zum Einstieg',
+    // Vor dem Start (und in der Pause): die ersten Schritte nur ansehen, noch nicht abhaken.
+    firstStepsPreview: 'Erste Schritte zum Einstieg',
+    firstStepsPreviewHint: 'Abhaken kannst du sie, sobald der Block läuft.',
+    stepDone: 'erledigt',
     startDone: 'Einstieg geschafft!',
     keepGoing: 'Bleib einfach dran, bis die Zeit um ist.',
     startBlock: 'Block starten',
@@ -86,10 +88,16 @@ export const T = {
     done: 'Erledigt',
     reopen: 'Wieder öffnen',
     markDone: 'Als erledigt markieren',
-    delete: 'Löschen',
-    deleteConfirm: 'Aufgabe löschen?',
-    yes: 'Ja',
-    no: 'Nein',
+    // Löschen: Papierkorb rechts auf jeder Karte, danach kurz „Rückgängig“.
+    delete: 'Aufgabe löschen',
+    deleteLabel: (title: string) => `Aufgabe „${title}“ löschen`,
+    deleted: 'Aufgabe gelöscht',
+    undo: 'Rückgängig',
+    // Nur wenn für die Aufgabe gerade ein Block oder eine kurze Pause läuft (der Timer kommt nicht zurück).
+    deleteRunningBlock: 'Der laufende Block wird beendet. Trotzdem löschen?',
+    deleteRunningBreak: 'Die laufende kurze Pause wird beendet. Trotzdem löschen?',
+    deleteYes: 'Ja, löschen',
+    deleteNo: 'Nein',
     dragHandle: 'Ziehen zum Sortieren',
     removeStep: 'Schritt entfernen',
     close: 'Zuklappen',
@@ -146,6 +154,9 @@ export const T = {
     themeSystem: 'Automatisch',
     themeLight: 'Hell',
     themeDark: 'Dunkel',
+    surfaces: 'Flächen',
+    surfacesPur: 'Pur',
+    surfacesGlass: 'Milchglas',
     sounds: 'Töne & Benachrichtigungen',
     testBlockEnd: '▶ Ton „Block vorbei“',
     testBreakEnd: '▶ Ton „Pause vorbei“',

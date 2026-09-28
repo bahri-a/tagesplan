@@ -144,17 +144,26 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   7 Minuten Pause – änderst du unter **Einstellungen**.
 - Reihenfolge: am Griff **⠿** links ziehen. **Schwerste Aufgabe nach oben.**
 - Planst du mehr als dein Limit, erscheint nur ein sanfter Hinweis.
+- **Löschen:** der kleine Papierkorb rechts auf jeder Karte. Die Aufgabe ist sofort weg;
+  unten steht 8 Sekunden lang **Aufgabe gelöscht · Rückgängig** – ein Klick holt sie mit
+  allen Schritten auf ihren alten Platz zurück (nur die zuletzt gelöschte). Läuft für die
+  Aufgabe gerade ein Block oder eine Pause, fragt die App vorher nach.
 
 ### Durchführen (Tab **Heute**)
-- Oben steht immer die oberste noch offene Aufgabe. Darüber zeigen zwei kleine Zeilen,
-  wo du stehst: **Aufgabe** (✓ = erledigt, hervorgehoben = jetzt dran) und **Block**
-  (voller Punkt = geschafft, breiter Punkt = jetzt dran, leerer Punkt = kommt noch).
-- **Block starten** → der Timer läuft. Dezent darunter: **Pausieren** und **Abbrechen**.
+- In der großen Karte steht immer die oberste noch offene Aufgabe. Darüber zeigen Punkte
+  deine **Blöcke** (voller Punkt = geschafft, breiter Punkt = jetzt dran, leerer Punkt =
+  kommt noch). Fährst du mit der Maus darüber, steht dort der ganze Stand als Satz.
+- Unter der Karte zeigt eine schmale Leiste alle Aufgaben des Tages (✓ = erledigt,
+  gefüllter Punkt = jetzt dran). Während eines Blocks ist sie ausgeblendet.
+- Vor dem Start siehst du unter dem Titel deine **ersten Schritte zum Einstieg** – nur zum
+  Ansehen. Abhaken kannst du sie erst, wenn der Block läuft.
+- **Block starten** → der Ring füllt sich langsam. Dezent darunter: **Pausieren** und **Abbrechen**.
+  Im Hintergrund schimmert es zart grün (im Block) oder blau (in der Pause).
 - Läuft der Block durch → sanfter Ton, die **kurze Pause** startet von selbst.
 - Pause vorbei → Ton und **Nächsten Block starten**. Wann du klickst, ist deine Sache.
 - Nach dem letzten geschätzten Block: **Erledigt** oder **Noch ein Block**.
 - Vor jeder weiteren Aufgabe: **Lange Pause gemacht – weiter mit …** (nicht getimt).
-- Unter dem Timer steht **Zum Einstieg: …** – dein nächster erster Schritt zum Abhaken.
+- Im laufenden Block steht unter dem Timer **Zum Einstieg: …** – dein nächster erster Schritt zum Abhaken.
   Abhaken beendet keinen Block. Sind alle abgehakt, steht dort „Einstieg geschafft!
   Bleib einfach dran, bis die Zeit um ist.“ **Alle Schritte** klappt die ganze Liste auf.
 - Bist du auf einem anderen Tab, zeigt oben rechts eine kleine Anzeige die Restzeit.
@@ -166,6 +175,11 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   Aufgaben nebeneinander und wählst mit einem Klick.
 - Vergessen? Kein Problem: Öffnest du die App am nächsten Tag, fragt sie freundlich nach.
   (Arbeit bis 4 Uhr nachts zählt noch zum alten Tag.)
+
+### Aussehen
+- **Einstellungen → Aussehen:** Automatisch / Hell / Dunkel und die **Flächen**:
+  **Pur** (massiv, Standard) oder **Milchglas** (leicht durchscheinend).
+- Hast du in macOS „Bewegung reduzieren“ eingeschaltet, gibt es keine Animationen.
 
 ### Notizzettel
 - Unten rechts **✎ Notizen**: ein Schmierblatt für alles, was dir durch den Kopf geht –

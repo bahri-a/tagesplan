@@ -8,6 +8,7 @@ import { IDBFactory } from 'fake-indexeddb'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DEFAULT_SETTINGS } from '../config/defaults'
 import { resetDatabaseForTests } from '../db/database'
+import type { Settings } from '../model/types'
 import * as actions from './actions'
 import * as sel from './selectors'
 import { flushSaves, getState, initStore, resetStoreForTests } from './store'
@@ -251,9 +252,105 @@ describe('Planen', () => {
     ])
   })
 
+  it('Rückgängig holt eine gelöschte Aufgabe mit Schritten und Werten auf ihren alten Platz zurück', () => {
+    const a = actions.addTask(today(), 'A')
+    const b = actions.addTask(today(), 'B')
+    const c = actions.addTask(today(), 'C')
+    actions.updateTask(b.id, { estimatedBlocks: 5, blockMinutesOverride: 40, shortBreakMinutesOverride: 3 })
+    const step1 = actions.addStep(b.id, 'PDF öffnen')
+    actions.addStep(b.id, 'Seite 1 lesen')
+    actions.toggleStep(step1.id)
+
+    actions.deleteTask(b.id)
+    expect(sel.tasksOfDay(getState(), today()).map((t) => t.title)).toEqual(['A', 'C'])
+    expect(sel.stepsOfTask(getState(), b.id)).toEqual([])
+
+    expect(actions.restoreTask(b.id)).toBe(true)
+    const s = getState()
+    expect(sel.tasksOfDay(s, today()).map((t) => [t.title, t.position])).toEqual([
+      ['A', 0],
+      ['B', 1],
+      ['C', 2],
+    ])
+    const restored = s.tasks[b.id]
+    expect(restored.deletedAt).toBeNull()
+    expect(restored.estimatedBlocks).toBe(5)
+    expect(restored.blockMinutesOverride).toBe(40)
+    expect(restored.shortBreakMinutesOverride).toBe(3)
+    const steps = sel.stepsOfTask(s, b.id)
+    expect(steps.map((st) => [st.text, st.doneAt !== null])).toEqual([
+      ['PDF öffnen', true],
+      ['Seite 1 lesen', false],
+    ])
+    // Nichts anderes hat sich verändert.
+    expect([a.id, c.id].map((id) => s.tasks[id].deletedAt)).toEqual([null, null])
+  })
+
+  it('Rückgängig bringt keine vorher einzeln entfernten Schritte zurück', () => {
+    const a = actions.addTask(today(), 'A')
+    const old = actions.addStep(a.id, 'alt')
+    actions.addStep(a.id, 'neu')
+    actions.deleteStep(old.id)
+    at(MIN)
+    actions.deleteTask(a.id)
+    actions.restoreTask(a.id)
+    expect(sel.stepsOfTask(getState(), a.id).map((st) => [st.text, st.position])).toEqual([['neu', 0]])
+  })
+
+  it('Rückgängig stellt einen beim Löschen beendeten Block nicht wieder her', () => {
+    const a = actions.addTask(tomorrow(), 'Morgen')
+    const b = actions.addTask(today(), 'B')
+    actions.startBlock(b.id)
+    at(4 * MIN)
+    expect(sel.runningTimerOfTask(getState(), b.id, Date.now())).toBe('block')
+    expect(sel.runningTimerOfTask(getState(), a.id, Date.now())).toBeNull()
+    actions.deleteTask(b.id)
+    expect(getState().timer.phase).toBe('idle')
+
+    actions.restoreTask(b.id)
+    const s = getState()
+    expect(s.timer.phase).toBe('idle')
+    // Die 4 gearbeiteten Minuten bleiben als abgebrochener Block gespeichert.
+    expect(sel.blocksOfTask(s, b.id).map((bl) => [bl.status, bl.workedSeconds])).toEqual([['aborted', 4 * 60]])
+  })
+
+  it('erkennt einen pausierten Block und eine laufende kurze Pause – nicht aber eine vorbei', () => {
+    const a = actions.addTask(today(), 'A')
+    actions.startBlock(a.id)
+    actions.pauseCurrentBlock()
+    expect(sel.runningTimerOfTask(getState(), a.id, Date.now())).toBe('block')
+    actions.resumeCurrentBlock()
+    actions.checkTimer(at(BLOCK))
+    expect(sel.runningTimerOfTask(getState(), a.id, at(BLOCK + MIN))).toBe('break')
+    expect(sel.runningTimerOfTask(getState(), a.id, at(BLOCK + BREAK))).toBeNull()
+  })
+
+  it('Rückgängig tut nichts, wenn der Tag der Aufgabe inzwischen beendet ist', () => {
+    const a = actions.addTask(today(), 'A')
+    actions.deleteTask(a.id)
+    actions.endDay()
+    expect(actions.restoreTask(a.id)).toBe(false)
+    expect(getState().tasks[a.id].deletedAt).not.toBeNull()
+    // Eine nicht gelöschte Aufgabe bleibt unverändert.
+    const b = actions.addTask(today(), 'B')
+    expect(actions.restoreTask(b.id)).toBe(false)
+  })
+
   it('neue Aufgaben bekommen die Standard-Blockanzahl', () => {
     actions.updateSettings({ defaultBlocksPerTask: 4 })
     expect(actions.addTask(today(), 'A').estimatedBlocks).toBe(4)
+  })
+
+  it('ältere Einstellungen ohne „Flächen“ bekommen den Standard „pur“', async () => {
+    const { surfaces: _ignored, ...old } = getState().settings
+    const db = await import('../db/database')
+    await flushSaves()
+    await db.putRecords('settings', [old as Settings])
+    resetStoreForTests()
+    await initStore()
+    expect(getState().settings.surfaces).toBe('pur')
+    actions.updateSettings({ surfaces: 'glass' })
+    expect(getState().settings.surfaces).toBe('glass')
   })
 
   it('hält Einstellungen in sinnvollen Grenzen', () => {
