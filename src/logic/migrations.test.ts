@@ -17,6 +17,7 @@ function settings(blockMinutes: number, shortBreakMinutes: number): Settings {
     sounds: true,
     noiseOn: false,
     noiseColor: 'brown',
+    ultraMode: false,
     recentHidden: {},
   }
 }

@@ -82,6 +82,12 @@ export const T = {
       'Kurz weg vom Bildschirm – Augen und Kopf erholen sich.',
     ],
     breakOver: 'Pause vorbei',
+    // Ultra-Modus: Die fällige Pause muss bestätigt werden, sonst piept es weiter.
+    ultraAsk: 'Zeit für die Pause!',
+    ultraSnoozed: 'Kurz weiterarbeiten – gleich ist Pause.',
+    ultraConfirm: 'Pause machen',
+    ultraSnooze: '+2 Min.',
+    ultraSnoozeHint: 'Noch 2 Minuten weiterarbeiten, dann beginnt die Pause (in voller Länge)',
     nextBlock: 'Nächsten Block starten',
     askDone: 'Hauptaufgabe erledigt oder noch ein Block?',
     // Karte über der aktuellen Aufgabe für jede heute erledigte Hauptaufgabe.
@@ -283,6 +289,11 @@ export const T = {
     noisePreview: (name: string) => `${name} probehören`,
     testBlockEnd: '▶ Ton „Block vorbei“',
     testBreakEnd: '▶ Ton „Pause vorbei“',
+    ultraLabel: 'Ultra-Modus',
+    ultraHint: 'Ist die kurze Pause fällig, piept es nervig, bis du „Pause machen“ oder „+2 Min.“ wählst.',
+    ultraOn: 'An',
+    ultraOff: 'Aus',
+    testUltra: '▶ Ton „Ultra“',
     notifyGranted: 'Chrome-Benachrichtigungen sind erlaubt.',
     notifyDefault: 'Chrome-Benachrichtigungen sind noch nicht erlaubt.',
     notifyDenied:

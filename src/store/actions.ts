@@ -6,7 +6,7 @@
  * Funktionen auf.
  */
 
-import { BLOCK_WARNING_MS, SETTINGS_LIMITS, SIGNAL_MAX_DELAY_MS } from '../config/defaults'
+import { BLOCK_WARNING_MS, SETTINGS_LIMITS, SIGNAL_MAX_DELAY_MS, ULTRA_SNOOZE_MS } from '../config/defaults'
 import { mergeCarryOver, type CarryConflict, type ConflictChoices } from '../logic/carryOver'
 import { baseFields } from '../logic/records'
 import { dayKey } from '../logic/time'
@@ -329,9 +329,14 @@ export function checkTimer(now = Date.now()): TimerEvent[] {
     const endedAt = timer.blockEndsAt(t)
     const { lastBlock, ...completed } = completeBlockChanges(t, endedAt)
     const taskTitle = titleOf(t.taskId)
+    const fresh = now - endedAt < SIGNAL_MAX_DELAY_MS
+    // Ultra-Modus: Die fällige Pause muss bestätigt werden (nur wenn das Blockende gerade erst war).
+    if (completed.timer.phase === 'break' && fresh && s.settings.ultraMode) {
+      completed.timer = { ...completed.timer, nagging: true }
+    }
     Object.assign(changes, completed)
     t = completed.timer
-    events.push({ type: 'blockEnd', taskTitle, fresh: now - endedAt < SIGNAL_MAX_DELAY_MS, lastBlock })
+    events.push({ type: 'blockEnd', taskTitle, fresh, lastBlock })
   }
 
   // 2. Kurze Pause abgelaufen → Ton, danach erscheint „Nächsten Block starten“.
@@ -344,6 +349,41 @@ export function checkTimer(now = Date.now()): TimerEvent[] {
 
   if (changes.timer) commit(changes)
   return events
+}
+
+/**
+ * Ultra-Modus: Soll gerade gepiept werden? Ja, solange die fällige Pause nicht bestätigt ist,
+ * nicht aufgeschoben ist (siehe `snoozeUltraBreak`), noch läuft – und der Modus an ist.
+ */
+export function isUltraRinging(now = Date.now()): boolean {
+  const s = getState()
+  const t = s.timer
+  return (
+    t.phase === 'break' &&
+    t.nagging === true &&
+    !t.endSignaled &&
+    s.settings.ultraMode &&
+    s.settings.sounds &&
+    now >= t.startedAt &&
+    !timer.isBreakOver(t, now)
+  )
+}
+
+/** Ultra-Modus: „Pause machen“ – der Ton hört auf, die Pause läuft (spätestens ab jetzt). */
+export function confirmUltraBreak(now = Date.now()): void {
+  const t = getState().timer
+  if (t.phase !== 'break' || !t.nagging) return
+  commit({ timer: { ...t, nagging: false, startedAt: Math.min(t.startedAt, now) } })
+}
+
+/**
+ * Ultra-Modus: „+2 Min.“ – noch kurz weiterarbeiten. Die Pause beginnt erst in 2 Minuten
+ * (in voller Länge), dann piept es wieder.
+ */
+export function snoozeUltraBreak(now = Date.now()): void {
+  const t = getState().timer
+  if (t.phase !== 'break' || !t.nagging) return
+  commit({ timer: { ...t, startedAt: now + ULTRA_SNOOZE_MS } })
 }
 
 /**

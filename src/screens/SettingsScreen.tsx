@@ -15,7 +15,7 @@ import {
   requestNotificationPermission,
   type PermissionState,
 } from '../signals/notifications'
-import { playBlockEnd, playBreakEnd, previewNoise } from '../signals/sounds'
+import { playBlockEnd, playBreakEnd, playUltraAlarm, previewNoise } from '../signals/sounds'
 import { updateSettings } from '../store/actions'
 import { useAppState } from '../store/store'
 import './settings.css'
@@ -34,6 +34,11 @@ const SURFACES: { value: SurfaceSetting; label: string }[] = [
 const SOUNDS: { value: boolean; label: string }[] = [
   { value: true, label: T.settings.soundsOn },
   { value: false, label: T.settings.soundsOff },
+]
+
+const ULTRA: { value: boolean; label: string }[] = [
+  { value: false, label: T.settings.ultraOff },
+  { value: true, label: T.settings.ultraOn },
 ]
 
 const NOISE_COLORS: { value: NoiseColor; label: string }[] = [
@@ -223,6 +228,14 @@ export function SettingsScreen() {
             <SettingRow label={T.settings.noiseColor} hint={T.settings.noiseColorHint}>
               <NoisePicker value={settings.noiseColor} onChange={(noiseColor) => updateSettings({ noiseColor })} />
             </SettingRow>
+            <SettingRow label={T.settings.ultraLabel} hint={T.settings.ultraHint}>
+              <Segmented
+                label={T.settings.ultraLabel}
+                options={ULTRA}
+                value={settings.ultraMode}
+                onChange={(ultraMode) => updateSettings({ ultraMode })}
+              />
+            </SettingRow>
             <div className="settings-buttons">
               <button type="button" className="btn" onClick={playBlockEnd}>
                 {T.settings.testBlockEnd}
@@ -230,6 +243,11 @@ export function SettingsScreen() {
               <button type="button" className="btn" onClick={playBreakEnd}>
                 {T.settings.testBreakEnd}
               </button>
+              {settings.ultraMode && (
+                <button type="button" className="btn" onClick={playUltraAlarm}>
+                  {T.settings.testUltra}
+                </button>
+              )}
             </div>
           </>
         )}

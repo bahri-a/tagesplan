@@ -10,7 +10,7 @@
  * in config/defaults.ts.
  */
 
-import { NOISE_FADE_S, NOISE_PREVIEW_S, NOISE_VOLUME, SOUND_VOLUME, WARNING_VOLUME } from '../config/defaults'
+import { NOISE_FADE_S, NOISE_PREVIEW_S, NOISE_VOLUME, SOUND_VOLUME, ULTRA_VOLUME, WARNING_VOLUME } from '../config/defaults'
 import { noiseSamples } from '../logic/noise'
 import type { NoiseColor } from '../model/types'
 import { getState } from '../store/store'
@@ -114,6 +114,31 @@ export function playBreakEnd(): void {
 /** Sanfte Vorwarnung: kurz vor dem Blockende, deutlich leiser als die anderen Töne. */
 export function playBlockWarning(): void {
   play(WARNING_NOTES, WARNING_VOLUME)
+}
+
+/**
+ * Ultra-Modus: absichtlich nervig – drei kurze, scharfe Pieptöne (Rechteckwelle, hoch).
+ * Wird wiederholt, bis die fällige Pause bestätigt ist (siehe useTimerEngine).
+ */
+export function playUltraAlarm(): void {
+  if (!soundsEnabled()) return
+  unlockAudio()
+  if (!ctx) return
+  const now = ctx.currentTime + 0.02
+  for (let i = 0; i < 3; i++) {
+    const start = now + i * 0.16
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.type = 'square'
+    osc.frequency.value = i % 2 === 0 ? 1760 : 2093
+    gain.gain.setValueAtTime(0, start)
+    gain.gain.linearRampToValueAtTime(ULTRA_VOLUME, start + 0.005)
+    gain.gain.setValueAtTime(ULTRA_VOLUME, start + 0.1)
+    gain.gain.linearRampToValueAtTime(0, start + 0.11)
+    osc.connect(gain).connect(ctx.destination)
+    osc.start(start)
+    osc.stop(start + 0.12)
+  }
 }
 
 /* ------------------------------------------------------------------ */

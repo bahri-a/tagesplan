@@ -34,6 +34,8 @@ export const DEFAULT_SETTINGS: SettingsValues = {
   noiseOn: false,
   /** Braunes Rauschen: tief und weich. */
   noiseColor: 'brown',
+  /** Ultra-Modus (nerviger Ton bei fälliger Pause) – anfangs aus. */
+  ultraMode: false,
   /** In „Zuletzt verwendet“ ausgeblendete Aufgaben – am Anfang keine. */
   recentHidden: {},
 }
@@ -81,6 +83,15 @@ export const BLOCK_WARNING_MS = 2 * 60_000
 
 /** Lautstärke der Vorwarnung (deutlich leiser als die anderen Töne). */
 export const WARNING_VOLUME = 0.08
+
+/** Ultra-Modus: so oft (Millisekunden) piept es, bis die Pause bestätigt ist. */
+export const ULTRA_REPEAT_MS = 2000
+
+/** Ultra-Modus: um so viel (Millisekunden) schiebt „+2 Min.“ die Pause auf. */
+export const ULTRA_SNOOZE_MS = 2 * 60_000
+
+/** Lautstärke des Ultra-Tons (bewusst deutlich lauter und schärfer als die Glocken). */
+export const ULTRA_VOLUME = 0.3
 
 /** Lautstärke des Rauschens (0 = stumm, 1 = sehr laut). */
 export const NOISE_VOLUME = 0.12

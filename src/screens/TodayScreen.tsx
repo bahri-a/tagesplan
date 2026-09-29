@@ -30,11 +30,13 @@ import { requestNotificationPermission } from '../signals/notifications'
 import {
   abortCurrentBlock,
   addExtraBlock,
+  confirmUltraBreak,
   finishBlockEarly,
   finishTask,
   isInWarningTime,
   pauseCurrentBlock,
   resumeCurrentBlock,
+  snoozeUltraBreak,
   updateSettings,
   startBlock,
   toggleStep,
@@ -200,6 +202,23 @@ function LongPauseCard({ task, onEnd }: { task: Task; onEnd: () => void }) {
   )
 }
 
+/** Ultra-Modus: Die fällige Pause bestätigen (Ton aus) oder um 2 Minuten aufschieben. */
+function UltraAsk({ snoozed }: { snoozed: boolean }) {
+  return (
+    <div className="ask-done ultra-ask">
+      <p className="ask-done-question">{snoozed ? T.today.ultraSnoozed : T.today.ultraAsk}</p>
+      <div className="ask-done-actions">
+        <button type="button" className="btn btn-primary btn-big" onClick={() => confirmUltraBreak()}>
+          {T.today.ultraConfirm}
+        </button>
+        <button type="button" className="btn btn-big" title={T.today.ultraSnoozeHint} onClick={() => snoozeUltraBreak()}>
+          {T.today.ultraSnooze}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 /** Sehr zarter Farbschimmer hinter allem – zeigt die Phase, wechselt langsam (siehe today.css). */
 function Ambient({ timerState, longPause = false }: { timerState: TimerState; longPause?: boolean }) {
   let phase = longPause ? 'break' : 'idle'
@@ -285,7 +304,11 @@ function FocusCard({ task }: { task: Task }) {
                 totalMs={t.durationMs}
                 caption={T.today.breakTitle}
               />
-              <p className="phase-note">{pick(T.today.breakHints, t.startedAt)}</p>
+              {t.nagging && state.settings.ultraMode ? (
+                <UltraAsk snoozed={now < t.startedAt} />
+              ) : (
+                <p className="phase-note">{pick(T.today.breakHints, t.startedAt)}</p>
+              )}
             </>
           ))}
 
