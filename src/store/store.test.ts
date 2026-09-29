@@ -164,7 +164,7 @@ describe('Ultra-Modus', () => {
     actions.startBlock(task.id)
     expect(actions.checkTimer(at(BLOCK + 500))).toEqual([{ type: 'blockEnd', taskTitle: 'A', fresh: true, lastBlock: false }])
     expect(actions.isUltraRinging(at(BLOCK + 10_000))).toBe(true)
-    actions.confirmUltraBreak(at(BLOCK + 20_000))
+    actions.confirmBreak(at(BLOCK + 20_000))
     expect(actions.isUltraRinging(at(BLOCK + 30_000))).toBe(false)
     const t = getState().timer
     expect(t.phase === 'break' && t.startedAt).toBe(START + BLOCK)
@@ -176,16 +176,26 @@ describe('Ultra-Modus', () => {
     const task = actions.addTask(today(), 'A')
     actions.startBlock(task.id)
     actions.checkTimer(at(BLOCK))
-    actions.snoozeUltraBreak(at(BLOCK + 5000))
+    actions.snoozeBreak(at(BLOCK + 5000))
     expect(actions.isUltraRinging(at(BLOCK + MIN))).toBe(false)
     // Während des Aufschubs startet die Pause nicht und läuft nicht ab.
     expect(actions.checkTimer(at(BLOCK + BREAK))).toEqual([])
     expect(actions.isUltraRinging(at(BLOCK + 5000 + 2 * MIN))).toBe(true)
-    actions.confirmUltraBreak(at(BLOCK + 5000 + 2 * MIN + 1000))
+    actions.confirmBreak(at(BLOCK + 5000 + 2 * MIN + 1000))
     const t = getState().timer
     // Die Pause beginnt erst nach dem Aufschub und dauert voll.
     expect(t.phase === 'break' && t.startedAt).toBe(START + BLOCK + 5000 + 2 * MIN)
     expect(actions.checkTimer(at(BLOCK + 5000 + 2 * MIN + BREAK))).toEqual([{ type: 'breakEnd', taskTitle: 'A', fresh: true }])
+  })
+
+  it('„+2 Min.“ gibt es auch ohne Ultra-Modus – ohne Piepen', () => {
+    const task = actions.addTask(today(), 'A')
+    actions.startBlock(task.id)
+    actions.checkTimer(at(BLOCK))
+    actions.snoozeBreak(at(BLOCK + MIN))
+    expect(actions.checkTimer(at(BLOCK + BREAK))).toEqual([])
+    expect(actions.isUltraRinging(at(BLOCK + 3 * MIN))).toBe(false)
+    expect(actions.checkTimer(at(BLOCK + 3 * MIN + BREAK))).toEqual([{ type: 'breakEnd', taskTitle: 'A', fresh: true }])
   })
 
   it('piept nicht, wenn die App lange zu war, nach dem letzten Block oder ohne Töne', () => {

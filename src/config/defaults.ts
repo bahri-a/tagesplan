@@ -87,8 +87,8 @@ export const WARNING_VOLUME = 0.08
 /** Ultra-Modus: so oft (Millisekunden) piept es, bis die Pause bestätigt ist. */
 export const ULTRA_REPEAT_MS = 2000
 
-/** Ultra-Modus: um so viel (Millisekunden) schiebt „+2 Min.“ die Pause auf. */
-export const ULTRA_SNOOZE_MS = 2 * 60_000
+/** Um so viel (Millisekunden) schiebt „+2 Min.“ die kurze Pause auf (in jedem Modus). */
+export const BREAK_SNOOZE_MS = 2 * 60_000
 
 /** Lautstärke des Ultra-Tons (bewusst deutlich lauter und schärfer als die Glocken). */
 export const ULTRA_VOLUME = 0.3

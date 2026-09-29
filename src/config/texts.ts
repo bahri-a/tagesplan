@@ -84,10 +84,11 @@ export const T = {
     breakOver: 'Pause vorbei',
     // Ultra-Modus: Die fällige Pause muss bestätigt werden, sonst piept es weiter.
     ultraAsk: 'Zeit für die Pause!',
-    ultraSnoozed: 'Kurz weiterarbeiten – gleich ist Pause.',
-    ultraConfirm: 'Pause machen',
-    ultraSnooze: '+2 Min.',
-    ultraSnoozeHint: 'Noch 2 Minuten weiterarbeiten, dann beginnt die Pause (in voller Länge)',
+    // „+2 Min.“ gibt es in jedem Modus: Die Pause beginnt 2 Minuten später.
+    breakSnoozed: 'Kurz weiterarbeiten – gleich ist Pause.',
+    breakConfirm: 'Pause machen',
+    breakSnooze: '+2 Min.',
+    breakSnoozeHint: 'Noch 2 Minuten weiterarbeiten, dann beginnt die Pause (in voller Länge)',
     nextBlock: 'Nächsten Block starten',
     askDone: 'Hauptaufgabe erledigt oder noch ein Block?',
     // Karte über der aktuellen Aufgabe für jede heute erledigte Hauptaufgabe.
@@ -290,7 +291,7 @@ export const T = {
     testBlockEnd: '▶ Ton „Block vorbei“',
     testBreakEnd: '▶ Ton „Pause vorbei“',
     ultraLabel: 'Ultra-Modus',
-    ultraHint: 'Ist die kurze Pause fällig, piept es nervig, bis du „Pause machen“ oder „+2 Min.“ wählst.',
+    ultraHint: 'Beginnt die kurze Pause, piept es so lange, bis du „Pause machen“ drückst. So übergehst du keine Pause.',
     ultraOn: 'An',
     ultraOff: 'Aus',
     testUltra: '▶ Ton „Ultra“',

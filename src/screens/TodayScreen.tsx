@@ -30,13 +30,13 @@ import { requestNotificationPermission } from '../signals/notifications'
 import {
   abortCurrentBlock,
   addExtraBlock,
-  confirmUltraBreak,
+  confirmBreak,
   finishBlockEarly,
   finishTask,
   isInWarningTime,
   pauseCurrentBlock,
   resumeCurrentBlock,
-  snoozeUltraBreak,
+  snoozeBreak,
   updateSettings,
   startBlock,
   toggleStep,
@@ -202,20 +202,34 @@ function LongPauseCard({ task, onEnd }: { task: Task; onEnd: () => void }) {
   )
 }
 
-/** Ultra-Modus: Die fällige Pause bestätigen (Ton aus) oder um 2 Minuten aufschieben. */
-function UltraAsk({ snoozed }: { snoozed: boolean }) {
+/**
+ * Pause bestätigen oder um 2 Minuten aufschieben. Groß, wenn gerade etwas zu tun ist (Ultra-Modus
+ * piept, oder die Pause ist aufgeschoben) – sonst nur ein kleiner, leiser „+2 Min.“-Knopf.
+ */
+function BreakAsk({ question }: { question: string }) {
   return (
-    <div className="ask-done ultra-ask">
-      <p className="ask-done-question">{snoozed ? T.today.ultraSnoozed : T.today.ultraAsk}</p>
+    <div className="ask-done">
+      <p className="ask-done-question">{question}</p>
       <div className="ask-done-actions">
-        <button type="button" className="btn btn-primary btn-big" onClick={() => confirmUltraBreak()}>
-          {T.today.ultraConfirm}
+        <button type="button" className="btn btn-primary btn-big" onClick={() => confirmBreak()}>
+          {T.today.breakConfirm}
         </button>
-        <button type="button" className="btn btn-big" title={T.today.ultraSnoozeHint} onClick={() => snoozeUltraBreak()}>
-          {T.today.ultraSnooze}
-        </button>
+        <SnoozeButton big />
       </div>
     </div>
+  )
+}
+
+function SnoozeButton({ big = false }: { big?: boolean }) {
+  return (
+    <button
+      type="button"
+      className={big ? 'btn btn-big' : 'btn btn-small'}
+      title={T.today.breakSnoozeHint}
+      onClick={() => snoozeBreak()}
+    >
+      {T.today.breakSnooze}
+    </button>
   )
 }
 
@@ -304,10 +318,15 @@ function FocusCard({ task }: { task: Task }) {
                 totalMs={t.durationMs}
                 caption={T.today.breakTitle}
               />
-              {t.nagging && state.settings.ultraMode ? (
-                <UltraAsk snoozed={now < t.startedAt} />
+              {now < t.startedAt ? (
+                <BreakAsk question={T.today.breakSnoozed} />
+              ) : t.nagging && state.settings.ultraMode ? (
+                <BreakAsk question={T.today.ultraAsk} />
               ) : (
-                <p className="phase-note">{pick(T.today.breakHints, t.startedAt)}</p>
+                <>
+                  <p className="phase-note">{pick(T.today.breakHints, t.startedAt)}</p>
+                  <SnoozeButton />
+                </>
               )}
             </>
           ))}
