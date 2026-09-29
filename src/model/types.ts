@@ -113,6 +113,12 @@ export type NoiseColor = 'brown' | 'pink' | 'white' | 'mix'
 /** Aussehen der Flächen: 'pur' (massiv) oder 'glass' (Milchglas, leicht durchscheinend). */
 export type SurfaceSetting = 'pur' | 'glass'
 
+/**
+ * Farbwelt: ändert nur Farben und das zarte Hintergrund-Muster, nie Aufbau oder Texte.
+ * 'salbei' = das ursprüngliche Aussehen (Standard).
+ */
+export type PaletteSetting = 'salbei' | 'fjord' | 'rose' | 'lavendel'
+
 /** Die änderbaren Einstellungen. */
 export interface SettingsValues {
   blockMinutes: number
@@ -122,6 +128,8 @@ export interface SettingsValues {
   theme: ThemeSetting
   /** Seit 2026-09-28. Fehlt in älteren Daten → Standard aus DEFAULT_SETTINGS. */
   surfaces: SurfaceSetting
+  /** Farbwelt. Seit 2026-09-29; fehlt in älteren Daten → 'salbei' (das bisherige Aussehen). */
+  palette: PaletteSetting
   /** Töne überhaupt an? `false` = komplett still (Timer-Töne, Vorwarnung, Rauschen). Seit 2026-09-28. */
   sounds: boolean
   /** Rauschen während eines laufenden Blocks an? (Knopf in „Heute“ und im Mini-Fenster) */

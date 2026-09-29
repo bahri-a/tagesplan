@@ -69,6 +69,74 @@
   box-shadow: var(--shadow);
 }
 
+/* Farbwelt: runde Farbmuster. Die Farben stehen hier fest (hell, dunkel), damit jedes Muster
+   seine eigene Farbwelt zeigt – egal, welche gerade gewählt ist. */
+.palette-picker {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.35rem;
+}
+
+.palette-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 3.6rem;
+  padding: 0.3rem 0.2rem;
+  border: none;
+  border-radius: var(--radius-small);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.palette-option:hover {
+  color: var(--text);
+}
+
+.palette-option[aria-checked='true'] {
+  color: var(--text);
+}
+
+.palette-swatch {
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--swatch-bg) 0 50%, var(--swatch-accent) 50% 100%);
+  box-shadow: 0 0 0 2px transparent;
+  transition: box-shadow 0.2s;
+}
+
+.palette-option[aria-checked='true'] .palette-swatch {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--accent);
+}
+
+.palette-option[data-value='salbei'] {
+  --swatch-bg: light-dark(#f4f2ee, #1e1e1c);
+  --swatch-accent: light-dark(#3b7667, #7dbdac);
+}
+
+.palette-option[data-value='fjord'] {
+  --swatch-bg: light-dark(#eef2f5, #182028);
+  --swatch-accent: light-dark(#2f6a8f, #86b8da);
+}
+
+.palette-option[data-value='rose'] {
+  --swatch-bg: light-dark(#f7f0ee, #211b1c);
+  --swatch-accent: light-dark(#9e5b6a, #e0a3b0);
+}
+
+.palette-option[data-value='lavendel'] {
+  --swatch-bg: light-dark(#f3f2f8, #1c1a24);
+  --swatch-accent: light-dark(#6356a8, #b0a6ec);
+}
+
 .settings-version {
   text-align: center;
 }
