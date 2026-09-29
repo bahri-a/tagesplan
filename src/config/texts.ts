@@ -59,7 +59,7 @@ export const T = {
     // Lange Pause nach einer erledigten Hauptaufgabe – eigene ruhige Karte, erst danach kommt die nächste.
     longPauseTitle: 'Lange Pause',
     longPauseText: 'Gut gemacht. Lass dir Zeit – die nächste Aufgabe wartet.',
-    longPauseEnd: 'Pause beenden',
+    longPauseEnd: 'Weiter',
     longPauseNext: 'Danach:',
     pause: 'Pausieren',
     resume: 'Weiter',
