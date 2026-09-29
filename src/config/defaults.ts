@@ -28,6 +28,8 @@ export const DEFAULT_SETTINGS: SettingsValues = {
   theme: 'system',
   /** Flächen: 'pur' (massiv) oder 'glass' (Milchglas). */
   surfaces: 'pur',
+  /** Farbwelt: 'salbei' (Standard), 'fjord', 'rose' oder 'lavendel'. */
+  palette: 'salbei',
   /** Töne an (Timer-Töne, Vorwarnung, Rauschen). */
   sounds: true,
   /** Rauschen im Block – anfangs aus, der Knopf in „Heute“ schaltet es an. */

@@ -9,7 +9,7 @@ import { T } from '../config/texts'
 import { Dialog } from '../components/Dialog'
 import { NumberStepper } from '../components/NumberStepper'
 import { downloadBackup, parseBackup, restoreBackup, type BackupFile } from '../db/backup'
-import type { NoiseColor, SurfaceSetting, ThemeSetting } from '../model/types'
+import type { NoiseColor, PaletteSetting, SurfaceSetting, ThemeSetting } from '../model/types'
 import {
   notificationPermission,
   requestNotificationPermission,
@@ -29,6 +29,13 @@ const THEMES: { value: ThemeSetting; label: string }[] = [
 const SURFACES: { value: SurfaceSetting; label: string }[] = [
   { value: 'pur', label: T.settings.surfacesPur },
   { value: 'glass', label: T.settings.surfacesGlass },
+]
+
+const PALETTES: { value: PaletteSetting; label: string }[] = [
+  { value: 'salbei', label: T.settings.paletteSalbei },
+  { value: 'fjord', label: T.settings.paletteFjord },
+  { value: 'rose', label: T.settings.paletteRose },
+  { value: 'lavendel', label: T.settings.paletteLavendel },
 ]
 
 const SOUNDS: { value: boolean; label: string }[] = [
@@ -66,6 +73,28 @@ function Segmented<V extends string | boolean>(props: {
           className="segmented-item"
           onClick={() => props.onChange(option.value)}
         >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/** Farbwelt: runde Farbmuster (Hintergrund + Akzentfarbe) mit Namen darunter. */
+function PalettePicker({ value, onChange }: { value: PaletteSetting; onChange: (value: PaletteSetting) => void }) {
+  return (
+    <div className="palette-picker" role="radiogroup" aria-label={T.settings.palette}>
+      {PALETTES.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          role="radio"
+          aria-checked={value === option.value}
+          className="palette-option"
+          data-value={option.value}
+          onClick={() => onChange(option.value)}
+        >
+          <span className="palette-swatch" aria-hidden="true" />
           {option.label}
         </button>
       ))}
@@ -211,6 +240,9 @@ export function SettingsScreen() {
             </button>
           ))}
         </div>
+        <SettingRow label={T.settings.palette} hint={T.settings.paletteHint}>
+          <PalettePicker value={settings.palette} onChange={(palette) => updateSettings({ palette })} />
+        </SettingRow>
       </section>
 
       <section className="card settings-section">

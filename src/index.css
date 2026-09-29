@@ -7,6 +7,9 @@
  *
  * Flächen (Karten, Kopfleiste, Leisten) gibt es in zwei Arten, wählbar in den
  * Einstellungen: „Pur“ (massiv, Standard) und „Milchglas“ (leicht durchscheinend).
+ *
+ * Die Farben ganz oben sind die Farbwelt „Salbei“ (Standard). Die anderen Farbwelten
+ * stehen weiter unten unter FARBWELTEN.
  */
 
 @property --glow {
@@ -70,6 +73,11 @@
   --panel-sheen: none;
   --panel-border: var(--panel-edge);
   --panel-filter: none;
+
+  /* Hintergrund-Muster der Farbwelt – bei „Salbei“ keins */
+  --bg-pattern: none;
+  --bg-pattern-size: auto;
+  --bg-pattern-position: 0 0;
 }
 
 /* Flächen „Milchglas“ */
@@ -167,6 +175,152 @@
   --shadow-lift: 0 1px 2px rgb(0 0 0 / 0.3), 0 22px 50px -22px rgb(0 0 0 / 0.65);
 }
 
+/*
+ * FARBWELTEN (Einstellungen → Aussehen → Farbwelt)
+ * ================================================
+ * „Salbei“ ist das ursprüngliche Aussehen oben – dafür steht hier nichts.
+ * Die anderen Farbwelten tauschen nur Farben und ein zartes Hintergrund-Muster aus.
+ * Jeder Wert steht als light-dark(hell, dunkel) da: So passt er automatisch zu Hell und Dunkel.
+ * Der Honig-Ton (Vorwarnung, Hinweise) bleibt überall gleich.
+ */
+
+/* Fjord: kühles Nordblau, mit feinen Wellen im Hintergrund */
+:root[data-palette='fjord'] {
+  --bg: light-dark(#eef2f5, #10151a);
+  --surface: light-dark(#fbfcfd, #182028);
+  --surface-2: light-dark(#e5ebf0, #212a33);
+  --border: light-dark(#d9e1e8, #2c3640);
+  --text: light-dark(#1f2730, #e5ebf0);
+  --text-muted: light-dark(#667380, #9aa6b1);
+  --accent: light-dark(#2f6a8f, #86b8da);
+  --accent-hover: light-dark(#285b7b, #9dc6e3);
+  --accent-top: light-dark(#5a92b6, #a6cbe6);
+  --accent-soft: light-dark(#deeaf3, #1a2835);
+  --accent-shadow: light-dark(rgb(47 106 143 / 0.55), rgb(0 0 0 / 0.55));
+  --on-accent: light-dark(#ffffff, #0b1a26);
+  --break: light-dark(#6f68ad, #b1a9e3);
+  --break-soft: light-dark(#e9e7f5, #232236);
+  --dot-open: light-dark(rgb(102 115 128 / 0.4), rgb(154 166 177 / 0.4));
+  --ring-block-a: light-dark(#a8c9df, #3b6784);
+  --ring-block-b: light-dark(#2f6a8f, #a9d0ea);
+  --ring-break-a: light-dark(#cbc6ea, #5a5391);
+  --ring-break-b: light-dark(#7a72b8, #c6bff0);
+  --ring-track-block: light-dark(rgb(47 106 143 / 0.1), rgb(134 184 218 / 0.1));
+  --ring-track-break: light-dark(rgb(122 114 184 / 0.12), rgb(177 169 227 / 0.11));
+  --ring-dot: light-dark(#ffffff, #f2f8fc);
+  --glow-idle: light-dark(rgb(150 180 205 / 0.26), rgb(90 120 150 / 0.12));
+  --glow-block: light-dark(rgb(95 150 195 / 0.28), rgb(80 140 190 / 0.18));
+  --glow-paused: light-dark(rgb(95 150 195 / 0.13), rgb(80 140 190 / 0.08));
+  --glow-break: light-dark(rgb(140 128 205 / 0.26), rgb(130 115 200 / 0.18));
+  --glass-bg: light-dark(rgb(251 252 253 / 0.46), rgb(28 36 45 / 0.42));
+  --panel-edge: light-dark(rgb(30 50 70 / 0.08), rgb(255 255 255 / 0.06));
+  --pattern-ink: light-dark(rgb(47 106 143 / 0.06), rgb(134 184 218 / 0.045));
+  --accent-line: color-mix(in srgb, var(--accent) 35%, transparent);
+  --shadow:
+    0 1px 2px light-dark(rgb(30 50 70 / 0.04), rgb(0 0 0 / 0.3)),
+    0 8px 24px -12px light-dark(rgb(30 50 70 / 0.14), rgb(0 0 0 / 0.5));
+  --shadow-lift:
+    0 1px 2px light-dark(rgb(30 50 70 / 0.04), rgb(0 0 0 / 0.3)),
+    0 22px 50px -22px light-dark(rgb(30 50 70 / 0.22), rgb(0 0 0 / 0.65));
+  /* Feine Wellen: Bögen aus Kreisringen, versetzt übereinander */
+  --bg-pattern:
+    radial-gradient(circle at 50% 100%, transparent 13px, var(--pattern-ink) 14px, transparent 15px),
+    radial-gradient(circle at 50% 100%, transparent 13px, var(--pattern-ink) 14px, transparent 15px);
+  --bg-pattern-size: 56px 28px;
+  --bg-pattern-position: 0 0, 28px 14px;
+}
+
+/* Rosé: warmes, gedecktes Rosa, mit zartem Punkteraster */
+:root[data-palette='rose'] {
+  --bg: light-dark(#f7f0ee, #171213);
+  --surface: light-dark(#fffbfa, #211b1c);
+  --surface-2: light-dark(#f0e6e3, #2b2325);
+  --border: light-dark(#e8dcd8, #3a3033);
+  --text: light-dark(#2c2426, #f0e6e6);
+  --text-muted: light-dark(#76686a, #ad9fa1);
+  --accent: light-dark(#9e5b6a, #e0a3b0);
+  --accent-hover: light-dark(#894d5b, #e8b5c0);
+  --accent-top: light-dark(#bf8391, #ebbcc6);
+  --accent-soft: light-dark(#f4e2e5, #33232a);
+  --accent-shadow: light-dark(rgb(158 91 106 / 0.5), rgb(0 0 0 / 0.55));
+  --on-accent: light-dark(#ffffff, #2a1219);
+  --break: light-dark(#5f86a0, #9dc0d8);
+  --break-soft: light-dark(#e2ecf2, #1c2830);
+  --dot-open: light-dark(rgb(118 104 106 / 0.4), rgb(173 159 161 / 0.4));
+  --ring-block-a: light-dark(#e3b7c0, #7c4a57);
+  --ring-block-b: light-dark(#9e5b6a, #f0c2cc);
+  --ring-break-a: light-dark(#b9d0de, #46657b);
+  --ring-break-b: light-dark(#5f86a0, #b5d3e7);
+  --ring-track-block: light-dark(rgb(158 91 106 / 0.1), rgb(224 163 176 / 0.1));
+  --ring-track-break: light-dark(rgb(95 134 160 / 0.12), rgb(157 192 216 / 0.11));
+  --ring-dot: light-dark(#ffffff, #fdf4f6);
+  --glow-idle: light-dark(rgb(222 180 170 / 0.28), rgb(160 110 110 / 0.1));
+  --glow-block: light-dark(rgb(205 140 155 / 0.26), rgb(190 110 135 / 0.16));
+  --glow-paused: light-dark(rgb(205 140 155 / 0.13), rgb(190 110 135 / 0.08));
+  --glow-break: light-dark(rgb(125 165 200 / 0.26), rgb(90 135 180 / 0.17));
+  --glass-bg: light-dark(rgb(255 251 250 / 0.46), rgb(40 32 34 / 0.42));
+  --panel-edge: light-dark(rgb(90 50 50 / 0.07), rgb(255 255 255 / 0.06));
+  --pattern-ink: light-dark(rgb(158 91 106 / 0.14), rgb(224 163 176 / 0.08));
+  --accent-line: color-mix(in srgb, var(--accent) 35%, transparent);
+  --shadow:
+    0 1px 2px light-dark(rgb(90 50 50 / 0.04), rgb(0 0 0 / 0.3)),
+    0 8px 24px -12px light-dark(rgb(90 50 50 / 0.14), rgb(0 0 0 / 0.5));
+  --shadow-lift:
+    0 1px 2px light-dark(rgb(90 50 50 / 0.04), rgb(0 0 0 / 0.3)),
+    0 22px 50px -22px light-dark(rgb(90 50 50 / 0.22), rgb(0 0 0 / 0.65));
+  /* Zartes Punkteraster */
+  --bg-pattern: radial-gradient(circle, var(--pattern-ink) 1.1px, transparent 1.6px);
+  --bg-pattern-size: 22px 22px;
+  --bg-pattern-position: 0 0;
+}
+
+/* Lavendel: sanftes Violett, mit weichem Farbverlauf in den Ecken */
+:root[data-palette='lavendel'] {
+  --bg: light-dark(#f3f2f8, #131219);
+  --surface: light-dark(#fdfcff, #1c1a24);
+  --surface-2: light-dark(#ebe9f4, #25232f);
+  --border: light-dark(#e0ddec, #322f3d);
+  --text: light-dark(#25232f, #eae7f2);
+  --text-muted: light-dark(#6c6a7c, #a29fb3);
+  --accent: light-dark(#6356a8, #b0a6ec);
+  --accent-hover: light-dark(#554994, #c0b8f1);
+  --accent-top: light-dark(#8b80c8, #c5bdf2);
+  --accent-soft: light-dark(#e8e5f6, #27233a);
+  --accent-shadow: light-dark(rgb(99 86 168 / 0.5), rgb(0 0 0 / 0.55));
+  --on-accent: light-dark(#ffffff, #16122b);
+  --break: light-dark(#3f8a9a, #8fcfd9);
+  --break-soft: light-dark(#dff0f2, #172a2d);
+  --dot-open: light-dark(rgb(108 106 124 / 0.4), rgb(162 159 179 / 0.4));
+  --ring-block-a: light-dark(#c6bfeb, #544a91);
+  --ring-block-b: light-dark(#6356a8, #cbc4f5);
+  --ring-break-a: light-dark(#aed7de, #336c75);
+  --ring-break-b: light-dark(#3f8a9a, #a7dfe7);
+  --ring-track-block: light-dark(rgb(99 86 168 / 0.1), rgb(176 166 236 / 0.1));
+  --ring-track-break: light-dark(rgb(63 138 154 / 0.12), rgb(143 207 217 / 0.11));
+  --ring-dot: light-dark(#ffffff, #f6f4fd);
+  --glow-idle: light-dark(rgb(190 180 225 / 0.28), rgb(120 105 170 / 0.12));
+  --glow-block: light-dark(rgb(140 125 210 / 0.26), rgb(130 115 210 / 0.18));
+  --glow-paused: light-dark(rgb(140 125 210 / 0.13), rgb(130 115 210 / 0.08));
+  --glow-break: light-dark(rgb(95 175 190 / 0.24), rgb(80 160 175 / 0.16));
+  --glass-bg: light-dark(rgb(253 252 255 / 0.46), rgb(34 32 44 / 0.42));
+  --panel-edge: light-dark(rgb(50 40 90 / 0.07), rgb(255 255 255 / 0.06));
+  --pattern-ink: light-dark(rgb(139 128 200 / 0.22), rgb(120 105 200 / 0.16));
+  --pattern-ink-2: light-dark(rgb(95 175 190 / 0.14), rgb(80 160 175 / 0.1));
+  --accent-line: color-mix(in srgb, var(--accent) 35%, transparent);
+  --shadow:
+    0 1px 2px light-dark(rgb(50 40 90 / 0.04), rgb(0 0 0 / 0.3)),
+    0 8px 24px -12px light-dark(rgb(50 40 90 / 0.14), rgb(0 0 0 / 0.5));
+  --shadow-lift:
+    0 1px 2px light-dark(rgb(50 40 90 / 0.04), rgb(0 0 0 / 0.3)),
+    0 22px 50px -22px light-dark(rgb(50 40 90 / 0.22), rgb(0 0 0 / 0.65));
+  /* Weicher Farbverlauf oben rechts und unten links */
+  --bg-pattern:
+    radial-gradient(70% 55% at 100% 0%, var(--pattern-ink), transparent 70%),
+    radial-gradient(60% 50% at 0% 100%, var(--pattern-ink-2), transparent 70%);
+  --bg-pattern-size: 100% 100%;
+  --bg-pattern-position: 0 0;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -184,6 +338,11 @@ body {
 
 body {
   min-height: 100vh;
+  /* Muster der Farbwelt; bleibt beim Scrollen stehen */
+  background-image: var(--bg-pattern);
+  background-size: var(--bg-pattern-size);
+  background-position: var(--bg-pattern-position);
+  background-attachment: fixed;
 }
 
 h1,

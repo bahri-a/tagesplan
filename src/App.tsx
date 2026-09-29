@@ -20,7 +20,7 @@ import { WelcomeBackDialog } from './components/WelcomeBackDialog'
 import { requestPersistentStorage } from './db/database'
 import { formatCountdown } from './logic/time'
 import * as timer from './logic/timer'
-import type { ID, SurfaceSetting, ThemeSetting, TimerState } from './model/types'
+import type { ID, PaletteSetting, SurfaceSetting, ThemeSetting, TimerState } from './model/types'
 import { PlanScreen } from './screens/PlanScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
 import { TodayScreen } from './screens/TodayScreen'
@@ -77,7 +77,7 @@ function Shell() {
 
   useTimerEngine()
   useNoise()
-  useTheme(state.settings.theme)
+  useTheme(state.settings.theme, state.settings.palette)
   useSurfaces(state.settings.surfaces)
   useWindowTitle(state.timer)
 
@@ -190,24 +190,26 @@ function useAskToEndPreviousDay() {
 }
 
 /**
- * Setzt Hell/Dunkel. Bei „Automatisch“ folgt die App macOS.
+ * Setzt Hell/Dunkel und die Farbwelt. Bei „Automatisch“ folgt die App macOS.
  * Auch die Titelleiste des installierten App-Fensters bekommt die passende Farbe.
  */
-function useTheme(theme: ThemeSetting) {
+function useTheme(theme: ThemeSetting, palette: PaletteSetting) {
   useEffect(() => {
     const root = document.documentElement
     if (theme === 'system') delete root.dataset.theme
     else root.dataset.theme = theme
+    root.dataset.palette = palette
 
     const updateTitleBar = () => {
-      const background = getComputedStyle(root).getPropertyValue('--bg').trim()
+      // Die fertig ausgerechnete Farbe (die Farbwelten nutzen light-dark() in --bg).
+      const background = getComputedStyle(document.body).backgroundColor
       document.querySelector('meta[name="theme-color"]')?.setAttribute('content', background)
     }
     updateTitleBar()
     const darkMode = window.matchMedia('(prefers-color-scheme: dark)')
     darkMode.addEventListener('change', updateTitleBar)
     return () => darkMode.removeEventListener('change', updateTitleBar)
-  }, [theme])
+  }, [theme, palette])
 }
 
 /** Pur oder Milchglas: steuert die Flächen-Variablen in index.css. */

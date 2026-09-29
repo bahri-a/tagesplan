@@ -222,6 +222,9 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
 ### Aussehen
 - **Einstellungen → Aussehen:** Automatisch / Hell / Dunkel und die **Flächen**:
   **Pur** (massiv, Standard) oder **Milchglas** (leicht durchscheinend).
+- **Farbwelt:** **Salbei** (das ursprüngliche Aussehen, Standard), **Fjord** (kühles Blau mit
+  feinen Wellen), **Rosé** (gedecktes Rosa mit zartem Punkteraster) oder **Lavendel** (sanftes
+  Violett mit weichem Verlauf). Es ändern sich nur Farben und Hintergrund, in Hell wie Dunkel.
 - Hast du in macOS „Bewegung reduzieren“ eingeschaltet, gibt es keine Animationen.
 
 ### Töne
@@ -262,7 +265,7 @@ Die meisten Wünsche lassen sich an **einer** Stelle ändern:
 |---|---|
 | Startwerte, Tageswechsel (4 Uhr), Lautstärke | `src/config/defaults.ts` |
 | Alle Texte der Oberfläche | `src/config/texts.ts` |
-| Farben (hell und dunkel) | ganz oben in `src/index.css` |
+| Farben (hell und dunkel) | ganz oben in `src/index.css` (Farbwelten weiter unten unter FARBWELTEN) |
 | Töne (Noten) | `src/signals/sounds.ts` |
 
 Nach einer Änderung (lokal mit `npm run dev` ausprobieren) veröffentlichst du so:
