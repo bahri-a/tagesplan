@@ -129,6 +129,11 @@ export interface SettingsValues {
   /** Welches Rauschen. */
   noiseColor: NoiseColor
   /**
+   * Ultra-Modus: Ist eine kurze Pause fällig, piept es nervig und wiederholt, bis die Pause
+   * bestätigt (oder um 2 Minuten aufgeschoben) wird. Seit 2026-09-29; fehlt in älteren Daten → aus.
+   */
+  ultraMode: boolean
+  /**
    * In „Zuletzt verwendet“ per × ausgeblendete Titel (klein geschrieben) → wann. Wird die Aufgabe
    * danach wieder benutzt, taucht sie wieder auf. Seit 2026-09-28; fehlt in älteren Daten → {}.
    */
@@ -175,6 +180,11 @@ export type TimerState =
       durationMs: number
       /** Wurde das Pausenende schon mit Ton gemeldet? */
       endSignaled: boolean
+      /**
+       * Ultra-Modus: Die Pause ist noch nicht bestätigt – ab `startedAt` piept es, bis „Pause machen“.
+       * „+2 Min.“ schiebt `startedAt` in die Zukunft. Fehlt in älteren Daten = nein.
+       */
+      nagging?: boolean
     }
 
 /** Sonstige gerätebezogene Werte. */

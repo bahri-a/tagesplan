@@ -4,10 +4,11 @@
 
 import { createContext, useContext, useEffect, useLayoutEffect, useState } from 'react'
 import { T } from '../config/texts'
-import { checkTimer, type TimerEvent } from '../store/actions'
+import { ULTRA_REPEAT_MS } from '../config/defaults'
+import { checkTimer, isUltraRinging, type TimerEvent } from '../store/actions'
 import { getState, subscribeToStore } from '../store/store'
 import { appIsInBackground, showNotification } from '../signals/notifications'
-import { playBlockEnd, playBlockWarning, playBreakEnd, setNoise } from '../signals/sounds'
+import { playBlockEnd, playBlockWarning, playBreakEnd, playUltraAlarm, setNoise } from '../signals/sounds'
 
 /**
  * In welchem Fenster wird gerade gezeichnet? Normalerweise im App-Fenster; im Mini-Fenster
@@ -71,7 +72,17 @@ export function useTimerEngine(): void {
     const worker = new Worker(new URL('../logic/ticker.worker.ts', import.meta.url), {
       type: 'module',
     })
-    const check = () => checkTimer().forEach(signal)
+    // Ultra-Modus: Solange die fällige Pause nicht bestätigt ist, alle ULTRA_REPEAT_MS piepen.
+    // Läuft im selben Sekundentakt wie der Timer – so klappt es auch im Hintergrund.
+    let lastUltraAt = 0
+    const check = () => {
+      checkTimer().forEach(signal)
+      const now = Date.now()
+      if (isUltraRinging(now) && now - lastUltraAt >= ULTRA_REPEAT_MS - 100) {
+        lastUltraAt = now
+        playUltraAlarm()
+      }
+    }
 
     let ticking = false
     const syncTicking = () => {
