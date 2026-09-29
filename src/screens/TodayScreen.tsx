@@ -69,10 +69,13 @@ export function TodayScreen({ onPlan, onEndDay }: Props) {
   const tasks = tasksOfDay(state, activeDay(state).id)
   // Während eines Blocks: dessen Aufgabe. Sonst: die oberste offene Aufgabe.
   const task = t.phase === 'block' ? state.tasks[t.taskId] : currentTask(state)
+  // Nach einer erledigten Hauptaufgabe: erst die lange Pause, die nächste Aufgabe nur leise als „Danach: …“.
+  const [pauseEndedFor, setPauseEndedFor] = useState(longPauseEndedFor)
+  const onLongPause = t.phase === 'idle' && !!task && needsLongPause(state, task) && pauseEndedFor !== task.id
 
   return (
     <div className="today">
-      <Ambient timerState={t} />
+      <Ambient timerState={t} longPause={onLongPause} />
 
       {/* Schon geschafft: erledigte Hauptaufgaben stehen als eigene Karten oben (nicht im Block). */}
       {t.phase !== 'block' && <DoneCards tasks={tasks.filter((x) => x.completedAt !== null)} />}
@@ -91,6 +94,14 @@ export function TodayScreen({ onPlan, onEndDay }: Props) {
             {T.today.goPlan}
           </button>
         </section>
+      ) : task && onLongPause ? (
+        <LongPauseCard
+          task={task}
+          onEnd={() => {
+            longPauseEndedFor = task.id
+            setPauseEndedFor(task.id)
+          }}
+        />
       ) : task ? (
         <FocusCard task={task} />
       ) : (
@@ -156,9 +167,42 @@ function DoneCards({ tasks }: { tasks: Task[] }) {
   )
 }
 
+/**
+ * Für welche Aufgabe die lange Pause schon beendet wurde. Liegt außerhalb der Komponente,
+ * damit ein Wechsel zu „Planer“ und zurück die Pause nicht wieder zeigt (nach Neuladen schon – harmlos).
+ */
+let longPauseEndedFor: ID | null = null
+
+/**
+ * Lange Pause nach einer erledigten Hauptaufgabe: ruhige Karte statt der nächsten Aufgabe.
+ * Erst „Pause beenden“ (oder Leertaste) zeigt die nächste Aufgabe – die steht vorher nur leise
+ * als „Danach: …“ darunter, damit sie nicht überrascht.
+ */
+function LongPauseCard({ task, onEnd }: { task: Task; onEnd: () => void }) {
+  useSpaceKey(onEnd)
+  return (
+    <section className="card focus-card is-message long-pause-card">
+      <div className="message-mark" aria-hidden="true">
+        <svg viewBox="0 0 76 76">
+          <circle className="long-pause-ring" cx="38" cy="38" r="33" />
+          <path className="long-pause-moon" d="M44 26a13 13 0 1 0 8 20a11 11 0 0 1-8-20z" />
+        </svg>
+      </div>
+      <h1 className="message-title">{T.today.longPauseTitle}</h1>
+      <p className="message-text">{T.today.longPauseText}</p>
+      <button type="button" className="btn btn-primary btn-big" title={T.today.spaceHint} onClick={onEnd}>
+        {T.today.longPauseEnd}
+      </button>
+      <p className="long-pause-next">
+        <span className="long-pause-next-label">{T.today.longPauseNext}</span> {task.title}
+      </p>
+    </section>
+  )
+}
+
 /** Sehr zarter Farbschimmer hinter allem – zeigt die Phase, wechselt langsam (siehe today.css). */
-function Ambient({ timerState }: { timerState: TimerState }) {
-  let phase = 'idle'
+function Ambient({ timerState, longPause = false }: { timerState: TimerState; longPause?: boolean }) {
+  let phase = longPause ? 'break' : 'idle'
   if (timerState.phase === 'block') phase = timerState.pausedAt === null ? 'block' : 'paused'
   if (timerState.phase === 'break') phase = 'break'
   return <div className="ambient" data-phase={phase} aria-hidden="true" />
@@ -485,7 +529,7 @@ function StartButton({ task, label: ownLabel }: { task: Task; label?: string }) 
   const state = useAppState()
   let label: ReactNode = ownLabel ?? (state.timer.phase === 'break' ? T.today.nextBlock : T.today.startBlock)
   // Mit eigener Beschriftung (z. B. „Weitermachen“) bleibt der Knopf bewusst einzeilig.
-  if (!ownLabel && needsLongPause(state, task)) {
+  if (!ownLabel && needsLongPause(state, task) && longPauseEndedFor !== task.id) {
     label = (
       <span className="long-pause-label">
         <span className="long-pause-ask">{T.today.longPauseAsk}</span>

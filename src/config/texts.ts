@@ -56,6 +56,11 @@ export const T = {
     // Startknopf ab der zweiten Aufgabe – zwei Zeilen: oben die Frage, darunter „Weiter mit …“.
     longPauseAsk: 'Lange Pause gemacht?',
     continueWith: (title: string) => `Weiter mit „${title}“`,
+    // Lange Pause nach einer erledigten Hauptaufgabe – eigene ruhige Karte, erst danach kommt die nächste.
+    longPauseTitle: 'Lange Pause',
+    longPauseText: 'Gut gemacht. Lass dir Zeit – die nächste Aufgabe wartet.',
+    longPauseEnd: 'Pause beenden',
+    longPauseNext: 'Danach:',
     pause: 'Pausieren',
     resume: 'Weiter',
     paused: 'Pausiert – die Zeit steht.',

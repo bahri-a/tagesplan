@@ -936,3 +936,30 @@
   font-weight: 500;
   opacity: 0.85;
 }
+
+/* ---------- Lange Pause nach einer erledigten Hauptaufgabe ---------- */
+/* Ruhig und bläulich wie die kurze Pause; die nächste Aufgabe steht nur leise darunter. */
+.long-pause-ring {
+  fill: none;
+  stroke: var(--ring-break-a);
+  stroke-width: 2;
+  opacity: 0.8;
+}
+
+.long-pause-moon {
+  fill: var(--break);
+  opacity: 0.85;
+}
+
+.long-pause-next {
+  margin-top: 0.5rem;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--panel-edge);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.long-pause-next-label {
+  opacity: 0.75;
+}
