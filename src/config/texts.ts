@@ -150,6 +150,10 @@ export const T = {
     blockLength: 'Blocklänge',
     shortBreak: 'Kurze Pause',
     standard: 'Standard',
+    // Hinweis neben „Kurze Pause“, wenn die Aufgabe nur einen Block hat
+    shortBreakOneBlock: 'erst ab 2 Blöcken',
+    shortBreakOneBlockHint:
+      'Nach dem letzten Block gibt es keine Pause. Sie zählt erst, wenn du am Ende noch einen Block dazunimmst.',
     custom: 'Individuell',
     reset: 'zurücksetzen',
     resetLabel: (label: string, m: number) => `${label} auf Standard (${m} Min.) zurücksetzen`,
@@ -187,6 +191,8 @@ export const T = {
     suggestionsTitle: 'Vorschläge',
     suggestionSource: (title: string) => `Aus Projekte: „${title}“`,
     suggestionHide: (title: string) => `„${title}“ aus „Vorschläge“ entfernen`,
+    suggestionsRefresh: 'Neue Vorschläge',
+    suggestionsRefreshHint: 'Diese Vorschläge ausblenden und die nächsten aus Projekte zeigen',
     undo: 'Rückgängig',
     // Nur wenn für die Aufgabe gerade ein Block oder eine kurze Pause läuft (der Timer kommt nicht zurück).
     deleteRunningBlock: 'Der laufende Block wird beendet. Trotzdem löschen?',

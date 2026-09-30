@@ -38,6 +38,7 @@ import { Dialog } from '../components/Dialog'
 import { TaskCard } from '../components/TaskCard'
 import {
   hideSuggestion,
+  hideSuggestions,
   loadHidden,
   loadShortTitles,
   PROJECTS_KEY,
@@ -448,18 +449,20 @@ function useProjectSuggestions() {
   }, [tasks, shortTitles])
 
   const hide = (id: string) => setHidden(hideSuggestion(localStorage, id))
-  return { tasks, shortTitles, hidden, hide }
+  const hideAll = (ids: string[]) => setHidden(hideSuggestions(localStorage, ids))
+  return { tasks, shortTitles, hidden, hide, hideAll }
 }
 
 /**
  * „Vorschläge“ unter „Zuletzt verwendet“, im selben Stil: offene Aufgaben aus der App „Projekte“,
  * von Claude kurz als Hauptaufgabe formuliert (1 bis 4 Wörter). Ein Klick legt sie als neue
- * Hauptaufgabe an – auf dem Tag, der oben bei „Hinzufügen zu“ gewählt ist. Der kleine Papierkorb
- * blendet einen Vorschlag aus; in Projekte selbst ändert sich nichts.
+ * Hauptaufgabe an – auf dem Tag, der oben bei „Hinzufügen zu“ gewählt ist. „Neue Vorschläge“
+ * blendet alle gezeigten aus; es erscheinen nur noch die, die wegen der Obergrenze warten mussten.
+ * Der kleine Papierkorb blendet einen Vorschlag aus; in Projekte selbst ändert sich nichts.
  */
 function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onNotice }: TargetProps & { showTarget: boolean }) {
   const state = useAppState()
-  const { tasks, shortTitles, hidden, hide } = useProjectSuggestions()
+  const { tasks, shortTitles, hidden, hide, hideAll } = useProjectSuggestions()
   const target = days[targetIndex]
   const onDay = (dayId: ID) => new Set(tasksOfDay(state, dayId).map((t) => recentKey(t.title)))
   const all = (dayId: ID) => suggestionsFor(tasks, shortTitles, hidden, onDay(dayId), recentKey, SUGGESTIONS_COUNT)
@@ -470,6 +473,20 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
     <section className="recent suggestions" aria-label={T.plan.suggestionsTitle}>
       <div className="recent-head">
         <h2 className="recent-title">{T.plan.suggestionsTitle}</h2>
+        {suggestions.length > 0 && (
+          <button
+            type="button"
+            className="suggestions-refresh"
+            title={T.plan.suggestionsRefreshHint}
+            onClick={() => hideAll(suggestions.map((s) => s.id))}
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71" />
+              <path d="M13.25 2.75v2.5h-2.5" />
+            </svg>
+            {T.plan.suggestionsRefresh}
+          </button>
+        )}
         {showTarget && <TargetSwitch days={days} targetIndex={targetIndex} onTargetChange={onTargetChange} />}
       </div>
       {suggestions.length === 0 && <p className="muted small">{T.plan.recentNone(target.label)}</p>}

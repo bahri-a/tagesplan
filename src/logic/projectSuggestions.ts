@@ -137,7 +137,13 @@ export function loadHidden(storage: Storage): Record<string, number> {
 }
 
 export function hideSuggestion(storage: Storage, id: string, now = Date.now()): Record<string, number> {
-  const next = { ...loadHidden(storage), [id]: now }
+  return hideSuggestions(storage, [id], now)
+}
+
+/** „Neue Vorschläge“: alle gerade gezeigten auf einmal ausblenden – die nächsten rücken nach. */
+export function hideSuggestions(storage: Storage, ids: string[], now = Date.now()): Record<string, number> {
+  const next = { ...loadHidden(storage) }
+  for (const id of ids) next[id] = now
   write(storage, HIDDEN_KEY, next)
   return next
 }

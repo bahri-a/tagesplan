@@ -178,6 +178,7 @@ export function SettingsScreen() {
             label={T.settings.maxTasks}
             value={settings.maxTasksPerDay}
             {...SETTINGS_LIMITS.maxTasksPerDay}
+            unit=""
             onChange={(v) => updateSettings({ maxTasksPerDay: v })}
           />
         </SettingRow>
@@ -186,6 +187,7 @@ export function SettingsScreen() {
             label={T.settings.defaultBlocks}
             value={settings.defaultBlocksPerTask}
             {...SETTINGS_LIMITS.defaultBlocksPerTask}
+            unit=""
             onChange={(v) => updateSettings({ defaultBlocksPerTask: v })}
           />
         </SettingRow>

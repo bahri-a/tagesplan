@@ -211,3 +211,8 @@
   background: var(--accent-soft);
   color: var(--accent);
 }
+
+/* Gleich breiter Platz für „Min.“ (auch leer), damit alle Zahlenfelder bündig stehen */
+.settings .stepper-unit {
+  min-width: 2.1em;
+}
