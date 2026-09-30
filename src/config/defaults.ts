@@ -127,7 +127,7 @@ export const UNDO_EXTRA_BLOCK_MS = 3 * 60_000
 export const RECENT_TASKS_COUNT = 5
 
 /** Wie viele „Vorschläge“ aus der App „Projekte“ in „Planen“ höchstens stehen. */
-export const SUGGESTIONS_COUNT = 8
+export const SUGGESTIONS_COUNT = 5
 
 /** Wie lange nach dem Löschen einer Aufgabe „Rückgängig“ angeboten wird (Millisekunden). */
 export const UNDO_DELETE_MS = 8000
