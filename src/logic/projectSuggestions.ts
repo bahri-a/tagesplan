@@ -20,6 +20,10 @@ export const HIDDEN_KEY = 'tagesplan-vorschlaege-ausgeblendet'
 export const DEFERRED_KEY = 'tagesplan-vorschlaege-aufschub'
 /** Der Helfer von Projekte auf dem Mac. */
 export const HELPER_URL = 'http://127.0.0.1:3290/kurztitel'
+/** Derselbe Helfer: sucht im Second Brain und in den Outlook-Mails nach neuen Aufgaben. */
+export const SEARCH_URL = 'http://127.0.0.1:3290/aktualisieren'
+/** Wann Projekte zuletzt gesucht hat (Projekte zeigt das im Reiter „Automatisch“). */
+export const LAST_SEARCH_KEY = 'projekte-zuletzt-aktualisiert'
 
 const MAX_WORDS = 4
 const MAX_LENGTH = 40
@@ -59,7 +63,8 @@ function write(storage: Storage, key: string, value: unknown): void {
 }
 
 /**
- * Offene Aufgaben aus Projekte: nicht erledigt und kein unbestätigter Vorschlag.
+ * Offene Aufgaben aus Projekte: alles, was nicht erledigt ist – auch neue Funde, die in Projekte
+ * noch auf „Annehmen“ warten (die sind ja genau als Vorschläge gedacht).
  * Wichtige zuerst, dann nach Datum (ohne Datum zuletzt), dann die älteren zuerst.
  */
 export function readProjectTasks(storage: Storage): ProjectTask[] {
@@ -72,8 +77,7 @@ export function readProjectTasks(storage: Storage): ProjectTask[] {
       typeof (e as Record<string, unknown>).id === 'string' &&
       typeof (e as Record<string, unknown>).titel === 'string' &&
       String((e as Record<string, unknown>).titel).trim() !== '' &&
-      (e as Record<string, unknown>).erledigt !== true &&
-      (e as Record<string, unknown>).vorschlag !== true,
+      (e as Record<string, unknown>).erledigt !== true,
   )
   return open
     .map((e) => ({
@@ -220,4 +224,88 @@ export async function requestShortTitles(
   } catch {
     return null
   }
+}
+
+/** Ergebnis von „Aktualisieren“: wie viele neue Aufgaben – oder warum es nicht ging. */
+export type SearchResult = { ok: true; added: number } | { ok: false; message: string }
+
+/**
+ * „Aktualisieren“ bei den Vorschlägen: lässt den Helfer von Projekte im Second Brain und in den
+ * Outlook-Mails nach neuen Aufgaben suchen (wie der Knopf „Aktualisieren“ in Projekte) und legt
+ * die Funde in Projekte ab – mit denselben Regeln wie dort (siehe `importCandidates`).
+ */
+export async function searchNewTasks(storage: Storage, fetcher: typeof fetch = fetch): Promise<SearchResult> {
+  let response: Response
+  try {
+    response = await fetcher(SEARCH_URL, { method: 'POST' })
+  } catch {
+    return { ok: false, message: 'Der Helfer auf dem Mac ist nicht erreichbar. Suchen geht nur auf dem MacBook.' }
+  }
+  const data = (await response.json().catch(() => null)) as unknown
+  if (!response.ok) {
+    const message = (data as { fehler?: unknown } | null)?.fehler
+    return { ok: false, message: typeof message === 'string' ? message : 'Die Suche ist fehlgeschlagen.' }
+  }
+  const added = importCandidates(storage, Array.isArray(data) ? data : [])
+  write(storage, LAST_SEARCH_KEY, new Date().toISOString())
+  return { ok: true, added }
+}
+
+const DATE = /^\d{4}-\d{2}-\d{2}$/
+const TIME = /^([01]\d|2[0-3]):[0-5]\d$/
+
+/**
+ * Funde des Helfers in die Daten von Projekte übernehmen – genau wie Projekte es selbst tut
+ * (projekte/src/daten/bestand.ts, `importiere`): Was schon da ist (gleiche Quelle) oder in
+ * Projekte abgelehnt wurde, kommt nicht noch einmal. Neue Funde landen dort im Reiter
+ * „Automatisch“ und warten aufs Annehmen. Liefert, wie viele neu dazugekommen sind.
+ */
+export function importCandidates(storage: Storage, candidates: unknown[], now = new Date()): number {
+  const data = read<{ version?: number; items?: unknown[]; geloeschteQuellen?: unknown[] } | null>(
+    storage,
+    PROJECTS_KEY,
+    null,
+  )
+  const items: Record<string, unknown>[] = Array.isArray(data?.items) ? (data.items as Record<string, unknown>[]) : []
+  const deleted = new Set(Array.isArray(data?.geloeschteQuellen) ? data.geloeschteQuellen : [])
+  const sourceKey = (e: Record<string, unknown>) =>
+    typeof e.quellId === 'string' && e.quellId && e.quelle !== 'manuell' ? `${e.quelle}:${e.quellId}` : null
+  const known = new Set(items.map(sourceKey).filter(Boolean))
+  let added = 0
+  for (const raw of candidates) {
+    if (!raw || typeof raw !== 'object') continue
+    const c = raw as Record<string, unknown>
+    if (typeof c.titel !== 'string' || !c.titel.trim()) continue
+    if (c.quelle !== 'second-brain' && c.quelle !== 'email') continue
+    if (typeof c.quellId !== 'string' || !c.quellId.trim()) continue
+    const datum = typeof c.datum === 'string' && DATE.test(c.datum) ? c.datum : null
+    const entry = {
+      id: crypto.randomUUID(),
+      titel: c.titel.trim(),
+      info: typeof c.info === 'string' ? c.info.trim() : '',
+      datum,
+      uhrzeit: datum && typeof c.uhrzeit === 'string' && TIME.test(c.uhrzeit) ? c.uhrzeit : null,
+      wichtig: c.wichtig === true,
+      erledigt: false,
+      erstelltAm: now.toISOString(),
+      erledigtAm: null,
+      quelle: c.quelle,
+      quellId: c.quellId.trim(),
+      bereich: 'automatisch',
+      vorschlag: true,
+    }
+    const key = sourceKey(entry)!
+    if (deleted.has(key) || known.has(key)) continue
+    known.add(key)
+    items.push(entry)
+    added++
+  }
+  if (added > 0) {
+    write(storage, PROJECTS_KEY, {
+      version: 1,
+      items,
+      geloeschteQuellen: Array.isArray(data?.geloeschteQuellen) ? data.geloeschteQuellen : [],
+    })
+  }
+  return added
 }

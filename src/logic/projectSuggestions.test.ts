@@ -3,6 +3,7 @@ import {
   fallbackShortTitle,
   hideSuggestion,
   hideSuggestions,
+  importCandidates,
   isShortTitle,
   loadDeferred,
   loadShortTitles,
@@ -10,6 +11,7 @@ import {
   readProjectTasks,
   requestShortTitles,
   saveShortTitles,
+  searchNewTasks,
   setDeferred,
   suggestionsFor,
 } from './projectSuggestions'
@@ -49,7 +51,7 @@ const item = (id: string, titel: string, extra: Record<string, unknown> = {}) =>
 const key = (t: string) => t.trim().toLocaleLowerCase('de')
 
 describe('Vorschläge aus Projekte', () => {
-  it('liest nur offene, angenommene Aufgaben – wichtige zuerst, dann nach Datum', () => {
+  it('liest offene Aufgaben (auch unbestätigte Funde) – wichtige zuerst, dann nach Datum', () => {
     const storage = memoryStorage({
       [PROJECTS_KEY]: JSON.stringify({
         version: 1,
@@ -65,7 +67,7 @@ describe('Vorschläge aus Projekte', () => {
         geloeschteQuellen: [],
       }),
     })
-    expect(readProjectTasks(storage).map((t) => t.title)).toEqual(['Wichtig', 'Bald', 'Später', 'Ohne Datum'])
+    expect(readProjectTasks(storage).map((t) => t.title)).toEqual(['Wichtig', 'Bald', 'Später', 'Ohne Datum', 'Unbestätigt'])
   })
 
   it('kommt ohne oder mit kaputten Projekte-Daten zurecht', () => {
@@ -132,5 +134,42 @@ describe('Vorschläge aus Projekte', () => {
     setDeferred(storage, 'b', true, 4)
     expect(setDeferred(storage, 'a', false)).toEqual({ b: 4 })
     expect(loadDeferred(storage)).toEqual({ b: 4 })
+  })
+
+  it('übernimmt Funde des Helfers wie Projekte: ohne Doppelte und ohne Abgelehnte', () => {
+    const storage = memoryStorage({
+      [PROJECTS_KEY]: JSON.stringify({
+        version: 1,
+        items: [item('a', 'Schon da', { quelle: 'email', quellId: 'm1', bereich: 'automatisch' })],
+        geloeschteQuellen: ['second-brain:notiz.md#weg'],
+      }),
+    })
+    const added = importCandidates(storage, [
+      { titel: 'Schon da', quelle: 'email', quellId: 'm1' },
+      { titel: 'Abgelehnt', quelle: 'second-brain', quellId: 'notiz.md#weg' },
+      { titel: 'Neu', quelle: 'email', quellId: 'm2', datum: '2026-10-01', uhrzeit: '09:30', wichtig: true },
+      { titel: 'Kaputt', quelle: 'manuell', quellId: 'x' },
+      { titel: 'Neu doppelt', quelle: 'email', quellId: 'm2' },
+    ])
+    expect(added).toBe(1)
+    const data = JSON.parse(storage.getItem(PROJECTS_KEY)!)
+    expect(data.items).toHaveLength(2)
+    expect(data.items[1]).toMatchObject({ titel: 'Neu', datum: '2026-10-01', uhrzeit: '09:30', wichtig: true, bereich: 'automatisch', vorschlag: true })
+    expect(data.geloeschteQuellen).toEqual(['second-brain:notiz.md#weg'])
+  })
+
+  it('„Aktualisieren“: sucht über den Helfer und meldet, was schiefging', async () => {
+    const storage = memoryStorage()
+    const found = (async () => new Response(JSON.stringify([{ titel: 'Arzt', quelle: 'email', quellId: 'm9' }]))) as typeof fetch
+    expect(await searchNewTasks(storage, found)).toEqual({ ok: true, added: 1 })
+    expect(readProjectTasks(storage).map((t) => t.title)).toEqual(['Arzt'])
+
+    const locked = (async () => new Response(JSON.stringify({ fehler: 'Gerade erst aktualisiert.' }), { status: 429 })) as typeof fetch
+    expect(await searchNewTasks(storage, locked)).toEqual({ ok: false, message: 'Gerade erst aktualisiert.' })
+
+    const offline = (async () => {
+      throw new TypeError('Failed to fetch')
+    }) as typeof fetch
+    expect((await searchNewTasks(storage, offline)).ok).toBe(false)
   })
 })

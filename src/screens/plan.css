@@ -100,6 +100,11 @@
   border-top: none;
 }
 
+/* Etwas mehr Luft zwischen „Vorschläge“ und „Aufschub“. */
+.suggestions + .suggestions {
+  margin-top: 2.75rem;
+}
+
 /* „Aufschub“ und „Vorschläge“ als Ablage beim Ziehen: leise gestrichelte Fläche, beim Drüberziehen
    in der Akzentfarbe. Der Rahmen liegt als Umriss außen, damit nichts springt. */
 .suggestions {
@@ -323,6 +328,22 @@
   display: inline-flex;
   flex-wrap: wrap;
   gap: 0.15rem;
+}
+
+/* „Sucht …“: der Pfeil dreht sich langsam. */
+.suggestions-refresh.is-busy {
+  cursor: progress;
+  opacity: 1;
+}
+
+.suggestions-refresh.is-busy svg {
+  animation: suggestions-spin 1.2s linear infinite;
+}
+
+@keyframes suggestions-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .suggestions-count {

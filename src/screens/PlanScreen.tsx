@@ -53,6 +53,7 @@ import {
   loadDeferred,
   requestShortTitles,
   saveShortTitles,
+  searchNewTasks,
   setDeferred,
   suggestionsFor,
   type ProjectTask,
@@ -491,6 +492,7 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
   const [menu, setMenu] = useState<{ id: string; place: SuggestionPlace } | null>(null)
   const [dragging, setDragging] = useState<{ id: string; place: SuggestionPlace; title: string } | null>(null)
   const [dropPlace, setDropPlace] = useState<SuggestionPlace | null>(null)
+  const [searching, setSearching] = useState(false)
   const touchDrag = useRef(false)
   const justDragged = useRef(false)
 
@@ -519,11 +521,19 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
   const showDeferred = hasDeferred || dragging?.place === 'suggestions'
   if (!showSuggestions && !showDeferred) return null
 
-  /** „Aktualisieren“: Projekte neu lesen und sagen, ob etwas dazugekommen ist. */
-  const refresh = () => {
+  /**
+   * „Aktualisieren“: Der Helfer auf dem Mac sucht im Second Brain und in den Mails nach neuen
+   * Aufgaben (wie „Aktualisieren“ in Projekte), danach wird alles neu gelesen.
+   */
+  const refresh = async () => {
+    if (searching) return
+    setSearching(true)
     const before = new Set(tasks.map((t) => t.id))
+    const result = await searchNewTasks(localStorage)
+    setSearching(false)
     const added = reload().filter((t) => !before.has(t.id)).length
-    onNotice(added > 0 ? T.plan.suggestionsUpdatedNew(added) : T.plan.suggestionsUpdated)
+    if (!result.ok) onNotice(result.message)
+    else onNotice(added > 0 ? T.plan.suggestionsUpdatedNew(added) : T.plan.suggestionsUpdated)
   }
   /** „Neue Vorschläge“: nur tauschen, wenn wirklich weitere warten – sonst bleibt alles stehen. */
   const next = () => {
@@ -603,12 +613,19 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
             <>
               {!dragging && (
                 <span className="suggestions-actions">
-                  <button type="button" className="suggestions-refresh" title={T.plan.suggestionsReloadHint} onClick={refresh}>
+                  <button
+                    type="button"
+                    className={`suggestions-refresh${searching ? ' is-busy' : ''}`}
+                    title={T.plan.suggestionsReloadHint}
+                    aria-busy={searching}
+                    disabled={searching}
+                    onClick={() => void refresh()}
+                  >
                     <svg viewBox="0 0 16 16" aria-hidden="true">
                       <path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71" />
                       <path d="M13.25 2.75v2.5h-2.5" />
                     </svg>
-                    {T.plan.suggestionsReload}
+                    {searching ? T.plan.suggestionsSearching : T.plan.suggestionsReload}
                   </button>
                   {suggestions.length > 0 && (
                     <button

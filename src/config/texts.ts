@@ -196,9 +196,10 @@ export const T = {
       `Diese Vorschläge ausblenden und die nächsten zeigen (${waiting} ${waiting === 1 ? 'wartet' : 'warten'})`,
     suggestionsNoMore: 'Gerade keine weiteren Vorschläge in Projekte.',
     suggestionsReload: 'Aktualisieren',
-    suggestionsReloadHint: 'Offene Aufgaben aus Projekte neu laden',
-    suggestionsUpdated: 'Vorschläge sind aktuell.',
-    suggestionsUpdatedNew: (n: number) => `${n} ${n === 1 ? 'neue Aufgabe' : 'neue Aufgaben'} aus Projekte.`,
+    suggestionsSearching: 'Sucht …',
+    suggestionsReloadHint: 'Im Second Brain und in den Mails nach neuen Aufgaben suchen (dauert 1–3 Minuten)',
+    suggestionsUpdated: 'Nichts Neues gefunden.',
+    suggestionsUpdatedNew: (n: number) => `${n} ${n === 1 ? 'neue Aufgabe' : 'neue Aufgaben'} gefunden.`,
     suggestionsNone: 'Gerade keine Vorschläge.',
     // „Aufschub“ unter den Vorschlägen
     deferredTitle: 'Aufschub',
