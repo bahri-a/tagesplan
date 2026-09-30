@@ -53,6 +53,23 @@
   gap: 0.5rem;
 }
 
+/* „Hinzufügen“ als schlichtes Plus in der Akzentfarbe, damit die Zeile ruhig bleibt. */
+.new-task-add {
+  flex: none;
+  width: 44px;
+  padding: 0;
+  color: var(--accent);
+}
+
+.new-task-add svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
 /* Beim Ziehen auf den anderen Tag: die Spalte leuchtet ganz zart, „Hierher ziehen“ im Titel. */
 .plan-column {
   margin: -0.6rem;
@@ -93,10 +110,144 @@
 }
 
 /* „Vorschläge“ direkt unter „Zuletzt verwendet“: gleicher Stil, ohne zweite Trennlinie. */
-.recent + .suggestions {
+.recent + .suggestions,
+.suggestions + .suggestions {
   margin-top: 1.75rem;
   padding-top: 0;
   border-top: none;
+}
+
+/* „Aufgeschoben“ gehört in die Zukunft: mit Luft und einer feinen, zu den Seiten auslaufenden Linie
+   vom Rest getrennt. */
+.suggestions + .suggestions {
+  position: relative;
+  margin-top: 3.5rem;
+}
+
+.suggestions + .suggestions::before {
+  content: '';
+  position: absolute;
+  top: -1.75rem;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent);
+  pointer-events: none;
+}
+
+/* Leiser Zusatz neben der Überschrift, z. B. „Für die Zukunft“. */
+.recent-subtitle {
+  margin-left: -0.45rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+/* „Aufgeschoben“ und „Vorschläge“ als Ablage beim Ziehen: leise gestrichelte Fläche, beim Drüberziehen
+   in der Akzentfarbe. Der Rahmen liegt als Umriss außen, damit nichts springt. */
+.suggestions {
+  outline: 1.5px dashed transparent;
+  outline-offset: 0.5rem;
+  transition:
+    background 0.15s,
+    outline-color 0.15s;
+}
+
+.suggestions.is-drop-zone {
+  border-radius: 16px;
+  outline-color: var(--border);
+}
+
+.suggestions.is-drop-zone.is-drop-target {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  outline-color: var(--accent-line);
+}
+
+.suggestions .drop-hint {
+  margin-left: 0;
+}
+
+/* Leere Ablage beim Ziehen: eine Zeile Platz, damit man gut trifft. */
+.suggestions-empty {
+  display: flex;
+  align-items: center;
+  min-height: 2.4rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* Die gezogene Pille bleibt als blasser Platzhalter stehen. */
+.recent-item.is-dragging {
+  opacity: 0.35;
+}
+
+.suggestion-chip.is-dragged {
+  box-shadow: var(--shadow-lift);
+  cursor: grabbing;
+  transform: scale(1.03);
+}
+
+/* Lange drücken auf dem iPhone: kein Textmarkieren und kein Systemmenü. */
+.suggestion-chip {
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+/* Kleines Menü unter der Pille (Rechtsklick bzw. lange drücken). */
+.chip-menu {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  min-width: 12rem;
+  padding: 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
+  animation: chip-menu-in 0.12s ease-out;
+}
+
+@keyframes chip-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.chip-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5em 0.7em;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.chip-menu-item:hover,
+.chip-menu-item:focus-visible {
+  outline: none;
+  background: var(--accent-soft);
+}
+
+.chip-menu-item svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .recent-head {
@@ -208,6 +359,38 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* „Aktualisieren“ und „Neue Vorschläge“: zwei leise Textknöpfe neben der Überschrift. */
+.suggestions-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+}
+
+/* „Sucht …“: der Pfeil dreht sich langsam. */
+.suggestions-refresh.is-busy {
+  cursor: progress;
+  opacity: 1;
+}
+
+.suggestions-refresh.is-busy svg {
+  animation: suggestions-spin 1.2s linear infinite;
+}
+
+@keyframes suggestions-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.suggestions-count {
+  min-width: 1.2em;
+  padding: 0 0.35em;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+  font-size: 0.72rem;
+  text-align: center;
 }
 
 /* „Neue Vorschläge“: leiser Textknopf neben der Überschrift. */
