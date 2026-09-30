@@ -473,6 +473,36 @@
   gap: 0.65rem;
 }
 
+/* Vorschläge und Aufgeschobenes: gleich breite, gleich hohe Pillen im Raster (5 nebeneinander,
+   am Handy 2). Lange Titel trennt der Browser sauber mit Bindestrich auf die zweite Zeile. */
+.suggestion-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+@media (max-width: 760px) {
+  .suggestion-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.suggestion-grid .recent-item {
+  min-width: 0;
+}
+
+.suggestion-grid .suggestion-chip {
+  flex: 1;
+  min-width: 0;
+  max-width: none;
+  min-height: calc(2.6em + 0.9em + 2px);
+}
+
+.suggestion-grid .recent-chip-title {
+  min-width: 0;
+  hyphens: auto;
+  overflow-wrap: anywhere;
+}
+
 .suggestion-remove {
   position: absolute;
   top: -0.55rem;
