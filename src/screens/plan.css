@@ -100,6 +100,61 @@
   margin-right: 0;
 }
 
+/* ---------- „Heute ⇄ Morgen“: leiser Tausch-Knopf mittig unter beiden Spalten ---------- */
+
+.plan-swap {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+/* Mit Knopf rückt die Trennlinie etwas näher, damit der Abstand insgesamt gleich bleibt. */
+.plan-swap + .recent {
+  margin-top: 1.25rem;
+}
+
+.plan-swap-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.25em 0.8em;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.plan-swap-button svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.plan-swap-button:hover,
+.plan-swap-button:focus-visible {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Am iPhone stehen die Tage untereinander – dann zeigen die Pfeile nach oben und unten. */
+@media (max-width: 760px) {
+  .plan-swap-button svg {
+    transform: rotate(90deg);
+  }
+}
+
 /* ---------- „Zuletzt verwendet“ – ganz unten, leise ---------- */
 
 .recent {

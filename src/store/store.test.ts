@@ -651,6 +651,23 @@ describe('Planen: kopieren, verschieben, zuletzt verwendet', () => {
     expect(sel.tasksOfDay(s, tomorrow()).map((t) => [t.title, t.position])).toEqual([['B', 0], ['C', 1]])
   })
 
+  it('tauscht heute und morgen – nur eine Seite voll: alles wandert hinüber; nicht während eines Blocks', () => {
+    const titles = (dayId: string) => sel.tasksOfDay(getState(), dayId).map((t) => [t.title, t.position])
+    const a = actions.addTask(today(), 'A')
+    actions.addTask(today(), 'B')
+    actions.addTask(tomorrow(), 'C')
+    expect(actions.swapDays()).toBe(true)
+    expect(titles(today())).toEqual([['C', 0]])
+    expect(titles(tomorrow())).toEqual([['A', 0], ['B', 1]])
+    actions.moveTask(sel.tasksOfDay(getState(), today())[0].id, tomorrow(), 2)
+    expect(actions.swapDays()).toBe(true)
+    expect(titles(today())).toEqual([['A', 0], ['B', 1], ['C', 2]])
+    expect(titles(tomorrow())).toEqual([])
+    actions.startBlock(a.id)
+    expect(actions.swapDays()).toBe(false)
+    expect(titles(today())).toEqual([['A', 0], ['B', 1], ['C', 2]])
+  })
+
   it('„Zuletzt verwendet“: jüngste zuerst, jeder Titel einmal, ohne Titel des Ziel-Tags', () => {
     at(0)
     actions.addTask(today(), 'Mathe')

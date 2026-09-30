@@ -177,6 +177,13 @@ export const T = {
     copied: (title: string) => `„${title}“ für morgen kopiert`,
     moveBlocked: 'Für diese Aufgabe läuft gerade ein Block – verschieben geht danach.',
     dropHere: 'Hierher ziehen',
+    // Leiser Knopf unter beiden Spalten: tauscht die Aufgaben von heute und morgen.
+    swapDays: 'Heute und Morgen tauschen',
+    swapToToday: 'Alle Aufgaben auf heute verschieben',
+    swapToTomorrow: 'Alle Aufgaben auf morgen verschieben',
+    swapped: 'Heute und Morgen getauscht.',
+    swappedTo: (day: string) => `Alle Aufgaben liegen jetzt bei ${day}.`,
+    swapBlocked: 'Gerade läuft ein Block – tauschen geht danach.',
     dragMoved: (title: string, day: string) => `„${title}“ liegt jetzt bei ${day}.`,
     // „Zuletzt verwendet“ unten in „Planen“
     recentTitle: 'Zuletzt verwendet',
