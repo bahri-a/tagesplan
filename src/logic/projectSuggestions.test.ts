@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   fallbackShortTitle,
   hideSuggestion,
+  hideSuggestions,
   isShortTitle,
   loadShortTitles,
   PROJECTS_KEY,
@@ -98,6 +99,14 @@ describe('Vorschläge aus Projekte', () => {
     saveShortTitles(storage, { 'A lang': 'A', 'B lang': 'viel zu viele Wörter für eine Pille' })
     expect(loadShortTitles(storage)).toEqual({ 'A lang': 'A' })
     expect(hideSuggestion(storage, 'x', 5)).toEqual({ x: 5 })
+    expect(hideSuggestions(storage, ['y', 'z'], 7)).toEqual({ x: 5, y: 7, z: 7 })
+  })
+
+  it('„Neue Vorschläge“: nach dem Ausblenden der gezeigten kommen nur die wartenden', () => {
+    const tasks = ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((t) => ({ id: t, title: t, date: null, important: false }))
+    const first = suggestionsFor(tasks, {}, {}, new Set(), key, 5)
+    const hidden = hideSuggestions(memoryStorage(), first.map((s) => s.id))
+    expect(suggestionsFor(tasks, {}, hidden, new Set(), key, 5).map((s) => s.title)).toEqual(['F', 'G'])
   })
 
   it('fragt den Helfer und nimmt nur passende Antworten', async () => {

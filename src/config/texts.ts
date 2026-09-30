@@ -187,6 +187,8 @@ export const T = {
     suggestionsTitle: 'Vorschläge',
     suggestionSource: (title: string) => `Aus Projekte: „${title}“`,
     suggestionHide: (title: string) => `„${title}“ aus „Vorschläge“ entfernen`,
+    suggestionsRefresh: 'Neue Vorschläge',
+    suggestionsRefreshHint: 'Diese Vorschläge ausblenden und die nächsten aus Projekte zeigen',
     undo: 'Rückgängig',
     // Nur wenn für die Aufgabe gerade ein Block oder eine kurze Pause läuft (der Timer kommt nicht zurück).
     deleteRunningBlock: 'Der laufende Block wird beendet. Trotzdem löschen?',

@@ -210,6 +210,51 @@
   white-space: nowrap;
 }
 
+/* „Neue Vorschläge“: leiser Textknopf neben der Überschrift. */
+.suggestions .recent-head {
+  justify-content: flex-start;
+}
+
+.suggestions .recent-target {
+  margin-left: auto;
+}
+
+.suggestions-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2em 0.6em;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  opacity: 0.7;
+  transition:
+    opacity 0.15s,
+    background 0.15s,
+    color 0.15s;
+}
+
+.suggestions-refresh:hover,
+.suggestions-refresh:focus-visible {
+  background: var(--accent-soft);
+  color: var(--accent);
+  opacity: 1;
+}
+
+.suggestions-refresh svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 /* „Vorschläge“: etwas edler als „Zuletzt verwendet“ – zarter Farbverlauf in der Akzentfarbe,
    das + in einem kleinen Kreis, beim Drüberfahren hebt sich die Pille leicht an. */
 .suggestion-chip {
