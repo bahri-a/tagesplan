@@ -7,9 +7,10 @@
  * Nur wenn für die Aufgabe gerade ein Block oder eine kurze Pause läuft, wird vorher gefragt –
  * „Rückgängig“ holt den Timer nämlich nicht zurück.
  * Ganz unten, leise: „Zuletzt verwendet“ – ein Klick legt eine frühere Aufgabe wieder an.
+ * Darunter „Vorschläge“: offene Aufgaben aus der App „Projekte“, kurz als Hauptaufgabe formuliert.
  */
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   closestCenter,
   DndContext,
@@ -31,13 +32,24 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { RECENT_TASKS_COUNT } from '../config/defaults'
+import { RECENT_TASKS_COUNT, SUGGESTIONS_COUNT } from '../config/defaults'
 import { T } from '../config/texts'
 import { Dialog } from '../components/Dialog'
 import { TaskCard } from '../components/TaskCard'
+import {
+  hideSuggestion,
+  loadHidden,
+  loadShortTitles,
+  PROJECTS_KEY,
+  readProjectTasks,
+  requestShortTitles,
+  saveShortTitles,
+  suggestionsFor,
+  type ProjectTask,
+} from '../logic/projectSuggestions'
 import type { ID, Task } from '../model/types'
 import { addTask, copyTask, deleteTask, hideRecentTask, moveTask, reorderTasks } from '../store/actions'
-import { activeDay, plannedDay, recentTasks, runningTimerOfTask, tasksOfDay } from '../store/selectors'
+import { activeDay, plannedDay, recentKey, recentTasks, runningTimerOfTask, tasksOfDay } from '../store/selectors'
 import { getState, useAppState } from '../store/store'
 import './plan.css'
 
@@ -72,6 +84,8 @@ export function PlanScreen({ onTaskDeleted, onNotice }: Props) {
   const [confirmDelete, setConfirmDelete] = useState<{ task: Task; running: 'block' | 'break' } | null>(null)
   // Beim Ziehen auf den ANDEREN Tag: diese Spalte wird hervorgehoben.
   const [dropDayId, setDropDayId] = useState<ID | null>(null)
+  // „Hinzufügen zu“ gilt für „Zuletzt verwendet“ und „Vorschläge“ gemeinsam. 1 = Morgen.
+  const [targetIndex, setTargetIndex] = useState(1)
 
   const days = [
     { day: activeDay(state), label: T.plan.today },
@@ -193,7 +207,15 @@ export function PlanScreen({ onTaskDeleted, onNotice }: Props) {
         </div>
       </DndContext>
 
-      <RecentTasks days={days} onNotice={onNotice} />
+      <RecentTasks days={days} targetIndex={targetIndex} onTargetChange={setTargetIndex} onNotice={onNotice} />
+      <ProjectSuggestions
+        days={days}
+        targetIndex={targetIndex}
+        onTargetChange={setTargetIndex}
+        // Ohne „Zuletzt verwendet“ zeigen die Vorschläge den Umschalter selbst.
+        showTarget={!hasRecentTasks(state, days)}
+        onNotice={onNotice}
+      />
 
       {confirmDelete && (
         <Dialog title={`„${confirmDelete.task.title || '…'}“`} onClose={() => setConfirmDelete(null)}>
@@ -299,31 +321,52 @@ function DayColumn(props: DayColumnProps) {
  * Umschalter auch für heute. Was auf dem gewählten Tag schon steht, wird nicht angeboten.
  * Das kleine × in der Pille nimmt eine Aufgabe aus der Liste (sie selbst bleibt unverändert).
  */
-function RecentTasks({ days, onNotice }: { days: { day: { id: ID }; label: string }[]; onNotice: (m: string) => void }) {
+type PlanDays = { day: { id: ID }; label: string }[]
+
+interface TargetProps {
+  days: PlanDays
+  /** Welcher Tag bekommt die Aufgabe? 0 = Heute, 1 = Morgen. */
+  targetIndex: number
+  onTargetChange: (index: number) => void
+  onNotice: (m: string) => void
+}
+
+/** Gibt es überhaupt etwas für „Zuletzt verwendet“ (auf einem der beiden Tage)? */
+function hasRecentTasks(state: ReturnType<typeof getState>, days: PlanDays): boolean {
+  return days.some(({ day }) => recentTasks(state, day.id, 1).length > 0)
+}
+
+/** Umschalter „Heute | Morgen“ rechts neben der Überschrift. */
+function TargetSwitch({ days, targetIndex, onTargetChange }: Omit<TargetProps, 'onNotice'>) {
+  return (
+    <div className="segmented recent-target" role="radiogroup" aria-label={T.plan.recentTarget}>
+      {days.map(({ label }, index) => (
+        <button
+          key={label}
+          type="button"
+          role="radio"
+          aria-checked={index === targetIndex}
+          className="segmented-item"
+          onClick={() => onTargetChange(index)}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function RecentTasks({ days, targetIndex, onTargetChange, onNotice }: TargetProps) {
   const state = useAppState()
-  const [targetIndex, setTargetIndex] = useState(1) // 1 = Morgen
   const target = days[targetIndex]
   const recent = recentTasks(state, target.day.id, RECENT_TASKS_COUNT)
-  if (recent.length === 0 && recentTasks(state, days[1 - targetIndex].day.id, 1).length === 0) return null
+  if (!hasRecentTasks(state, days)) return null
 
   return (
     <section className="recent" aria-label={T.plan.recentTitle}>
       <div className="recent-head">
         <h2 className="recent-title">{T.plan.recentTitle}</h2>
-        <div className="segmented recent-target" role="radiogroup" aria-label={T.plan.recentTarget}>
-          {days.map(({ label }, index) => (
-            <button
-              key={label}
-              type="button"
-              role="radio"
-              aria-checked={index === targetIndex}
-              className="segmented-item"
-              onClick={() => setTargetIndex(index)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <TargetSwitch days={days} targetIndex={targetIndex} onTargetChange={onTargetChange} />
       </div>
       {recent.length === 0 && <p className="muted small">{T.plan.recentNone(target.label)}</p>}
       <ul className="recent-list">
@@ -354,6 +397,112 @@ function RecentTasks({ days, onNotice }: { days: { day: { id: ID }; label: strin
             >
               <svg viewBox="0 0 12 12" aria-hidden="true">
                 <path d="M3.5 3.5l5 5M8.5 3.5l-5 5" />
+              </svg>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+/** Liest die offenen Aufgaben aus Projekte – neu, sobald Projekte (in einem anderen Tab) speichert
+ * oder das Fenster wieder in den Vordergrund kommt. Fehlende Kurztitel lässt es von Claude
+ * formulieren (jeden Titel nur einmal pro Sitzung). */
+function useProjectSuggestions() {
+  const [tasks, setTasks] = useState<ProjectTask[]>(() => readProjectTasks(localStorage))
+  const [shortTitles, setShortTitles] = useState(() => loadShortTitles(localStorage))
+  const [hidden, setHidden] = useState(() => loadHidden(localStorage))
+  const asked = useRef(new Set<string>())
+  const mounted = useRef(true)
+
+  useEffect(() => {
+    mounted.current = true
+    const reload = () => {
+      setTasks(readProjectTasks(localStorage))
+      setShortTitles(loadShortTitles(localStorage))
+      setHidden(loadHidden(localStorage))
+    }
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === null || e.key === PROJECTS_KEY) reload()
+    }
+    window.addEventListener('storage', onStorage)
+    window.addEventListener('focus', reload)
+    return () => {
+      mounted.current = false
+      window.removeEventListener('storage', onStorage)
+      window.removeEventListener('focus', reload)
+    }
+  }, [])
+
+  useEffect(() => {
+    const missing = tasks.map((t) => t.title).filter((t) => !(t in shortTitles) && !asked.current.has(t))
+    if (missing.length === 0) return
+    for (const t of missing) asked.current.add(t)
+    // Die Antwort wird auch gespeichert, wenn „Planen“ inzwischen zu ist – beim nächsten Mal ist sie da.
+    void requestShortTitles(missing).then((found) => {
+      if (!found || Object.keys(found).length === 0) return
+      const saved = saveShortTitles(localStorage, found)
+      if (mounted.current) setShortTitles(saved)
+    })
+  }, [tasks, shortTitles])
+
+  const hide = (id: string) => setHidden(hideSuggestion(localStorage, id))
+  return { tasks, shortTitles, hidden, hide }
+}
+
+/**
+ * „Vorschläge“ unter „Zuletzt verwendet“, im selben Stil: offene Aufgaben aus der App „Projekte“,
+ * von Claude kurz als Hauptaufgabe formuliert (1 bis 4 Wörter). Ein Klick legt sie als neue
+ * Hauptaufgabe an – auf dem Tag, der oben bei „Hinzufügen zu“ gewählt ist. Der kleine Papierkorb
+ * blendet einen Vorschlag aus; in Projekte selbst ändert sich nichts.
+ */
+function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onNotice }: TargetProps & { showTarget: boolean }) {
+  const state = useAppState()
+  const { tasks, shortTitles, hidden, hide } = useProjectSuggestions()
+  const target = days[targetIndex]
+  const onDay = (dayId: ID) => new Set(tasksOfDay(state, dayId).map((t) => recentKey(t.title)))
+  const all = (dayId: ID) => suggestionsFor(tasks, shortTitles, hidden, onDay(dayId), recentKey, SUGGESTIONS_COUNT)
+  const suggestions = all(target.day.id)
+  if (suggestions.length === 0 && all(days[1 - targetIndex].day.id).length === 0) return null
+
+  return (
+    <section className="recent suggestions" aria-label={T.plan.suggestionsTitle}>
+      <div className="recent-head">
+        <h2 className="recent-title">{T.plan.suggestionsTitle}</h2>
+        {showTarget && <TargetSwitch days={days} targetIndex={targetIndex} onTargetChange={onTargetChange} />}
+      </div>
+      {suggestions.length === 0 && <p className="muted small">{T.plan.recentNone(target.label)}</p>}
+      <ul className="recent-list">
+        {suggestions.map((suggestion) => (
+          <li key={suggestion.id} className="recent-item">
+            <button
+              type="button"
+              className="recent-chip suggestion-chip"
+              aria-label={T.plan.recentAdd(suggestion.title, target.label)}
+              title={T.plan.suggestionSource(suggestion.source)}
+              onClick={() => {
+                addTask(target.day.id, suggestion.title)
+                onNotice(T.plan.recentAdded(suggestion.title, target.label))
+              }}
+            >
+              <span className="recent-plus" aria-hidden="true">
+                +
+              </span>
+              <span className="recent-chip-title">{suggestion.title}</span>
+            </button>
+            {/* Kleiner, leiser Papierkorb oben rechts an der Pille. */}
+            <button
+              type="button"
+              className="suggestion-remove"
+              aria-label={T.plan.suggestionHide(suggestion.title)}
+              title={T.plan.suggestionHide(suggestion.title)}
+              onClick={() => hide(suggestion.id)}
+            >
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M2.75 4.25h10.5" />
+                <path d="M6.25 4.25V3a1 1 0 0 1 1-1h1.5a1 1 0 0 1 1 1v1.25" />
+                <path d="M4 4.25l.65 8.6a1.2 1.2 0 0 0 1.2 1.15h4.3a1.2 1.2 0 0 0 1.2-1.15l.65-8.6" />
               </svg>
             </button>
           </li>

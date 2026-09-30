@@ -183,6 +183,10 @@ export const T = {
     recentHide: (title: string) => `„${title}“ aus „Zuletzt verwendet“ entfernen`,
     recentNone: (day: string) => `Steht alles schon bei ${day}.`,
     recentAdded: (title: string, day: string) => `„${title}“ steht jetzt bei ${day}.`,
+    // „Vorschläge“ darunter: offene Aufgaben aus der App „Projekte“
+    suggestionsTitle: 'Vorschläge',
+    suggestionSource: (title: string) => `Aus Projekte: „${title}“`,
+    suggestionHide: (title: string) => `„${title}“ aus „Vorschläge“ entfernen`,
     undo: 'Rückgängig',
     // Nur wenn für die Aufgabe gerade ein Block oder eine kurze Pause läuft (der Timer kommt nicht zurück).
     deleteRunningBlock: 'Der laufende Block wird beendet. Trotzdem löschen?',
