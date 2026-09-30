@@ -207,7 +207,7 @@ export const T = {
     suggestionsResetConfirm: 'Ausblenden',
     suggestionsResetCancel: 'Abbrechen',
     suggestionsResetDone: 'Alle Vorschläge ausgeblendet.',
-    suggestionsLimit: (n: number) => `(max. ${n})`,
+    suggestionsLimit: (n: number) => `max. ${n}`,
     suggestionsLimitHint: 'Wie viele Vorschläge höchstens erscheinen (1 bis 10)',
     // „Aufgeschoben“ unter den Vorschlägen
     deferredTitle: 'Aufgeschoben',

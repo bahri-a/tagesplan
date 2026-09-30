@@ -491,9 +491,34 @@
   height: 14px;
 }
 
-/* „(max. 5)“: Die Auswahl liegt unsichtbar über dem Text, damit sich am iPhone das native Rad öffnet. */
+/* „max. 5 ⌄“: kleine Auswahl-Pille mit Pfeil – man sieht, dass man hier wählen kann.
+   Die echte Auswahl liegt unsichtbar darüber, damit sich am iPhone das native Rad öffnet. */
 .suggestions-limit {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-right: 0.35rem;
+  padding: 0.15em 0.45em 0.15em 0.65em;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.78rem;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.suggestions-limit svg {
+  width: 11px;
+  height: 11px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .suggestions-limit select {
@@ -505,7 +530,9 @@
   font-size: 16px;
 }
 
+.suggestions-limit:hover,
 .suggestions-limit:focus-within {
+  border-color: var(--accent-line);
   background: var(--accent-soft);
   color: var(--accent);
 }
