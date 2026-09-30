@@ -41,8 +41,16 @@ export function blocksOfTask(s: AppState, taskId: ID): Block[] {
   return alive(Object.values(s.blocks)).filter((b) => b.taskId === taskId)
 }
 
-/** Blöcke, die für „Block n von m“ zählen: durchgehaltene und abgebrochene (nicht zurückgenommene). */
+/**
+ * Blöcke, die für „Block n von m“ zählen: nur durchgehaltene (auch „Früher fertig“).
+ * Ein abgebrochener Block zählt nicht – beim nächsten Mal kommt genau dieser Block noch einmal.
+ */
 function countedBlocks(s: AppState, taskId: ID): Block[] {
+  return blocksOfTask(s, taskId).filter((b) => b.status === 'completed')
+}
+
+/** Angefangene Blöcke: durchgehaltene und abgebrochene (nicht zurückgenommene). */
+function startedBlocks(s: AppState, taskId: ID): Block[] {
   return blocksOfTask(s, taskId).filter((b) => b.status !== 'undone')
 }
 
@@ -92,13 +100,13 @@ export function recentTasks(s: AppState, dayId: ID, limit: number): Task[] {
 
 /** Wann der letzte Block dieser Aufgabe geendet hat (oder `null`). */
 export function lastBlockEndedAt(s: AppState, taskId: ID): number | null {
-  const ends = countedBlocks(s, taskId).map((b) => b.endedAt)
+  const ends = startedBlocks(s, taskId).map((b) => b.endedAt)
   return ends.length > 0 ? Math.max(...ends) : null
 }
 
 /**
  * Wie viele Blöcke für diese Aufgabe schon gemacht wurden.
- * Durchgehaltene UND abgebrochene Blöcke zählen mit.
+ * Nur durchgehaltene Blöcke zählen, abgebrochene nicht.
  */
 export function blocksDone(s: AppState, taskId: ID): number {
   return countedBlocks(s, taskId).length
@@ -163,7 +171,7 @@ export function isAskingDone(s: AppState, task: Task): boolean {
 export function isAskingResume(s: AppState, task: Task): boolean {
   if (task.completedAt !== null || isAskingDone(s, task)) return false
   if (s.timer.phase !== 'idle' && s.timer.taskId === task.id) return false // schon weitergemacht
-  const blocks = countedBlocks(s, task.id)
+  const blocks = startedBlocks(s, task.id)
   const today = activeDay(s).id
   return blocks.length > 0 && blocks.every((b) => b.dayId !== today)
 }

@@ -81,7 +81,7 @@ export interface Step extends BaseRecord {
 
 /**
  * Ein Arbeitsblock – das WIE LANGE.
- * 'completed' = durchgehalten (lief bis zum Ende), 'aborted' = abgebrochen,
+ * 'completed' = durchgehalten (lief bis zum Ende), 'aborted' = abgebrochen (zählt nicht als Block),
  * 'undone' = per „Zurück“ nach „Noch ein Block“ zurückgenommen: zählt NICHT als Block,
  * die gearbeiteten Minuten zählen aber trotzdem mit.
  */

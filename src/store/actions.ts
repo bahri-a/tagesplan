@@ -311,7 +311,10 @@ export function finishBlockEarly(now = Date.now()): void {
   commit({ blocks, timer: next })
 }
 
-/** Block abbrechen. Die bis dahin gearbeitete Zeit wird gespeichert. */
+/**
+ * Block abbrechen. Die bis dahin gearbeitete Zeit wird gespeichert, der Block zählt aber nicht:
+ * Beim nächsten Start kommt genau dieser Block noch einmal (fürs Beenden gibt es „Früher fertig“).
+ */
 export function abortCurrentBlock(): void {
   if (getState().timer.phase !== 'block') return
   commit(stopTimerChanges(Date.now()))

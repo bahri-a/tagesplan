@@ -96,7 +96,7 @@ describe('Block und kurze Pause', () => {
     expect(block.workedSeconds).toBe(BLOCK / 1000)
   })
 
-  it('Abbrechen speichert die gearbeitete Zeit und zählt als Block', () => {
+  it('Abbrechen speichert die gearbeitete Zeit, zählt aber nicht als Block', () => {
     const task = actions.addTask(today(), 'A')
     actions.startBlock(task.id)
     at(7 * MIN)
@@ -104,7 +104,7 @@ describe('Block und kurze Pause', () => {
     const [block] = sel.blocksOfTask(getState(), task.id)
     expect(block.status).toBe('aborted')
     expect(block.workedSeconds).toBe(7 * 60)
-    expect(sel.blocksDone(getState(), task.id)).toBe(1)
+    expect(sel.blocksDone(getState(), task.id)).toBe(0)
     expect(getState().timer.phase).toBe('idle')
   })
 
@@ -221,7 +221,7 @@ describe('Ultra-Modus', () => {
 })
 
 describe('Hauptaufgabe erledigt, lange Pause', () => {
-  it('fragt nach dem letzten geschätzten Block – abgebrochene zählen mit', () => {
+  it('fragt nach dem letzten geschätzten Block – abgebrochene zählen nicht', () => {
     const task = actions.addTask(today(), 'A')
     actions.updateTask(task.id, { estimatedBlocks: 2 })
     actions.startBlock(task.id)
@@ -230,6 +230,11 @@ describe('Hauptaufgabe erledigt, lange Pause', () => {
     actions.startBlock(task.id)
     at(BLOCK + 10 * MIN)
     actions.abortCurrentBlock()
+    // Abgebrochen → derselbe Block kommt noch einmal.
+    expect(sel.blocksDone(getState(), task.id)).toBe(1)
+    expect(sel.isAskingDone(getState(), getState().tasks[task.id])).toBe(false)
+    actions.startBlock(task.id)
+    actions.checkTimer(at(2 * BLOCK + 10 * MIN))
     expect(sel.isAskingDone(getState(), getState().tasks[task.id])).toBe(true)
 
     actions.addExtraBlock(task.id)
@@ -628,7 +633,7 @@ describe('Nach dem letzten Block und am nächsten Tag', () => {
 })
 
 describe('Erledigte Hauptaufgaben', () => {
-  it('zählt Blöcke und echte Minuten einer Aufgabe – auch abgebrochene', () => {
+  it('zählt Blöcke (ohne abgebrochene) und echte Minuten einer Aufgabe (auch abgebrochene)', () => {
     const task = actions.addTask(today(), 'A')
     actions.startBlock(task.id)
     actions.checkTimer(at(BLOCK))
@@ -636,7 +641,7 @@ describe('Erledigte Hauptaufgaben', () => {
     actions.startBlock(task.id)
     at(BLOCK + BREAK + 10 * MIN)
     actions.abortCurrentBlock()
-    expect(sel.taskWork(getState(), task.id)).toEqual({ blocks: 2, minutes: BLOCK / MIN + 10 })
+    expect(sel.taskWork(getState(), task.id)).toEqual({ blocks: 1, minutes: BLOCK / MIN + 10 })
   })
 })
 
