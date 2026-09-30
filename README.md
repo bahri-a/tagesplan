@@ -161,7 +161,7 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   gezeigten auf einmal aus; dann erscheinen die, die wegen der Obergrenze von 5 warten mussten (die kleine
   Zahl zeigt, wie viele). Warten keine, bleibt alles stehen. **Aktualisieren** sucht direkt von hier aus
   im Second Brain und in den Mails nach neuen Aufgaben (über den Projekte-Helfer auf dem Mac, dauert
-  1 bis 3 Minuten, höchstens alle 10 Minuten). Funde erscheinen sofort als Vorschläge und in Projekte
+  1 bis 3 Minuten, höchstens alle 60 Sekunden). Funde erscheinen sofort als Vorschläge und in Projekte
   unter „Automatisch“.
 - **Aufschub** (unter den Vorschlägen): Vorschläge für später beiseitelegen. Einfach hineinziehen
   (am iPhone kurz halten, dann ziehen) oder per Rechtsklick bzw. langem Drücken → **Aufschieben**.
