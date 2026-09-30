@@ -141,7 +141,7 @@ export const T = {
     title: 'Titel',
     steps: 'Erste Schritte',
     // Zwei Zeilen (Zeilenumbruch per \n, siehe .field-hint)
-    stepsHint: 'Nur für den Start: ein, zwei winzige Schritte.\nDopamin-Hack für den Anfang.',
+    stepsHint: 'Nur für den Start: ein, zwei winzige Schritte.\nKlein anfangen, der Rest kommt von selbst.',
     firstStep: 'Erster Schritt – sofort machbar, z. B. „PDF öffnen“',
     nextStep: 'Noch ein kleiner Schritt? (optional)',
     blocks: 'Blöcke',
