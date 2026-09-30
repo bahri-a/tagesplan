@@ -43,28 +43,9 @@
   list-style: none;
 }
 
-/* Beide Eingaben gleich breit. */
 .new-task {
   display: flex;
   gap: 0.5rem;
-  width: 22rem;
-  max-width: 100%;
-  align-self: flex-start;
-}
-
-.new-task .input {
-  flex: 1;
-  min-width: 0;
-}
-
-/* „Heute“ und „Morgen“ symmetrisch: Überschrift, Hinweis und Eingabe mittig in der Spalte. */
-.plan-column-title,
-.plan-empty {
-  text-align: center;
-}
-
-.plan-column .new-task {
-  align-self: center;
 }
 
 /* „Hinzufügen“ als schlichtes Plus in der Akzentfarbe, damit die Zeile ruhig bleibt. */
