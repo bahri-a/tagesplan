@@ -11,7 +11,7 @@ export type Mark = 'done' | 'current' | 'open'
 
 /**
  * Die Punkte für die Blöcke einer Aufgabe.
- * @param done       schon gemachte Blöcke (abgebrochene zählen mit)
+ * @param done       schon gemachte Blöcke (nur durchgehaltene, abgebrochene zählen nicht)
  * @param estimated  geschätzte Blöcke
  * @param highlight  Soll der nächste Block als „jetzt dran“ erscheinen?
  *                   (Ja, wenn er läuft oder gleich gestartet werden kann.)
