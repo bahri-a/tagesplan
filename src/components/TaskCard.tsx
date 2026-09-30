@@ -177,6 +177,8 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
           override={task.shortBreakMinutesOverride}
           limits={SETTINGS_LIMITS.shortBreakMinutes}
           onChange={(v) => updateTask(task.id, { shortBreakMinutesOverride: v })}
+          // Bei nur einem Block folgt keine Pause – sie zählt erst, wenn ein weiterer Block dazukommt.
+          note={task.estimatedBlocks === 1 ? { text: T.plan.shortBreakOneBlock, hint: T.plan.shortBreakOneBlockHint } : undefined}
         />
       </div>
 
@@ -214,6 +216,8 @@ interface DurationRowProps {
   override: number | null
   limits: { min: number; max: number }
   onChange: (value: number | null) => void
+  /** Kleiner, leiser Hinweis neben dem Namen (mit längerem Text beim Drüberfahren). */
+  note?: { text: string; hint: string }
 }
 
 /**
@@ -222,7 +226,7 @@ interface DurationRowProps {
  * Wer die Zahl ändert, macht sie automatisch individuell. Wer genau den Standardwert
  * einstellt oder „zurücksetzen“ klickt, ist wieder beim Standard (folgt dann den Einstellungen).
  */
-function DurationRow({ label, standardMinutes, override, limits, onChange }: DurationRowProps) {
+function DurationRow({ label, standardMinutes, override, limits, onChange, note }: DurationRowProps) {
   const isCustom = override !== null
   return (
     <div className="number-row">
@@ -245,6 +249,16 @@ function DurationRow({ label, standardMinutes, override, limits, onChange }: Dur
           <span className="number-row-state">{T.plan.standard}</span>
         )}
       </span>
+      {note && (
+        <span className="number-row-note" title={note.hint}>
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <circle cx="8" cy="8" r="6.25" />
+            <path d="M8 7.25v3.75M8 5.1v.01" />
+          </svg>
+          {note.text}
+          <span className="visually-hidden"> – {note.hint}</span>
+        </span>
+      )}
       <NumberStepper
         label={label}
         value={override ?? standardMinutes}

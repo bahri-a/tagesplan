@@ -150,6 +150,10 @@ export const T = {
     blockLength: 'Blocklänge',
     shortBreak: 'Kurze Pause',
     standard: 'Standard',
+    // Hinweis neben „Kurze Pause“, wenn die Aufgabe nur einen Block hat
+    shortBreakOneBlock: 'erst ab 2 Blöcken',
+    shortBreakOneBlockHint:
+      'Nach dem letzten Block gibt es keine Pause. Sie zählt erst, wenn du am Ende noch einen Block dazunimmst.',
     custom: 'Individuell',
     reset: 'zurücksetzen',
     resetLabel: (label: string, m: number) => `${label} auf Standard (${m} Min.) zurücksetzen`,
