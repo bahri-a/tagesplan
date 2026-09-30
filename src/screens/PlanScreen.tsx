@@ -7,16 +7,21 @@
  * Nur wenn für die Aufgabe gerade ein Block oder eine kurze Pause läuft, wird vorher gefragt –
  * „Rückgängig“ holt den Timer nämlich nicht zurück.
  * Ganz unten, leise: „Zuletzt verwendet“ – ein Klick legt eine frühere Aufgabe wieder an.
- * Darunter „Vorschläge“: offene Aufgaben aus der App „Projekte“, kurz als Hauptaufgabe formuliert.
+ * Darunter „Vorschläge“: offene Aufgaben aus der App „Projekte“, kurz als Hauptaufgabe formuliert,
+ * und „Aufschub“ für Vorschläge, die man für später beiseitegelegt hat.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   closestCenter,
   DndContext,
+  DragOverlay,
   KeyboardSensor,
+  MouseSensor,
   PointerSensor,
   pointerWithin,
+  TouchSensor,
+  useDraggable,
   useDroppable,
   useSensor,
   useSensors,
@@ -24,6 +29,7 @@ import {
   type CollisionDetection,
   type DragEndEvent,
   type DragOverEvent,
+  type DragStartEvent,
   type UniqueIdentifier,
 } from '@dnd-kit/core'
 import {
@@ -43,10 +49,13 @@ import {
   loadShortTitles,
   PROJECTS_KEY,
   readProjectTasks,
+  loadDeferred,
   requestShortTitles,
   saveShortTitles,
+  setDeferred,
   suggestionsFor,
   type ProjectTask,
+  type Suggestion,
 } from '../logic/projectSuggestions'
 import type { ID, Task } from '../model/types'
 import { addTask, copyTask, deleteTask, hideRecentTask, moveTask, reorderTasks } from '../store/actions'
@@ -414,6 +423,7 @@ function useProjectSuggestions() {
   const [tasks, setTasks] = useState<ProjectTask[]>(() => readProjectTasks(localStorage))
   const [shortTitles, setShortTitles] = useState(() => loadShortTitles(localStorage))
   const [hidden, setHidden] = useState(() => loadHidden(localStorage))
+  const [deferred, setDeferredState] = useState(() => loadDeferred(localStorage))
   const asked = useRef(new Set<string>())
   const mounted = useRef(true)
 
@@ -423,6 +433,7 @@ function useProjectSuggestions() {
       setTasks(readProjectTasks(localStorage))
       setShortTitles(loadShortTitles(localStorage))
       setHidden(loadHidden(localStorage))
+      setDeferredState(loadDeferred(localStorage))
     }
     const onStorage = (e: StorageEvent) => {
       if (e.key === null || e.key === PROJECTS_KEY) reload()
@@ -450,8 +461,12 @@ function useProjectSuggestions() {
 
   const hide = (id: string) => setHidden(hideSuggestion(localStorage, id))
   const hideAll = (ids: string[]) => setHidden(hideSuggestions(localStorage, ids))
-  return { tasks, shortTitles, hidden, hide, hideAll }
+  const defer = (id: string, value: boolean) => setDeferredState(setDeferred(localStorage, id, value))
+  return { tasks, shortTitles, hidden, hide, hideAll, deferred, defer }
 }
+
+/** Wo ein Vorschlag liegt: bei den „Vorschlägen“ oder im „Aufschub“. */
+type SuggestionPlace = 'suggestions' | 'deferred'
 
 /**
  * „Vorschläge“ unter „Zuletzt verwendet“, im selben Stil: offene Aufgaben aus der App „Projekte“,
@@ -459,72 +474,329 @@ function useProjectSuggestions() {
  * Hauptaufgabe an – auf dem Tag, der oben bei „Hinzufügen zu“ gewählt ist. „Neue Vorschläge“
  * blendet alle gezeigten aus; es erscheinen nur noch die, die wegen der Obergrenze warten mussten.
  * Der kleine Papierkorb blendet einen Vorschlag aus; in Projekte selbst ändert sich nichts.
+ *
+ * Darunter „Aufschub“: Vorschläge, die man für später beiseitegelegt hat. Verschieben geht auf
+ * zwei Arten: ziehen (Maus sofort, Finger nach kurzem Halten) oder über das kleine Menü
+ * (Rechtsklick bzw. lange drücken ohne zu ziehen). Aufgeschobene zählen nicht zu den fünf.
  */
 function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onNotice }: TargetProps & { showTarget: boolean }) {
   const state = useAppState()
-  const { tasks, shortTitles, hidden, hide, hideAll } = useProjectSuggestions()
+  const { tasks, shortTitles, hidden, hide, hideAll, deferred, defer } = useProjectSuggestions()
+  const [menu, setMenu] = useState<{ id: string; place: SuggestionPlace } | null>(null)
+  const [dragging, setDragging] = useState<{ id: string; place: SuggestionPlace; title: string } | null>(null)
+  const [dropPlace, setDropPlace] = useState<SuggestionPlace | null>(null)
+  const touchDrag = useRef(false)
+  const justDragged = useRef(false)
+
+  const sensors = useSensors(
+    // Maus: ab 6 Pixel Bewegung wird gezogen – ein Klick bleibt ein Klick.
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    // Finger: kurz halten, dann ziehen (Scrollen bleibt normal).
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 6 } }),
+  )
+
   const target = days[targetIndex]
   const onDay = (dayId: ID) => new Set(tasksOfDay(state, dayId).map((t) => recentKey(t.title)))
-  const all = (dayId: ID) => suggestionsFor(tasks, shortTitles, hidden, onDay(dayId), recentKey, SUGGESTIONS_COUNT)
-  const suggestions = all(target.day.id)
-  if (suggestions.length === 0 && all(days[1 - targetIndex].day.id).length === 0) return null
+  const open = tasks.filter((t) => deferred[t.id] === undefined)
+  const later = tasks.filter((t) => deferred[t.id] !== undefined)
+  const pick = (list: ProjectTask[], dayId: ID, limit: number) =>
+    suggestionsFor(list, shortTitles, hidden, onDay(dayId), recentKey, limit)
+  const suggestions = pick(open, target.day.id, SUGGESTIONS_COUNT)
+  const deferredList = pick(later, target.day.id, Infinity)
+  const hasSuggestions = suggestions.length > 0 || pick(open, days[1 - targetIndex].day.id, 1).length > 0
+  const hasDeferred = deferredList.length > 0 || pick(later, days[1 - targetIndex].day.id, 1).length > 0
+  // Beim Ziehen ist die jeweils andere Ablage immer da – auch wenn sie noch leer ist.
+  const showSuggestions = hasSuggestions || dragging?.place === 'deferred'
+  const showDeferred = hasDeferred || dragging?.place === 'suggestions'
+  if (!showSuggestions && !showDeferred) return null
+
+  const move = (id: string, to: SuggestionPlace, title: string) => {
+    setMenu(null)
+    defer(id, to === 'deferred')
+    onNotice(to === 'deferred' ? T.plan.deferredMoved(title) : T.plan.deferredBack(title))
+  }
+  const add = (title: string) => {
+    if (justDragged.current) return
+    addTask(target.day.id, title)
+    onNotice(T.plan.recentAdded(title, target.label))
+  }
+  const remove = (id: string) => {
+    setMenu(null)
+    hide(id)
+  }
+
+  const handleDragStart = ({ active, activatorEvent }: DragStartEvent) => {
+    const data = active.data.current as { place: SuggestionPlace; title: string }
+    touchDrag.current = 'touches' in activatorEvent
+    justDragged.current = true
+    setMenu(null)
+    setDragging({ id: String(active.id), place: data.place, title: data.title })
+  }
+  const handleDragEnd = ({ active, over, delta }: DragEndEvent) => {
+    const from = dragging?.place
+    const title = dragging?.title ?? ''
+    setDragging(null)
+    setDropPlace(null)
+    // Der Klick nach dem Loslassen soll nichts anlegen.
+    setTimeout(() => (justDragged.current = false), 0)
+    const to = over ? (String(over.id) as SuggestionPlace) : null
+    if (from && to && to !== from) move(String(active.id), to, title)
+    // Nur lange gedrückt, nicht gezogen (Finger): das kleine Menü öffnen.
+    else if (from && touchDrag.current && Math.hypot(delta.x, delta.y) < 8) setMenu({ id: String(active.id), place: from })
+  }
+
+  const chipProps = (place: SuggestionPlace) => ({
+    place,
+    targetLabel: target.label,
+    menuOpen: (id: string) => menu?.id === id,
+    onMenu: (id: string) => setMenu((m) => (m?.id === id ? null : { id, place })),
+    onCloseMenu: () => setMenu(null),
+    onAdd: add,
+    onRemove: remove,
+    onMove: (id: string, title: string) => move(id, place === 'suggestions' ? 'deferred' : 'suggestions', title),
+    draggingId: dragging?.id ?? null,
+  })
 
   return (
-    <section className="recent suggestions" aria-label={T.plan.suggestionsTitle}>
-      <div className="recent-head">
-        <h2 className="recent-title">{T.plan.suggestionsTitle}</h2>
-        {suggestions.length > 0 && (
-          <button
-            type="button"
-            className="suggestions-refresh"
-            title={T.plan.suggestionsRefreshHint}
-            onClick={() => hideAll(suggestions.map((s) => s.id))}
-          >
-            <svg viewBox="0 0 16 16" aria-hidden="true">
-              <path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71" />
-              <path d="M13.25 2.75v2.5h-2.5" />
-            </svg>
-            {T.plan.suggestionsRefresh}
-          </button>
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragOver={({ over }) => setDropPlace(over ? (String(over.id) as SuggestionPlace) : null)}
+      onDragEnd={handleDragEnd}
+      onDragCancel={() => {
+        setDragging(null)
+        setDropPlace(null)
+        setTimeout(() => (justDragged.current = false), 0)
+      }}
+    >
+      {showSuggestions && (
+        <SuggestionArea
+          place="suggestions"
+          title={T.plan.suggestionsTitle}
+          isDropTarget={dragging?.place === 'deferred' && dropPlace === 'suggestions'}
+          dropHint={dragging?.place === 'deferred' ? T.plan.deferredDropBack : null}
+          head={
+            <>
+              {suggestions.length > 0 && !dragging && (
+                <button
+                  type="button"
+                  className="suggestions-refresh"
+                  title={T.plan.suggestionsRefreshHint}
+                  onClick={() => hideAll(suggestions.map((x) => x.id))}
+                >
+                  <svg viewBox="0 0 16 16" aria-hidden="true">
+                    <path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71" />
+                    <path d="M13.25 2.75v2.5h-2.5" />
+                  </svg>
+                  {T.plan.suggestionsRefresh}
+                </button>
+              )}
+              {showTarget && <TargetSwitch days={days} targetIndex={targetIndex} onTargetChange={onTargetChange} />}
+            </>
+          }
+        >
+          {suggestions.length === 0 && hasSuggestions && <p className="muted small">{T.plan.recentNone(target.label)}</p>}
+          {!hasSuggestions && <p className="suggestions-empty">{T.plan.deferredEmptyBack}</p>}
+          <SuggestionList items={suggestions} {...chipProps('suggestions')} />
+        </SuggestionArea>
+      )}
+
+      {showDeferred && (
+        <SuggestionArea
+          place="deferred"
+          title={T.plan.deferredTitle}
+          isDropTarget={dragging?.place === 'suggestions' && dropPlace === 'deferred'}
+          dropHint={dragging?.place === 'suggestions' ? T.plan.deferredDropHere : null}
+          head={!showSuggestions && showTarget ? <TargetSwitch days={days} targetIndex={targetIndex} onTargetChange={onTargetChange} /> : null}
+        >
+          {deferredList.length === 0 && hasDeferred && <p className="muted small">{T.plan.recentNone(target.label)}</p>}
+          {!hasDeferred && <p className="suggestions-empty">{T.plan.deferredEmpty}</p>}
+          <SuggestionList items={deferredList} {...chipProps('deferred')} />
+        </SuggestionArea>
+      )}
+
+      {/* Die Pille, die unter dem Finger bzw. der Maus mitwandert. */}
+      <DragOverlay dropAnimation={null}>
+        {dragging && (
+          <span className="recent-chip suggestion-chip is-dragged">
+            <span className="recent-plus" aria-hidden="true">
+              +
+            </span>
+            <span className="recent-chip-title">{dragging.title}</span>
+          </span>
         )}
-        {showTarget && <TargetSwitch days={days} targetIndex={targetIndex} onTargetChange={onTargetChange} />}
+      </DragOverlay>
+    </DndContext>
+  )
+}
+
+/** Überschrift und Ablagefläche für „Vorschläge“ bzw. „Aufschub“. */
+function SuggestionArea(props: {
+  place: SuggestionPlace
+  title: string
+  head: ReactNode
+  isDropTarget: boolean
+  /** Beim Ziehen aus dem anderen Bereich: kurzer Hinweis, dass man hier ablegen kann. */
+  dropHint: string | null
+  children: ReactNode
+}) {
+  const { place, title, head, isDropTarget, dropHint, children } = props
+  const { setNodeRef } = useDroppable({ id: place })
+  return (
+    <section
+      ref={setNodeRef}
+      className={`recent suggestions suggestions-${place}${dropHint ? ' is-drop-zone' : ''}${isDropTarget ? ' is-drop-target' : ''}`}
+      aria-label={title}
+    >
+      <div className="recent-head">
+        <h2 className="recent-title">{title}</h2>
+        {dropHint && <span className="drop-hint">{dropHint}</span>}
+        {head}
       </div>
-      {suggestions.length === 0 && <p className="muted small">{T.plan.recentNone(target.label)}</p>}
-      <ul className="recent-list">
-        {suggestions.map((suggestion) => (
-          <li key={suggestion.id} className="recent-item">
-            <button
-              type="button"
-              className="recent-chip suggestion-chip"
-              aria-label={T.plan.recentAdd(suggestion.title, target.label)}
-              title={T.plan.suggestionSource(suggestion.source)}
-              onClick={() => {
-                addTask(target.day.id, suggestion.title)
-                onNotice(T.plan.recentAdded(suggestion.title, target.label))
-              }}
-            >
-              <span className="recent-plus" aria-hidden="true">
-                +
-              </span>
-              <span className="recent-chip-title">{suggestion.title}</span>
-            </button>
-            {/* Kleiner, leiser Papierkorb oben rechts an der Pille. */}
-            <button
-              type="button"
-              className="suggestion-remove"
-              aria-label={T.plan.suggestionHide(suggestion.title)}
-              title={T.plan.suggestionHide(suggestion.title)}
-              onClick={() => hide(suggestion.id)}
-            >
-              <svg viewBox="0 0 16 16" aria-hidden="true">
-                <path d="M2.75 4.25h10.5" />
-                <path d="M6.25 4.25V3a1 1 0 0 1 1-1h1.5a1 1 0 0 1 1 1v1.25" />
-                <path d="M4 4.25l.65 8.6a1.2 1.2 0 0 0 1.2 1.15h4.3a1.2 1.2 0 0 0 1.2-1.15l.65-8.6" />
-              </svg>
-            </button>
-          </li>
-        ))}
-      </ul>
+      {children}
     </section>
+  )
+}
+
+interface SuggestionListProps {
+  items: Suggestion[]
+  place: SuggestionPlace
+  targetLabel: string
+  draggingId: string | null
+  menuOpen: (id: string) => boolean
+  onMenu: (id: string) => void
+  onCloseMenu: () => void
+  onAdd: (title: string) => void
+  onRemove: (id: string) => void
+  onMove: (id: string, title: string) => void
+}
+
+function SuggestionList({ items, ...rest }: SuggestionListProps) {
+  if (items.length === 0) return null
+  return (
+    <ul className="recent-list">
+      {items.map((item) => (
+        <SuggestionChip key={item.id} item={item} {...rest} />
+      ))}
+    </ul>
+  )
+}
+
+/**
+ * Eine Vorschlags-Pille: Klick legt an, ziehen verschiebt, Rechtsklick bzw. lange drücken öffnet
+ * ein kleines Menü („Aufschieben“ bzw. „Zu den Vorschlägen“, „Entfernen“).
+ */
+function SuggestionChip({
+  item,
+  place,
+  targetLabel,
+  draggingId,
+  menuOpen,
+  onMenu,
+  onCloseMenu,
+  onAdd,
+  onRemove,
+  onMove,
+}: Omit<SuggestionListProps, 'items'> & { item: Suggestion }) {
+  const { setNodeRef, listeners } = useDraggable({ id: item.id, data: { place, title: item.title } })
+  const isOpen = menuOpen(item.id)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  // Menü schließen: Klick daneben oder Escape.
+  useEffect(() => {
+    if (!isOpen) return
+    const onPointer = (e: PointerEvent) => {
+      if (!menuRef.current?.contains(e.target as Node)) onCloseMenu()
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCloseMenu()
+    }
+    // Erst nach dem aktuellen Druck lauschen – sonst schließt das Loslassen das Menü gleich wieder.
+    const timer = setTimeout(() => document.addEventListener('pointerdown', onPointer), 0)
+    document.addEventListener('keydown', onKey)
+    menuRef.current?.querySelector('button')?.focus()
+    return () => {
+      clearTimeout(timer)
+      document.removeEventListener('pointerdown', onPointer)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [isOpen, onCloseMenu])
+
+  const moveLabel = place === 'suggestions' ? T.plan.deferredMove : T.plan.deferredMoveBack
+
+  return (
+    <li className={`recent-item${draggingId === item.id ? ' is-dragging' : ''}`}>
+      <button
+        ref={setNodeRef}
+        type="button"
+        className="recent-chip suggestion-chip"
+        aria-label={T.plan.recentAdd(item.title, targetLabel)}
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+        title={T.plan.suggestionSource(item.source)}
+        onClick={() => onAdd(item.title)}
+        onContextMenu={(e) => {
+          e.preventDefault()
+          onMenu(item.id)
+        }}
+        {...listeners}
+      >
+        <span className="recent-plus" aria-hidden="true">
+          +
+        </span>
+        <span className="recent-chip-title">{item.title}</span>
+      </button>
+      {/* Kleiner, leiser Papierkorb oben rechts an der Pille. */}
+      <button
+        type="button"
+        className="suggestion-remove"
+        aria-label={T.plan.suggestionHide(item.title)}
+        title={T.plan.suggestionHide(item.title)}
+        onClick={() => onRemove(item.id)}
+      >
+        <TrashIcon />
+      </button>
+      {isOpen && (
+        <div ref={menuRef} className="chip-menu" role="menu" aria-label={item.title}>
+          <button type="button" role="menuitem" className="chip-menu-item" onClick={() => onMove(item.id, item.title)}>
+            {place === 'suggestions' ? <LaterIcon /> : <BackIcon />}
+            {moveLabel}
+          </button>
+          <button type="button" role="menuitem" className="chip-menu-item" onClick={() => onRemove(item.id)}>
+            <TrashIcon />
+            {T.plan.deferredRemove}
+          </button>
+        </div>
+      )}
+    </li>
+  )
+}
+
+function TrashIcon() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M2.75 4.25h10.5" />
+      <path d="M6.25 4.25V3a1 1 0 0 1 1-1h1.5a1 1 0 0 1 1 1v1.25" />
+      <path d="M4 4.25l.65 8.6a1.2 1.2 0 0 0 1.2 1.15h4.3a1.2 1.2 0 0 0 1.2-1.15l.65-8.6" />
+    </svg>
+  )
+}
+
+/** Uhr – „Aufschieben“. */
+function LaterIcon() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <circle cx="8" cy="8" r="5.75" />
+      <path d="M8 5v3.25l2 1.25" />
+    </svg>
+  )
+}
+
+/** Pfeil nach oben – „Zu den Vorschlägen“. */
+function BackIcon() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M8 12.75V3.5M4.25 7.25L8 3.5l3.75 3.75" />
+    </svg>
   )
 }

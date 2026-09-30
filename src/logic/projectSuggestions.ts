@@ -16,6 +16,8 @@ export const PROJECTS_KEY = 'projekte-daten'
 export const SHORT_TITLES_KEY = 'tagesplan-kurztitel'
 /** Per × ausgeblendete Vorschläge: Kennung der Projekte-Aufgabe → wann. */
 export const HIDDEN_KEY = 'tagesplan-vorschlaege-ausgeblendet'
+/** In „Aufschub“ verschobene Vorschläge: Kennung der Projekte-Aufgabe → wann. */
+export const DEFERRED_KEY = 'tagesplan-vorschlaege-aufschub'
 /** Der Helfer von Projekte auf dem Mac. */
 export const HELPER_URL = 'http://127.0.0.1:3290/kurztitel'
 
@@ -145,6 +147,22 @@ export function hideSuggestions(storage: Storage, ids: string[], now = Date.now(
   const next = { ...loadHidden(storage) }
   for (const id of ids) next[id] = now
   write(storage, HIDDEN_KEY, next)
+  return next
+}
+
+export function loadDeferred(storage: Storage): Record<string, number> {
+  const map = read<Record<string, unknown>>(storage, DEFERRED_KEY, {})
+  const result: Record<string, number> = {}
+  for (const [id, at] of Object.entries(map ?? {})) if (typeof at === 'number') result[id] = at
+  return result
+}
+
+/** Einen Vorschlag in „Aufschub“ legen (`true`) oder zurück zu den Vorschlägen holen (`false`). */
+export function setDeferred(storage: Storage, id: string, deferred: boolean, now = Date.now()): Record<string, number> {
+  const next = { ...loadDeferred(storage) }
+  if (deferred) next[id] = now
+  else delete next[id]
+  write(storage, DEFERRED_KEY, next)
   return next
 }
 

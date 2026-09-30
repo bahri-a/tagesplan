@@ -193,6 +193,17 @@ export const T = {
     suggestionHide: (title: string) => `„${title}“ aus „Vorschläge“ entfernen`,
     suggestionsRefresh: 'Neue Vorschläge',
     suggestionsRefreshHint: 'Diese Vorschläge ausblenden und die nächsten aus Projekte zeigen',
+    // „Aufschub“ unter den Vorschlägen
+    deferredTitle: 'Aufschub',
+    deferredMove: 'Aufschieben',
+    deferredMoveBack: 'Zu den Vorschlägen',
+    deferredRemove: 'Entfernen',
+    deferredDropHere: 'Hier ablegen',
+    deferredDropBack: 'Hier ablegen',
+    deferredEmpty: 'Hierher ziehen, um es für später beiseitezulegen',
+    deferredEmptyBack: 'Hierher ziehen, um es wieder vorzuschlagen',
+    deferredMoved: (title: string) => `„${title}“ liegt jetzt im Aufschub.`,
+    deferredBack: (title: string) => `„${title}“ ist wieder bei den Vorschlägen.`,
     undo: 'Rückgängig',
     // Nur wenn für die Aufgabe gerade ein Block oder eine kurze Pause läuft (der Timer kommt nicht zurück).
     deleteRunningBlock: 'Der laufende Block wird beendet. Trotzdem löschen?',

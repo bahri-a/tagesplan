@@ -4,11 +4,13 @@ import {
   hideSuggestion,
   hideSuggestions,
   isShortTitle,
+  loadDeferred,
   loadShortTitles,
   PROJECTS_KEY,
   readProjectTasks,
   requestShortTitles,
   saveShortTitles,
+  setDeferred,
   suggestionsFor,
 } from './projectSuggestions'
 
@@ -122,5 +124,13 @@ describe('Vorschläge aus Projekte', () => {
       throw new TypeError('Failed to fetch')
     }) as typeof fetch
     expect(await requestShortTitles(['Eins'], offline)).toBeNull()
+  })
+
+  it('„Aufschub“: verschieben und zurückholen', () => {
+    const storage = memoryStorage()
+    expect(setDeferred(storage, 'a', true, 3)).toEqual({ a: 3 })
+    setDeferred(storage, 'b', true, 4)
+    expect(setDeferred(storage, 'a', false)).toEqual({ b: 4 })
+    expect(loadDeferred(storage)).toEqual({ b: 4 })
   })
 })
