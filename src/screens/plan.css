@@ -796,23 +796,30 @@
 .field-info {
   display: inline-grid;
   place-items: center;
-  width: 1.15rem;
-  height: 1.15rem;
-  margin-left: 0.4em;
+  width: 1.3rem;
+  height: 1.3rem;
+  margin-left: 0.25em;
   padding: 0;
-  border: 1px solid color-mix(in srgb, var(--text-muted) 55%, transparent);
+  border: none;
   border-radius: 50%;
   background: transparent;
   color: var(--text-muted);
-  font: italic 600 0.68rem/1 Georgia, 'Times New Roman', serif;
-  vertical-align: 0.08em;
+  vertical-align: -0.28em;
   cursor: pointer;
-  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  transition: color 0.2s;
+}
+
+.field-info svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
 }
 
 .field-info:hover,
 .field-info.is-open {
-  border-color: var(--accent);
   color: var(--accent);
 }
 
