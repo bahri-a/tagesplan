@@ -792,6 +792,44 @@
   vertical-align: 0.08em;
 }
 
+/* Kleines „i“ hinter einer Feldbezeichnung – klappt eine kurze Erklärung auf */
+.field-info {
+  display: inline-grid;
+  place-items: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-left: 0.4em;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--text-muted) 55%, transparent);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  font: italic 600 0.68rem/1 Georgia, 'Times New Roman', serif;
+  vertical-align: 0.08em;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.field-info:hover,
+.field-info.is-open {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.field-info:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.field-info-text {
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--text) 5%, transparent);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
 /* Kurze Erklärung unter einer Feldbezeichnung (z. B. bei „Erste Schritte“) */
 .field-hint {
   margin-top: -0.2rem;

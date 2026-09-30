@@ -142,6 +142,10 @@ export const T = {
     steps: 'Erste Schritte',
     // Zwei Zeilen (Zeilenumbruch per \n, siehe .field-hint)
     stepsHint: 'Nur für den Start: ein, zwei winzige Schritte.\nKlein anfangen, der Rest kommt von selbst.',
+    // Kleines „i“ neben „Erste Schritte“: warum so klein? (nur Belegtes, vorsichtig formuliert)
+    stepsInfo:
+      'Studien zur Arbeitsmotivation zeigen: Kaum etwas treibt so an wie das Gefühl, voranzukommen – auch in kleinen Schritten (Amabile & Kramer, „The Progress Principle“). Ein winziger erster Schritt macht den Anfang leicht und bringt dir gleich so ein kleines Erfolgserlebnis. Im Gehirn ist daran das Belohnungssystem beteiligt, in dem Dopamin eine Rolle spielt.',
+    infoLabel: (label: string) => `Mehr zu „${label}“`,
     firstStep: 'Erster Schritt – sofort machbar, z. B. „PDF öffnen“',
     nextStep: 'Noch ein kleiner Schritt? (optional)',
     blocks: 'Blöcke',
