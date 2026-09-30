@@ -53,6 +53,23 @@
   gap: 0.5rem;
 }
 
+/* „Hinzufügen“ als schlichtes Plus in der Akzentfarbe, damit die Zeile ruhig bleibt. */
+.new-task-add {
+  flex: none;
+  width: 44px;
+  padding: 0;
+  color: var(--accent);
+}
+
+.new-task-add svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
 /* Beim Ziehen auf den anderen Tag: die Spalte leuchtet ganz zart, „Hierher ziehen“ im Titel. */
 .plan-column {
   margin: -0.6rem;

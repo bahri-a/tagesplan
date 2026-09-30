@@ -319,8 +319,10 @@ function DayColumn(props: DayColumnProps) {
           aria-label={`${T.plan.newTask} (${label})`}
           onChange={(e) => setNewTitle(e.target.value)}
         />
-        <button type="submit" className="btn" disabled={!newTitle.trim()}>
-          {T.plan.add}
+        <button type="submit" className="btn new-task-add" disabled={!newTitle.trim()} aria-label={T.plan.add} title={T.plan.add}>
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M8 3.25v9.5M3.25 8h9.5" />
+          </svg>
         </button>
       </form>
     </section>
