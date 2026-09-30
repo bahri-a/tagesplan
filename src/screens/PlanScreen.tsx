@@ -317,6 +317,8 @@ function DayColumn(props: DayColumnProps) {
           value={newTitle}
           placeholder={T.plan.newTask}
           aria-label={`${T.plan.newTask} (${label})`}
+          // Wächst mit dem Text, von der Länge des Platzhalters bis zu einer ruhigen Obergrenze.
+          style={{ width: `calc(${Math.min(Math.max(newTitle.length, T.plan.newTask.length) + 2, 36)}ch + 1.7em)` }}
           onChange={(e) => setNewTitle(e.target.value)}
         />
         <button type="submit" className="btn new-task-add" disabled={!newTitle.trim()} aria-label={T.plan.add} title={T.plan.add}>
