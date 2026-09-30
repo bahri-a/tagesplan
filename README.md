@@ -154,6 +154,11 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
 - **Zuletzt verwendet** (ganz unten): deine letzten 5 Hauptaufgaben. Ein Klick legt sie wieder
   an – rechts wählst du, ob für **Heute** oder **Morgen** (Standard: Morgen).
   Das kleine **×** in einer Pille nimmt sie aus der Liste (die Aufgabe selbst bleibt).
+- **Vorschläge** (darunter): offene Aufgaben aus der App **Projekte**, von Claude kurz als
+  Hauptaufgabe formuliert (1 bis 4 Wörter). Ein Klick legt sie auf dem oben gewählten Tag an,
+  das **×** blendet einen Vorschlag aus. In Projekte ändert sich dabei nichts. Das klappt, weil
+  beide Apps unter `bahri-a.github.io` liegen; formuliert wird über den Helfer von Projekte auf
+  dem Mac. Läuft der Helfer nicht, werden die Titel einfach auf 4 Wörter gekürzt.
 - Planst du mehr als dein Limit, erscheint nur ein sanfter Hinweis.
 - **Löschen:** der kleine Papierkorb rechts auf jeder Karte. Die Aufgabe ist sofort weg;
   unten steht 8 Sekunden lang **Aufgabe gelöscht · Rückgängig** – ein Klick holt sie mit

@@ -92,6 +92,13 @@
   border-top: 1px solid var(--border);
 }
 
+/* „Vorschläge“ direkt unter „Zuletzt verwendet“: gleicher Stil, ohne zweite Trennlinie. */
+.recent + .suggestions {
+  margin-top: 1.75rem;
+  padding-top: 0;
+  border-top: none;
+}
+
 .recent-head {
   display: flex;
   flex-wrap: wrap;
