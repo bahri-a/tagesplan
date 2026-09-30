@@ -43,7 +43,7 @@
   list-style: none;
 }
 
-/* Beide Eingaben gleich breit: „Heute“ links, „Morgen“ rechts. */
+/* Beide Eingaben gleich breit. */
 .new-task {
   display: flex;
   gap: 0.5rem;
@@ -57,14 +57,14 @@
   min-width: 0;
 }
 
-/* „Morgen“ gespiegelt: Überschrift, Hinweis und Eingabe rechts – so unterscheidet man die Tage auf einen Blick. */
-.plan-column:nth-child(2) .plan-column-title,
-.plan-column:nth-child(2) .plan-empty {
-  text-align: right;
+/* „Heute“ und „Morgen“ symmetrisch: Überschrift, Hinweis und Eingabe mittig in der Spalte. */
+.plan-column-title,
+.plan-empty {
+  text-align: center;
 }
 
-.plan-column:nth-child(2) .new-task {
-  align-self: flex-end;
+.plan-column .new-task {
+  align-self: center;
 }
 
 /* „Hinzufügen“ als schlichtes Plus in der Akzentfarbe, damit die Zeile ruhig bleibt. */
