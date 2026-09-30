@@ -210,15 +210,69 @@
   white-space: nowrap;
 }
 
-/* „Vorschläge“: statt des × ein kleiner hellgrauer Papierkorb oben rechts an der Pille. */
+/* „Vorschläge“: etwas edler als „Zuletzt verwendet“ – zarter Farbverlauf in der Akzentfarbe,
+   das + in einem kleinen Kreis, beim Drüberfahren hebt sich die Pille leicht an. */
 .suggestion-chip {
-  padding-right: 0.9em;
+  gap: 0.55rem;
+  padding: 0.5em 1em 0.5em 0.5em;
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--border));
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 12%, var(--surface)) 0%,
+    var(--surface) 70%
+  );
+  box-shadow: var(--shadow);
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    transform 0.2s;
+}
+
+.suggestion-chip:hover,
+.suggestion-chip:focus-visible {
+  border-color: var(--accent-line);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 20%, var(--surface)) 0%,
+    color-mix(in srgb, var(--accent) 4%, var(--surface)) 70%
+  );
+  box-shadow: var(--shadow-lift);
+  transform: translateY(-1px);
+}
+
+.suggestion-chip .recent-plus {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  font-size: 0.85rem;
+  line-height: 1;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.suggestion-chip:hover .recent-plus,
+.suggestion-chip:focus-visible .recent-plus {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.suggestions .recent-list {
+  gap: 0.65rem;
 }
 
 .suggestion-remove {
   position: absolute;
-  top: -0.4rem;
-  right: -0.3rem;
+  top: -0.45rem;
+  right: -0.4rem;
+  z-index: 1;
   display: grid;
   place-items: center;
   width: 1.2rem;
