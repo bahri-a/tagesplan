@@ -7,10 +7,13 @@ import {
   isShortTitle,
   loadDeferred,
   loadShortTitles,
+  loadSuggestionLimit,
+  LIMIT_KEY,
   PROJECTS_KEY,
   readProjectTasks,
   requestShortTitles,
   saveShortTitles,
+  saveSuggestionLimit,
   searchNewTasks,
   setDeferred,
   suggestionsFor,
@@ -171,5 +174,16 @@ describe('Vorschläge aus Projekte', () => {
       throw new TypeError('Failed to fetch')
     }) as typeof fetch
     expect((await searchNewTasks(storage, offline)).ok).toBe(false)
+  })
+
+  it('„(max. 5)“: merkt sich die Höchstzahl, nur 1 bis 10, sonst Standard', () => {
+    const storage = memoryStorage()
+    expect(loadSuggestionLimit(storage, 5, 1, 10)).toBe(5)
+    saveSuggestionLimit(storage, 8)
+    expect(loadSuggestionLimit(storage, 5, 1, 10)).toBe(8)
+    storage.setItem(LIMIT_KEY, '12')
+    expect(loadSuggestionLimit(storage, 5, 1, 10)).toBe(5)
+    storage.setItem(LIMIT_KEY, 'kaputt')
+    expect(loadSuggestionLimit(storage, 5, 1, 10)).toBe(5)
   })
 })

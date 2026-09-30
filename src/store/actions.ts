@@ -514,6 +514,14 @@ export function hideRecentTask(title: string, now = Date.now()): void {
   commit({ settings: { ...current, recentHidden: { ...current.recentHidden, [recentKey(title)]: now } } })
 }
 
+/** „Reset“ in „Zuletzt verwendet“: alle Titel auf einmal ausblenden (wie × bei jedem einzelnen). */
+export function hideAllRecentTasks(titles: string[], now = Date.now()): void {
+  const current = getState().settings
+  const recentHidden = { ...current.recentHidden }
+  for (const title of titles) recentHidden[recentKey(title)] = now
+  commit({ settings: { ...current, recentHidden } })
+}
+
 export function updateNote(text: string): void {
   commit({ note: { ...getState().note, text } })
 }

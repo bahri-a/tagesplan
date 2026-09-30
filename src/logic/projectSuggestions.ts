@@ -19,6 +19,8 @@ export const HIDDEN_KEY = 'tagesplan-vorschlaege-ausgeblendet'
 /** Aufgeschobene Vorschläge: Kennung der Projekte-Aufgabe → wann. */
 export const DEFERRED_KEY = 'tagesplan-vorschlaege-aufschub'
 /** Der Helfer von Projekte auf dem Mac. */
+/** Wie viele Vorschläge höchstens gezeigt werden (vom Nutzer eingestellt). */
+export const LIMIT_KEY = 'tagesplan-vorschlaege-max'
 export const HELPER_URL = 'http://127.0.0.1:3290/kurztitel'
 /** Derselbe Helfer: sucht im Second Brain und in den Outlook-Mails nach neuen Aufgaben. */
 export const SEARCH_URL = 'http://127.0.0.1:3290/aktualisieren'
@@ -159,6 +161,16 @@ export function loadDeferred(storage: Storage): Record<string, number> {
   const result: Record<string, number> = {}
   for (const [id, at] of Object.entries(map ?? {})) if (typeof at === 'number') result[id] = at
   return result
+}
+
+/** Eingestellte Höchstzahl der Vorschläge – ganzzahlig zwischen `min` und `max`, sonst `fallback`. */
+export function loadSuggestionLimit(storage: Storage, fallback: number, min: number, max: number): number {
+  const value = read<unknown>(storage, LIMIT_KEY, fallback)
+  return typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max ? value : fallback
+}
+
+export function saveSuggestionLimit(storage: Storage, limit: number): void {
+  write(storage, LIMIT_KEY, limit)
 }
 
 /** Einen Vorschlag aufschieben (`true`) oder zurück zu den Vorschlägen holen (`false`). */

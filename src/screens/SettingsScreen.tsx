@@ -173,15 +173,6 @@ export function SettingsScreen() {
 
       <section className="card settings-section">
         <h2>{T.settings.blocksSection}</h2>
-        <SettingRow label={T.settings.maxTasks} hint={T.settings.maxTasksHint}>
-          <NumberStepper
-            label={T.settings.maxTasks}
-            value={settings.maxTasksPerDay}
-            {...SETTINGS_LIMITS.maxTasksPerDay}
-            unit=""
-            onChange={(v) => updateSettings({ maxTasksPerDay: v })}
-          />
-        </SettingRow>
         <SettingRow label={T.settings.defaultBlocks} hint={T.settings.defaultBlocksHint}>
           <NumberStepper
             label={T.settings.defaultBlocks}

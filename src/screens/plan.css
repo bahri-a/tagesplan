@@ -43,6 +43,13 @@
   list-style: none;
 }
 
+/* Leiser Tipp ab der fünften Hauptaufgabe. */
+.plan-tip {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
 .new-task {
   display: flex;
   gap: 0.5rem;
@@ -245,6 +252,64 @@
   stroke-linejoin: round;
 }
 
+/* „Reset“ neben der Überschrift: leise, mit kleiner Nachfrage darunter. */
+.reset-box {
+  position: relative;
+  display: inline-flex;
+}
+
+.recent-head > .reset-box {
+  margin-right: auto;
+  margin-left: -0.6rem;
+}
+
+.reset-confirm {
+  right: 0;
+  left: auto;
+  min-width: 13rem;
+  gap: 0.6rem;
+  padding: 0.7rem 0.75rem;
+}
+
+.reset-question {
+  color: var(--text);
+  font-size: 0.85rem;
+}
+
+.reset-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.reset-cancel,
+.reset-ok {
+  padding: 0.3em 0.75em;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+.reset-cancel:hover,
+.reset-cancel:focus-visible {
+  background: var(--surface-2);
+}
+
+.reset-ok {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.reset-ok:hover,
+.reset-ok:focus-visible {
+  outline: none;
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
 .recent-head {
   display: flex;
   flex-wrap: wrap;
@@ -416,6 +481,35 @@
     color 0.15s;
 }
 
+/* „Aktualisieren“ nur als Symbol, etwas größer. */
+.suggestions-reload {
+  padding: 0.3em;
+}
+
+.suggestions-reload svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* „(max. 5)“: Die Auswahl liegt unsichtbar über dem Text, damit sich am iPhone das native Rad öffnet. */
+.suggestions-limit {
+  position: relative;
+}
+
+.suggestions-limit select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.suggestions-limit:focus-within {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
 .suggestions-refresh:hover,
 .suggestions-refresh:focus-visible {
   background: var(--accent-soft);
@@ -426,6 +520,7 @@
 .suggestions-refresh svg {
   width: 12px;
   height: 12px;
+  flex: none;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.5;

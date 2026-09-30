@@ -158,18 +158,20 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   als Hauptaufgabe formuliert (1 bis 4 Wörter). Ein Klick legt sie auf dem oben gewählten Tag an,
   der kleine **Papierkorb** oben rechts blendet einen
   Vorschlag aus, und der nächste rückt nach. **Neue Vorschläge** neben der Überschrift blendet alle
-  gezeigten auf einmal aus; dann erscheinen die, die wegen der Obergrenze von 5 warten mussten (die kleine
-  Zahl zeigt, wie viele). Warten keine, bleibt alles stehen. **Aktualisieren** sucht direkt von hier aus
+  gezeigten auf einmal aus; dann erscheinen die, die wegen der Obergrenze warten mussten (die kleine
+  Zahl zeigt, wie viele). Warten keine, bleibt alles stehen. Die Obergrenze stellst du mit
+  **(max. 5)** neben dem Aktualisieren-Symbol ein, von 1 bis 10 (Standard 5). **Aktualisieren** (das kleine Kreis-Symbol) sucht direkt von hier aus
   im Second Brain und in den Mails nach neuen Aufgaben (über den Projekte-Helfer auf dem Mac, dauert
   1 bis 3 Minuten, höchstens alle 60 Sekunden). Funde erscheinen sofort als Vorschläge und in Projekte
   unter „Automatisch“.
 - **Aufgeschoben** (unter den Vorschlägen, fein abgetrennt, „Für die Zukunft“): Vorschläge für später beiseitelegen. Einfach hineinziehen
   (am iPhone kurz halten, dann ziehen) oder per Rechtsklick bzw. langem Drücken → **Aufschieben**.
-  Aufgeschobene zählen nicht zu den 5 Vorschlägen; ein Klick legt sie wie gewohnt an, und
+  Aufgeschobene zählen nicht zur Höchstzahl der Vorschläge; ein Klick legt sie wie gewohnt an, und
   zurück geht es genauso („Zu den Vorschlägen“). In Projekte ändert sich dabei nichts. Das klappt, weil
   beide Apps unter `bahri-a.github.io` liegen; formuliert wird über den Helfer von Projekte auf
   dem Mac. Läuft der Helfer nicht, werden die Titel einfach auf 4 Wörter gekürzt.
-- Planst du mehr als dein Limit, erscheint nur ein sanfter Hinweis.
+- **Reset** neben „Zuletzt verwendet“ leert die Liste sofort; **Reset** bei den Vorschlägen blendet nach kurzer Nachfrage alle aus.
+- Ab der fünften Hauptaufgabe an einem Tag erscheint ein leiser Tipp: lieber weniger Hauptaufgaben und dafür mehr Blöcke.
 - **Löschen:** der kleine Papierkorb rechts auf jeder Karte. Die Aufgabe ist sofort weg;
   unten steht 8 Sekunden lang **Aufgabe gelöscht · Rückgängig** – ein Klick holt sie mit
   allen Schritten auf ihren alten Platz zurück (nur die zuletzt gelöschte). Läuft für die

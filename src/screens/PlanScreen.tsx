@@ -38,7 +38,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { RECENT_TASKS_COUNT, SUGGESTIONS_COUNT } from '../config/defaults'
+import { MANY_TASKS_HINT_FROM, RECENT_TASKS_COUNT, SUGGESTIONS_COUNT, SUGGESTIONS_MAX, SUGGESTIONS_MIN } from '../config/defaults'
 import { T } from '../config/texts'
 import { Dialog } from '../components/Dialog'
 import { TaskCard } from '../components/TaskCard'
@@ -47,19 +47,22 @@ import {
   hideSuggestions,
   loadHidden,
   loadShortTitles,
+  loadSuggestionLimit,
   PROJECTS_KEY,
   readProjectTasks,
   loadDeferred,
   requestShortTitles,
   saveShortTitles,
+  saveSuggestionLimit,
   searchNewTasks,
   setDeferred,
   suggestionsFor,
   type ProjectTask,
   type Suggestion,
 } from '../logic/projectSuggestions'
+import { alive } from '../logic/records'
 import type { ID, Task } from '../model/types'
-import { addTask, copyTask, deleteTask, hideRecentTask, moveTask, reorderTasks } from '../store/actions'
+import { addTask, copyTask, deleteTask, hideAllRecentTasks, hideRecentTask, moveTask, reorderTasks } from '../store/actions'
 import { activeDay, plannedDay, recentKey, recentTasks, runningTimerOfTask, tasksOfDay } from '../store/selectors'
 import { getState, useAppState } from '../store/store'
 import './plan.css'
@@ -263,7 +266,6 @@ function DayColumn(props: DayColumnProps) {
   const { dayId, label, isDropTarget, expandedId, justCreatedId, onToggle, onCreated, onDelete, onCopy } = props
   const state = useAppState()
   const tasks = tasksOfDay(state, dayId)
-  const max = state.settings.maxTasksPerDay
   const [newTitle, setNewTitle] = useState('')
   // Die ganze Spalte ist Ablagefläche – so klappt es auch, wenn der Tag noch leer ist.
   const { setNodeRef } = useDroppable({ id: COLUMN_PREFIX + dayId })
@@ -281,8 +283,6 @@ function DayColumn(props: DayColumnProps) {
         {label}
         {isDropTarget && <span className="drop-hint">{T.plan.dropHere}</span>}
       </h2>
-
-      {tasks.length > max && <p className="hint">{T.plan.overLimit(max)}</p>}
 
       <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
         <ol className="task-list">
@@ -302,6 +302,8 @@ function DayColumn(props: DayColumnProps) {
       </SortableContext>
 
       {tasks.length === 0 && <p className="muted small plan-empty">{T.plan.empty}</p>}
+      {/* Viele Hauptaufgaben? Ein leiser Tipp statt einer festen Grenze. */}
+      {tasks.length >= MANY_TASKS_HINT_FROM && <p className="plan-tip">{T.plan.manyTasks}</p>}
 
       <form
         className="new-task"
@@ -378,6 +380,14 @@ function RecentTasks({ days, targetIndex, onTargetChange, onNotice }: TargetProp
     <section className="recent" aria-label={T.plan.recentTitle}>
       <div className="recent-head">
         <h2 className="recent-title">{T.plan.recentTitle}</h2>
+        {/* „Reset“: alle auf einmal weg, ohne Nachfrage – sie kommen wieder, sobald man sie benutzt. */}
+        <ResetButton
+          hint={T.plan.recentResetHint}
+          onReset={() => {
+            hideAllRecentTasks(alive(Object.values(state.tasks)).map((t) => t.title))
+            onNotice(T.plan.recentResetDone)
+          }}
+        />
         <TargetSwitch days={days} targetIndex={targetIndex} onTargetChange={onTargetChange} />
       </div>
       {recent.length === 0 && <p className="muted small">{T.plan.recentNone(target.label)}</p>}
@@ -484,7 +494,7 @@ type SuggestionPlace = 'suggestions' | 'deferred'
  *
  * Darunter „Aufgeschoben“: Vorschläge, die man für später beiseitegelegt hat. Verschieben geht auf
  * zwei Arten: ziehen (Maus sofort, Finger nach kurzem Halten) oder über das kleine Menü
- * (Rechtsklick bzw. lange drücken ohne zu ziehen). Aufgeschobene zählen nicht zu den fünf.
+ * (Rechtsklick bzw. lange drücken ohne zu ziehen). Aufgeschobene zählen nicht zur Höchstzahl.
  */
 function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onNotice }: TargetProps & { showTarget: boolean }) {
   const state = useAppState()
@@ -493,6 +503,7 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
   const [dragging, setDragging] = useState<{ id: string; place: SuggestionPlace; title: string } | null>(null)
   const [dropPlace, setDropPlace] = useState<SuggestionPlace | null>(null)
   const [searching, setSearching] = useState(false)
+  const [limit, setLimit] = useState(() => loadSuggestionLimit(localStorage, SUGGESTIONS_COUNT, SUGGESTIONS_MIN, SUGGESTIONS_MAX))
   const touchDrag = useRef(false)
   const justDragged = useRef(false)
 
@@ -509,8 +520,8 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
   const later = tasks.filter((t) => deferred[t.id] !== undefined)
   const pick = (list: ProjectTask[], dayId: ID, limit: number) =>
     suggestionsFor(list, shortTitles, hidden, onDay(dayId), recentKey, limit)
-  const suggestions = pick(open, target.day.id, SUGGESTIONS_COUNT)
-  // Wie viele warten noch hinter den fünf gezeigten?
+  const suggestions = pick(open, target.day.id, limit)
+  // Wie viele warten noch hinter den gezeigten?
   const waiting = pick(open, target.day.id, Infinity).length - suggestions.length
   const deferredList = pick(later, target.day.id, Infinity)
   // Sobald Projekte offene Aufgaben hat, bleibt „Vorschläge“ sichtbar – mit „Aktualisieren“.
@@ -534,6 +545,10 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
     const added = reload().filter((t) => !before.has(t.id)).length
     if (!result.ok) onNotice(result.message)
     else onNotice(added > 0 ? T.plan.suggestionsUpdatedNew(added) : T.plan.suggestionsUpdated)
+  }
+  const changeLimit = (value: number) => {
+    setLimit(value)
+    saveSuggestionLimit(localStorage, value)
   }
   /** „Neue Vorschläge“: nur tauschen, wenn wirklich weitere warten – sonst bleibt alles stehen. */
   const next = () => {
@@ -615,8 +630,9 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
                 <span className="suggestions-actions">
                   <button
                     type="button"
-                    className={`suggestions-refresh${searching ? ' is-busy' : ''}`}
-                    title={T.plan.suggestionsReloadHint}
+                    className={`suggestions-refresh suggestions-reload${searching ? ' is-busy' : ''}`}
+                    title={searching ? T.plan.suggestionsSearching : T.plan.suggestionsReloadHint}
+                    aria-label={searching ? T.plan.suggestionsSearching : T.plan.suggestionsReload}
                     aria-busy={searching}
                     disabled={searching}
                     onClick={() => void refresh()}
@@ -625,8 +641,22 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
                       <path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71" />
                       <path d="M13.25 2.75v2.5h-2.5" />
                     </svg>
-                    {searching ? T.plan.suggestionsSearching : T.plan.suggestionsReload}
                   </button>
+                  {/* „(max. 5)“: sieht aus wie ein leiser Textknopf, darüber liegt unsichtbar die Auswahl 1–10. */}
+                  <label className="suggestions-refresh suggestions-limit" title={T.plan.suggestionsLimitHint}>
+                    {T.plan.suggestionsLimit(limit)}
+                    <select
+                      value={limit}
+                      aria-label={T.plan.suggestionsLimitHint}
+                      onChange={(e) => changeLimit(Number(e.target.value))}
+                    >
+                      {Array.from({ length: SUGGESTIONS_MAX - SUGGESTIONS_MIN + 1 }, (_, i) => SUGGESTIONS_MIN + i).map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                   {suggestions.length > 0 && (
                     <button
                       type="button"
@@ -640,6 +670,17 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
                       {T.plan.suggestionsRefresh}
                       {waiting > 0 && <span className="suggestions-count">{waiting}</span>}
                     </button>
+                  )}
+                  {/* „Reset“: alle Vorschläge ausblenden – erst nach kurzer Bestätigung. */}
+                  {suggestions.length > 0 && (
+                    <ResetButton
+                      hint={T.plan.suggestionsResetHint}
+                      confirm={T.plan.suggestionsResetQuestion}
+                      onReset={() => {
+                        hideAll(open.map((t) => t.id))
+                        onNotice(T.plan.suggestionsResetDone)
+                      }}
+                    />
                   )}
                 </span>
               )}
@@ -832,6 +873,67 @@ function SuggestionChip({
         </div>
       )}
     </li>
+  )
+}
+
+/**
+ * Leiser Textknopf „Reset“. Mit `confirm` fragt ein kleines Fenster darunter erst nach
+ * („Ausblenden“ / „Abbrechen“); Klick daneben oder Escape schließt es.
+ */
+function ResetButton({ hint, confirm, onReset }: { hint: string; confirm?: string; onReset: () => void }) {
+  const [asking, setAsking] = useState(false)
+  const boxRef = useRef<HTMLSpanElement>(null)
+
+  useEffect(() => {
+    if (!asking) return
+    const onPointer = (e: PointerEvent) => {
+      if (!boxRef.current?.contains(e.target as Node)) setAsking(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setAsking(false)
+    }
+    const timer = setTimeout(() => document.addEventListener('pointerdown', onPointer), 0)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      clearTimeout(timer)
+      document.removeEventListener('pointerdown', onPointer)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [asking])
+
+  return (
+    <span ref={boxRef} className="reset-box">
+      <button
+        type="button"
+        className="suggestions-refresh reset-button"
+        title={hint}
+        aria-expanded={confirm ? asking : undefined}
+        onClick={() => (confirm ? setAsking((a) => !a) : onReset())}
+      >
+        {T.plan.listReset}
+      </button>
+      {asking && confirm && (
+        <span className="chip-menu reset-confirm" role="dialog" aria-label={confirm}>
+          <span className="reset-question">{confirm}</span>
+          <span className="reset-actions">
+            <button type="button" className="reset-cancel" onClick={() => setAsking(false)}>
+              {T.plan.suggestionsResetCancel}
+            </button>
+            <button
+              type="button"
+              className="reset-ok"
+              autoFocus
+              onClick={() => {
+                setAsking(false)
+                onReset()
+              }}
+            >
+              {T.plan.suggestionsResetConfirm}
+            </button>
+          </span>
+        </span>
+      )}
+    </span>
   )
 }
 
