@@ -41,7 +41,6 @@ import {
 import { RECENT_TASKS_COUNT, SUGGESTIONS_COUNT } from '../config/defaults'
 import { T } from '../config/texts'
 import { Dialog } from '../components/Dialog'
-import { useBalancedWrap } from '../components/hooks'
 import { TaskCard } from '../components/TaskCard'
 import {
   hideSuggestion,
@@ -191,7 +190,6 @@ export function PlanScreen({ onTaskDeleted, onNotice }: Props) {
 
   return (
     <div className="plan">
-      <p className="plan-hint muted">{T.plan.hardestFirst}</p>
       <DndContext
         sensors={sensors}
         collisionDetection={collisionDetection}
@@ -736,12 +734,10 @@ interface SuggestionListProps {
 }
 
 function SuggestionList({ items, ...rest }: SuggestionListProps) {
-  const listRef = useRef<HTMLUListElement>(null)
-  // Gleichmäßig umbrechen: lieber 3 + 2 als 4 + 1 Pillen.
-  useBalancedWrap(listRef, items.map((i) => `${i.id}:${i.title}`).join('|'))
   if (items.length === 0) return null
+  // Alle Pillen gleich breit in einem ruhigen Raster; lange Titel brechen mit Bindestrich um.
   return (
-    <ul ref={listRef} className="recent-list">
+    <ul className="recent-list suggestion-grid">
       {items.map((item) => (
         <SuggestionChip key={item.id} item={item} {...rest} />
       ))}

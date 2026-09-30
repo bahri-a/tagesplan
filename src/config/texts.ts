@@ -135,7 +135,6 @@ export const T = {
   plan: {
     today: 'Heute',
     tomorrow: 'Morgen',
-    hardestFirst: 'Schwerste Aufgabe nach oben.',
     overLimit: (max: number) =>
       `Das sind mehr als deine üblichen ${max} Hauptaufgaben. Das ist okay – vielleicht passt eine auch auf einen anderen Tag.`,
     newTask: 'Neue Hauptaufgabe …',

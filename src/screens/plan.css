@@ -5,12 +5,6 @@
   margin: 0 auto;
 }
 
-.plan-hint {
-  margin-bottom: 1rem;
-  text-align: center;
-  font-size: 0.92rem;
-}
-
 .plan-columns {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -25,6 +19,7 @@
 }
 
 .plan-column {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -48,9 +43,28 @@
   list-style: none;
 }
 
+/* Beide Eingaben gleich breit. */
 .new-task {
   display: flex;
   gap: 0.5rem;
+  width: 22rem;
+  max-width: 100%;
+  align-self: flex-start;
+}
+
+.new-task .input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* „Heute“ und „Morgen“ symmetrisch: Überschrift, Hinweis und Eingabe mittig in der Spalte. */
+.plan-column-title,
+.plan-empty {
+  text-align: center;
+}
+
+.plan-column .new-task {
+  align-self: center;
 }
 
 /* „Hinzufügen“ als schlichtes Plus in der Akzentfarbe, damit die Zeile ruhig bleibt. */
@@ -457,6 +471,36 @@
 
 .suggestions .recent-list {
   gap: 0.65rem;
+}
+
+/* Vorschläge und Aufgeschobenes: gleich breite, gleich hohe Pillen im Raster (5 nebeneinander,
+   am Handy 2). Lange Titel trennt der Browser sauber mit Bindestrich auf die zweite Zeile. */
+.suggestion-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+@media (max-width: 760px) {
+  .suggestion-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.suggestion-grid .recent-item {
+  min-width: 0;
+}
+
+.suggestion-grid .suggestion-chip {
+  flex: 1;
+  min-width: 0;
+  max-width: none;
+  min-height: calc(2.6em + 0.9em + 2px);
+}
+
+.suggestion-grid .recent-chip-title {
+  min-width: 0;
+  hyphens: auto;
+  overflow-wrap: anywhere;
 }
 
 .suggestion-remove {
