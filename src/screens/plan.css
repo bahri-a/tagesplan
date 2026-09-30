@@ -255,58 +255,21 @@
   stroke-linejoin: round;
 }
 
-/* „Vorschläge“: etwas edler als „Zuletzt verwendet“ – zarter Farbverlauf in der Akzentfarbe,
-   das + in einem kleinen Kreis, beim Drüberfahren hebt sich die Pille leicht an. */
+/* „Vorschläge“: im Stil von „Zuletzt verwendet“, nur mit Platz für zwei Zeilen. */
 .suggestion-chip {
-  gap: 0.55rem;
-  padding: 0.5em 1em 0.5em 0.5em;
-  border-color: color-mix(in srgb, var(--accent) 22%, var(--border));
+  max-width: 16rem;
+  padding-right: 0.9em;
   border-radius: 14px;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--accent) 12%, var(--surface)) 0%,
-    var(--surface) 70%
-  );
-  box-shadow: var(--shadow);
-  font-weight: 500;
-  letter-spacing: 0.005em;
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s,
-    transform 0.2s;
+  text-align: left;
 }
 
-.suggestion-chip:hover,
-.suggestion-chip:focus-visible {
-  border-color: var(--accent-line);
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--accent) 20%, var(--surface)) 0%,
-    color-mix(in srgb, var(--accent) 4%, var(--surface)) 70%
-  );
-  box-shadow: var(--shadow-lift);
-  transform: translateY(-1px);
-}
-
-.suggestion-chip .recent-plus {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 1.35rem;
-  height: 1.35rem;
-  border-radius: 999px;
-  background: var(--accent-soft);
-  font-size: 0.85rem;
-  line-height: 1;
-  transition:
-    background 0.2s,
-    color 0.2s;
-}
-
-.suggestion-chip:hover .recent-plus,
-.suggestion-chip:focus-visible .recent-plus {
-  background: var(--accent);
-  color: var(--on-accent);
+.suggestion-chip .recent-chip-title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-height: 1.3;
+  white-space: normal;
 }
 
 .suggestions .recent-list {
@@ -315,13 +278,13 @@
 
 .suggestion-remove {
   position: absolute;
-  top: -0.45rem;
-  right: -0.4rem;
+  top: -0.55rem;
+  right: -0.5rem;
   z-index: 1;
   display: grid;
   place-items: center;
-  width: 1.2rem;
-  height: 1.2rem;
+  width: 1.5rem;
+  height: 1.5rem;
   padding: 0;
   border: none;
   border-radius: 999px;
@@ -342,8 +305,8 @@
 }
 
 .suggestion-remove svg {
-  width: 11px;
-  height: 11px;
+  width: 14px;
+  height: 14px;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.5;
