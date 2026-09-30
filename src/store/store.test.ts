@@ -678,6 +678,9 @@ describe('Planen: kopieren, verschieben, zuletzt verwendet', () => {
     at(3 * MIN)
     actions.addTask(today(), 'Physik') // wieder benutzt → taucht wieder auf
     expect(titles()).toEqual(['Physik', 'Mathe'])
+    at(4 * MIN)
+    actions.hideAllRecentTasks(['Physik', 'Mathe']) // „Reset“
+    expect(titles()).toEqual([])
   })
 })
 

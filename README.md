@@ -170,6 +170,7 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   zurück geht es genauso („Zu den Vorschlägen“). In Projekte ändert sich dabei nichts. Das klappt, weil
   beide Apps unter `bahri-a.github.io` liegen; formuliert wird über den Helfer von Projekte auf
   dem Mac. Läuft der Helfer nicht, werden die Titel einfach auf 4 Wörter gekürzt.
+- **Reset** neben „Zuletzt verwendet“ leert die Liste sofort; **Reset** bei den Vorschlägen blendet nach kurzer Nachfrage alle aus.
 - Ab der fünften Hauptaufgabe an einem Tag erscheint ein leiser Tipp: lieber weniger Hauptaufgaben und dafür mehr Blöcke.
 - **Löschen:** der kleine Papierkorb rechts auf jeder Karte. Die Aufgabe ist sofort weg;
   unten steht 8 Sekunden lang **Aufgabe gelöscht · Rückgängig** – ein Klick holt sie mit

@@ -60,8 +60,9 @@ import {
   type ProjectTask,
   type Suggestion,
 } from '../logic/projectSuggestions'
+import { alive } from '../logic/records'
 import type { ID, Task } from '../model/types'
-import { addTask, copyTask, deleteTask, hideRecentTask, moveTask, reorderTasks } from '../store/actions'
+import { addTask, copyTask, deleteTask, hideAllRecentTasks, hideRecentTask, moveTask, reorderTasks } from '../store/actions'
 import { activeDay, plannedDay, recentKey, recentTasks, runningTimerOfTask, tasksOfDay } from '../store/selectors'
 import { getState, useAppState } from '../store/store'
 import './plan.css'
@@ -379,6 +380,14 @@ function RecentTasks({ days, targetIndex, onTargetChange, onNotice }: TargetProp
     <section className="recent" aria-label={T.plan.recentTitle}>
       <div className="recent-head">
         <h2 className="recent-title">{T.plan.recentTitle}</h2>
+        {/* „Reset“: alle auf einmal weg, ohne Nachfrage – sie kommen wieder, sobald man sie benutzt. */}
+        <ResetButton
+          hint={T.plan.recentResetHint}
+          onReset={() => {
+            hideAllRecentTasks(alive(Object.values(state.tasks)).map((t) => t.title))
+            onNotice(T.plan.recentResetDone)
+          }}
+        />
         <TargetSwitch days={days} targetIndex={targetIndex} onTargetChange={onTargetChange} />
       </div>
       {recent.length === 0 && <p className="muted small">{T.plan.recentNone(target.label)}</p>}
@@ -662,6 +671,17 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
                       {waiting > 0 && <span className="suggestions-count">{waiting}</span>}
                     </button>
                   )}
+                  {/* „Reset“: alle Vorschläge ausblenden – erst nach kurzer Bestätigung. */}
+                  {suggestions.length > 0 && (
+                    <ResetButton
+                      hint={T.plan.suggestionsResetHint}
+                      confirm={T.plan.suggestionsResetQuestion}
+                      onReset={() => {
+                        hideAll(open.map((t) => t.id))
+                        onNotice(T.plan.suggestionsResetDone)
+                      }}
+                    />
+                  )}
                 </span>
               )}
               {showTarget && <TargetSwitch days={days} targetIndex={targetIndex} onTargetChange={onTargetChange} />}
@@ -853,6 +873,67 @@ function SuggestionChip({
         </div>
       )}
     </li>
+  )
+}
+
+/**
+ * Leiser Textknopf „Reset“. Mit `confirm` fragt ein kleines Fenster darunter erst nach
+ * („Ausblenden“ / „Abbrechen“); Klick daneben oder Escape schließt es.
+ */
+function ResetButton({ hint, confirm, onReset }: { hint: string; confirm?: string; onReset: () => void }) {
+  const [asking, setAsking] = useState(false)
+  const boxRef = useRef<HTMLSpanElement>(null)
+
+  useEffect(() => {
+    if (!asking) return
+    const onPointer = (e: PointerEvent) => {
+      if (!boxRef.current?.contains(e.target as Node)) setAsking(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setAsking(false)
+    }
+    const timer = setTimeout(() => document.addEventListener('pointerdown', onPointer), 0)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      clearTimeout(timer)
+      document.removeEventListener('pointerdown', onPointer)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [asking])
+
+  return (
+    <span ref={boxRef} className="reset-box">
+      <button
+        type="button"
+        className="suggestions-refresh reset-button"
+        title={hint}
+        aria-expanded={confirm ? asking : undefined}
+        onClick={() => (confirm ? setAsking((a) => !a) : onReset())}
+      >
+        {T.plan.listReset}
+      </button>
+      {asking && confirm && (
+        <span className="chip-menu reset-confirm" role="dialog" aria-label={confirm}>
+          <span className="reset-question">{confirm}</span>
+          <span className="reset-actions">
+            <button type="button" className="reset-cancel" onClick={() => setAsking(false)}>
+              {T.plan.suggestionsResetCancel}
+            </button>
+            <button
+              type="button"
+              className="reset-ok"
+              autoFocus
+              onClick={() => {
+                setAsking(false)
+                onReset()
+              }}
+            >
+              {T.plan.suggestionsResetConfirm}
+            </button>
+          </span>
+        </span>
+      )}
+    </span>
   )
 }
 
