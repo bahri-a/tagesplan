@@ -126,8 +126,12 @@ export const UNDO_EXTRA_BLOCK_MS = 3 * 60_000
 /** Wie viele Hauptaufgaben „Zuletzt verwendet“ in „Planen“ zeigt. */
 export const RECENT_TASKS_COUNT = 5
 
-/** Wie viele „Vorschläge“ aus der App „Projekte“ in „Planen“ höchstens stehen. */
+/** Wie viele „Vorschläge“ aus der App „Projekte“ in „Planen“ höchstens stehen (Standard, einstellbar). */
 export const SUGGESTIONS_COUNT = 5
+
+/** Kleinste und größte einstellbare Zahl der „Vorschläge“. */
+export const SUGGESTIONS_MIN = 1
+export const SUGGESTIONS_MAX = 10
 
 /** Wie lange nach dem Löschen einer Aufgabe „Rückgängig“ angeboten wird (Millisekunden). */
 export const UNDO_DELETE_MS = 8000

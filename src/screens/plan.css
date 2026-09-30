@@ -416,6 +416,25 @@
     color 0.15s;
 }
 
+/* „(max. 5)“: Die Auswahl liegt unsichtbar über dem Text, damit sich am iPhone das native Rad öffnet. */
+.suggestions-limit {
+  position: relative;
+}
+
+.suggestions-limit select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.suggestions-limit:focus-within {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
 .suggestions-refresh:hover,
 .suggestions-refresh:focus-visible {
   background: var(--accent-soft);

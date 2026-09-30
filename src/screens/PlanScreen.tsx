@@ -38,7 +38,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { RECENT_TASKS_COUNT, SUGGESTIONS_COUNT } from '../config/defaults'
+import { RECENT_TASKS_COUNT, SUGGESTIONS_COUNT, SUGGESTIONS_MAX, SUGGESTIONS_MIN } from '../config/defaults'
 import { T } from '../config/texts'
 import { Dialog } from '../components/Dialog'
 import { TaskCard } from '../components/TaskCard'
@@ -47,11 +47,13 @@ import {
   hideSuggestions,
   loadHidden,
   loadShortTitles,
+  loadSuggestionLimit,
   PROJECTS_KEY,
   readProjectTasks,
   loadDeferred,
   requestShortTitles,
   saveShortTitles,
+  saveSuggestionLimit,
   searchNewTasks,
   setDeferred,
   suggestionsFor,
@@ -484,7 +486,7 @@ type SuggestionPlace = 'suggestions' | 'deferred'
  *
  * Darunter „Aufgeschoben“: Vorschläge, die man für später beiseitegelegt hat. Verschieben geht auf
  * zwei Arten: ziehen (Maus sofort, Finger nach kurzem Halten) oder über das kleine Menü
- * (Rechtsklick bzw. lange drücken ohne zu ziehen). Aufgeschobene zählen nicht zu den fünf.
+ * (Rechtsklick bzw. lange drücken ohne zu ziehen). Aufgeschobene zählen nicht zur Höchstzahl.
  */
 function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onNotice }: TargetProps & { showTarget: boolean }) {
   const state = useAppState()
@@ -493,6 +495,7 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
   const [dragging, setDragging] = useState<{ id: string; place: SuggestionPlace; title: string } | null>(null)
   const [dropPlace, setDropPlace] = useState<SuggestionPlace | null>(null)
   const [searching, setSearching] = useState(false)
+  const [limit, setLimit] = useState(() => loadSuggestionLimit(localStorage, SUGGESTIONS_COUNT, SUGGESTIONS_MIN, SUGGESTIONS_MAX))
   const touchDrag = useRef(false)
   const justDragged = useRef(false)
 
@@ -509,8 +512,8 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
   const later = tasks.filter((t) => deferred[t.id] !== undefined)
   const pick = (list: ProjectTask[], dayId: ID, limit: number) =>
     suggestionsFor(list, shortTitles, hidden, onDay(dayId), recentKey, limit)
-  const suggestions = pick(open, target.day.id, SUGGESTIONS_COUNT)
-  // Wie viele warten noch hinter den fünf gezeigten?
+  const suggestions = pick(open, target.day.id, limit)
+  // Wie viele warten noch hinter den gezeigten?
   const waiting = pick(open, target.day.id, Infinity).length - suggestions.length
   const deferredList = pick(later, target.day.id, Infinity)
   // Sobald Projekte offene Aufgaben hat, bleibt „Vorschläge“ sichtbar – mit „Aktualisieren“.
@@ -534,6 +537,10 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
     const added = reload().filter((t) => !before.has(t.id)).length
     if (!result.ok) onNotice(result.message)
     else onNotice(added > 0 ? T.plan.suggestionsUpdatedNew(added) : T.plan.suggestionsUpdated)
+  }
+  const changeLimit = (value: number) => {
+    setLimit(value)
+    saveSuggestionLimit(localStorage, value)
   }
   /** „Neue Vorschläge“: nur tauschen, wenn wirklich weitere warten – sonst bleibt alles stehen. */
   const next = () => {
@@ -627,6 +634,21 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
                     </svg>
                     {searching ? T.plan.suggestionsSearching : T.plan.suggestionsReload}
                   </button>
+                  {/* „(max. 5)“: sieht aus wie ein leiser Textknopf, darüber liegt unsichtbar die Auswahl 1–10. */}
+                  <label className="suggestions-refresh suggestions-limit" title={T.plan.suggestionsLimitHint}>
+                    {T.plan.suggestionsLimit(limit)}
+                    <select
+                      value={limit}
+                      aria-label={T.plan.suggestionsLimitHint}
+                      onChange={(e) => changeLimit(Number(e.target.value))}
+                    >
+                      {Array.from({ length: SUGGESTIONS_MAX - SUGGESTIONS_MIN + 1 }, (_, i) => SUGGESTIONS_MIN + i).map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                   {suggestions.length > 0 && (
                     <button
                       type="button"

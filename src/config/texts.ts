@@ -199,7 +199,9 @@ export const T = {
     suggestionsReloadHint: 'Im Second Brain und in den Mails nach neuen Aufgaben suchen (dauert 1–3 Minuten)',
     suggestionsUpdated: 'Nichts Neues gefunden.',
     suggestionsUpdatedNew: (n: number) => `${n} ${n === 1 ? 'neue Aufgabe' : 'neue Aufgaben'} gefunden.`,
-    suggestionsNone: 'Gerade keine Vorschläge.',
+    suggestionsNone: 'Gerade keine neuen Vorschläge.',
+    suggestionsLimit: (n: number) => `(max. ${n})`,
+    suggestionsLimitHint: 'Wie viele Vorschläge höchstens erscheinen (1 bis 10)',
     // „Aufgeschoben“ unter den Vorschlägen
     deferredTitle: 'Aufgeschoben',
     deferredSubtitle: 'Für die Zukunft',
