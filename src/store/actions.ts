@@ -10,6 +10,7 @@ import { BLOCK_WARNING_MS, SETTINGS_LIMITS, SIGNAL_MAX_DELAY_MS, BREAK_SNOOZE_MS
 import { mergeCarryOver, type CarryConflict, type ConflictChoices } from '../logic/carryOver'
 import { baseFields } from '../logic/records'
 import * as timer from '../logic/timer'
+import { stripStartCuePrefix } from '../logic/variety'
 import type { Block, BlockStatus, ID, SettingsValues, Step, Task, TimerState } from '../model/types'
 import {
   activeDay,
@@ -42,7 +43,8 @@ export function addTask(dayId: ID, title: string): Task {
     blockMinutesOverride: null,
     shortBreakMinutesOverride: null,
     completedAt: null,
-    startCue: null,
+    // Gemerktes Startsignal (Häkchen „Für alle neuen Hauptaufgaben“) – pro Aufgabe änderbar.
+    startCue: s.settings.defaultStartCue,
     firstEstimatedBlocks: null,
   }
   commit({ tasks: [task] })
@@ -503,6 +505,16 @@ export function updateSettings(patch: Partial<SettingsValues>): void {
     next[key] = clamp(Math.round(Number(next[key]) || min), min, max)
   }
   commit({ settings: next })
+}
+
+/**
+ * Häkchen unter dem Startsignal: Diesen Satz für alle neuen Hauptaufgaben merken (`null` = vergessen).
+ * Bestehende Aufgaben bleiben unverändert.
+ */
+export function rememberStartCue(cue: string | null): void {
+  const current = getState().settings
+  const clean = cue === null ? null : stripStartCuePrefix(cue).trim() || null
+  commit({ settings: { ...current, defaultStartCue: clean } })
 }
 
 /**

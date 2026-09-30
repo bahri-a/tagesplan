@@ -40,6 +40,8 @@ export const DEFAULT_SETTINGS: SettingsValues = {
   ultraMode: false,
   /** In „Zuletzt verwendet“ ausgeblendete Aufgaben – am Anfang keine. */
   recentHidden: {},
+  /** Kein gemerktes Startsignal – neue Hauptaufgaben beginnen ohne. */
+  defaultStartCue: null,
 }
 
 /** Erlaubte Bereiche für die Zahlen in den Einstellungen. */

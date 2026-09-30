@@ -450,6 +450,24 @@ describe('Startsignal und erste Schätzung', () => {
     expect(getState().tasks[task.id].startCue).toBeNull()
   })
 
+  it('füllt einen gemerkten Satz bei neuen Hauptaufgaben vor – änderbar, Häkchen weg = vergessen', () => {
+    const first = actions.addTask(today(), 'A')
+    actions.updateTask(first.id, { startCue: 'der Kaffee auf dem Tisch steht' })
+    actions.rememberStartCue('Ich starte, wenn der Kaffee auf dem Tisch steht ')
+    expect(getState().settings.defaultStartCue).toBe('der Kaffee auf dem Tisch steht')
+
+    const second = actions.addTask(today(), 'B')
+    expect(getState().tasks[second.id].startCue).toBe('der Kaffee auf dem Tisch steht')
+    // Pro Aufgabe änderbar, die Vorgabe bleibt
+    actions.updateTask(second.id, { startCue: 'das Handy weg ist' })
+    expect(getState().settings.defaultStartCue).toBe('der Kaffee auf dem Tisch steht')
+
+    actions.rememberStartCue(null)
+    expect(actions.addTask(today(), 'C').startCue).toBeNull()
+    // Bestehende Aufgaben behalten ihren Satz
+    expect(getState().tasks[first.id].startCue).toBe('der Kaffee auf dem Tisch steht')
+  })
+
   it('merkt sich beim ersten Block die damalige Schätzung – „Noch ein Block“ ändert sie nicht', () => {
     const task = actions.addTask(today(), 'A')
     expect(getState().tasks[task.id].firstEstimatedBlocks).toBeNull()

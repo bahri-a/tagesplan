@@ -20,6 +20,7 @@ function settings(blockMinutes: number, shortBreakMinutes: number): Settings {
     noiseColor: 'brown',
     ultraMode: false,
     recentHidden: {},
+    defaultStartCue: null,
   }
 }
 

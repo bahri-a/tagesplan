@@ -164,6 +164,9 @@ export const T = {
     // Kleines, leises Schild hinter „Erste Schritte“ und „Ich starte, wenn …“: nichts davon ist Pflicht.
     optional: 'optional',
     startCuePlaceholder: 'der Kaffee auf dem Tisch steht',
+    // Leises Häkchen unter dem Startsignal: Satz für alle neuen Hauptaufgaben vorausfüllen.
+    startCueRemember: 'Für alle neuen Hauptaufgaben',
+    startCueRememberHint: 'Neue Hauptaufgaben beginnen mit diesem Satz. Du kannst ihn bei jeder Aufgabe ändern.',
     done: 'Erledigt',
     reopen: 'Wieder öffnen',
     markDone: 'Als erledigt markieren',

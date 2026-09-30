@@ -800,6 +800,45 @@
   line-height: 1.4;
 }
 
+/* Leises Häkchen unter dem Startsignal: „Für alle neuen Hauptaufgaben“ */
+.start-cue-remember {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  align-self: flex-start;
+  margin-top: 0.15rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s, opacity 0.2s;
+}
+
+.start-cue-remember .checkbox {
+  width: 1.05em;
+  height: 1.05em;
+  border-radius: 5px;
+  border-color: var(--text-muted);
+}
+
+.start-cue-remember .checkbox:checked {
+  border-color: var(--accent);
+}
+
+.start-cue-remember:hover:not(.is-disabled),
+.start-cue-remember:has(.checkbox:checked) {
+  color: var(--text);
+}
+
+.start-cue-remember.is-disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.start-cue-remember.is-disabled .checkbox {
+  cursor: default;
+}
+
 /* Blöcke, Blocklänge, kurze Pause: je eine feste Zeile – Name links, Zahl rechts */
 .task-numbers {
   display: flex;
