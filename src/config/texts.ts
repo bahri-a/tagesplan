@@ -144,7 +144,7 @@ export const T = {
     stepsHint: 'Nur für den Start: ein, zwei winzige Schritte.\nKlein anfangen, der Rest kommt von selbst.',
     // Kleines „i“ neben „Erste Schritte“: warum so klein? (nur Belegtes, vorsichtig formuliert)
     stepsInfo:
-      'Studien zeigen:\nErste Schritte anzugehen und abzuhaken motiviert und erleichtert das weitere Vorankommen und Durchhalten.',
+      'Studien zeigen:\nErste Schritte anzugehen und abzuhaken liefert Dopaminschübe und erleichtert das weitere Vorankommen und Durchhalten.',
     infoLabel: (label: string) => `Mehr zu „${label}“`,
     firstStep: 'Erster Schritt – sofort machbar, z. B. „PDF öffnen“',
     nextStep: 'Noch ein kleiner Schritt? (optional)',
