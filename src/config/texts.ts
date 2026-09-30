@@ -225,11 +225,11 @@ export const T = {
     },
   },
 
-  welcome: {
-    title: 'Willkommen zurück!',
-    question: (dayName: string) => `Möchtest du den Tag von ${dayName} beenden?`,
-    yes: 'Ja, Tag beenden',
-    no: 'Nein, ich arbeite noch daran',
+  // Am nächsten Kalendertag, wenn der alte Tag noch offen ist: leiser Link oben in „Heute“.
+  newDay: {
+    link: 'Neuen Tag beginnen',
+    hint: (dayName: string) =>
+      `${dayName} ist noch offen. Ein Klick beendet ihn – offene Aufgaben wandern auf ihren Platz im neuen Tag.`,
   },
 
   // Taste N: einen Gedanken parken, ohne den Block zu verlassen (landet im Notizzettel).

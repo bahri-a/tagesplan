@@ -292,23 +292,28 @@ describe('Tag beenden', () => {
     expect(getState().timer.phase).toBe('idle')
   })
 
-  it('fragt am nächsten Tag freundlich nach – aber nur nach echter Arbeit', () => {
+  it('zeigt am nächsten Tag „Neuen Tag beginnen“ – ohne zu fragen, nur nach echter Arbeit', () => {
     const a = actions.addTask(today(), 'A')
-    // Ohne Arbeit: keine Frage
-    expect(sel.shouldAskToEndPreviousDay(getState(), at(24 * 60 * MIN))).toBe(false)
+    // Ohne Arbeit: kein Link
+    expect(sel.canStartNewDay(getState(), at(24 * 60 * MIN))).toBe(false)
     at(0)
     actions.startBlock(a.id)
     actions.checkTimer(at(BLOCK))
     // Nachts um 2 Uhr zählt noch zum selben Tag
     const nightTwo = new Date(2026, 8, 29, 2, 0).getTime()
-    expect(sel.shouldAskToEndPreviousDay(getState(), nightTwo)).toBe(false)
-    // Am nächsten Morgen schon
+    expect(sel.canStartNewDay(getState(), nightTwo)).toBe(false)
+    // Am nächsten Morgen schon – und er bleibt, auch wenn du am alten Tag weiterarbeitest
     const nextMorning = new Date(2026, 8, 29, 9, 0).getTime()
-    expect(sel.shouldAskToEndPreviousDay(getState(), nextMorning)).toBe(true)
-    // „Nein“ → heute nicht mehr fragen, morgen wieder
-    actions.dismissEndDayPrompt(nextMorning)
-    expect(sel.shouldAskToEndPreviousDay(getState(), nextMorning + 60 * MIN)).toBe(false)
-    expect(sel.shouldAskToEndPreviousDay(getState(), nextMorning + 24 * 60 * MIN)).toBe(true)
+    expect(sel.canStartNewDay(getState(), nextMorning)).toBe(true)
+    // Während eines Blocks bleibt er weg
+    vi.setSystemTime(nextMorning)
+    actions.startBlock(a.id)
+    expect(sel.canStartNewDay(getState(), nextMorning + MIN)).toBe(false)
+    actions.abortCurrentBlock()
+    expect(sel.canStartNewDay(getState(), nextMorning + MIN)).toBe(true)
+    // Klick → neuer Tag, der Link ist weg
+    actions.endDay()
+    expect(sel.canStartNewDay(getState(), nextMorning + 2 * MIN)).toBe(false)
   })
 })
 

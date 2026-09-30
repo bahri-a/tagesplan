@@ -963,3 +963,85 @@
 .long-pause-next-label {
   opacity: 0.75;
 }
+
+/* ---------- „Neuen Tag beginnen →“: leise, aber gut zu sehen ---------- */
+
+.new-day {
+  display: flex;
+  justify-content: center;
+  margin-bottom: -0.4rem;
+  animation: new-day-in 0.6s ease-out both;
+}
+
+.new-day-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.2rem;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+}
+
+.new-day-label {
+  background-image: linear-gradient(var(--accent-line), var(--accent-line));
+  background-size: 100% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  padding-bottom: 2px;
+  transition: background-image 0.2s;
+}
+
+.new-day-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.new-day-arrow {
+  transition: transform 0.2s ease;
+}
+
+.new-day-link:hover {
+  color: var(--accent-hover);
+}
+
+.new-day-link:hover .new-day-label {
+  background-image: linear-gradient(currentColor, currentColor);
+}
+
+.new-day-link:hover .new-day-arrow {
+  transform: translateX(3px);
+}
+
+.new-day-link:focus-visible {
+  outline: 2px solid var(--accent-line);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+@keyframes new-day-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .new-day {
+    animation: none;
+  }
+
+  .new-day-arrow {
+    transition: none;
+  }
+}
