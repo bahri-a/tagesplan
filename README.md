@@ -158,7 +158,9 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   als Hauptaufgabe formuliert (1 bis 4 Wörter). Ein Klick legt sie auf dem oben gewählten Tag an,
   der kleine **Papierkorb** oben rechts blendet einen
   Vorschlag aus, und der nächste rückt nach. **Neue Vorschläge** neben der Überschrift blendet alle
-  gezeigten auf einmal aus; dann erscheinen nur noch die, die wegen der Obergrenze von 5 warten mussten.
+  gezeigten auf einmal aus; dann erscheinen die, die wegen der Obergrenze von 5 warten mussten (die kleine
+  Zahl zeigt, wie viele). Warten keine, bleibt alles stehen. **Aktualisieren** liest Projekte sofort neu
+  (passiert sonst von selbst, sobald du zu Tagesplan zurückwechselst).
 - **Aufschub** (unter den Vorschlägen): Vorschläge für später beiseitelegen. Einfach hineinziehen
   (am iPhone kurz halten, dann ziehen) oder per Rechtsklick bzw. langem Drücken → **Aufschieben**.
   Aufgeschobene zählen nicht zu den 5 Vorschlägen; ein Klick legt sie wie gewohnt an, und

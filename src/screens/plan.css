@@ -318,6 +318,22 @@
   white-space: nowrap;
 }
 
+/* „Aktualisieren“ und „Neue Vorschläge“: zwei leise Textknöpfe neben der Überschrift. */
+.suggestions-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+}
+
+.suggestions-count {
+  min-width: 1.2em;
+  padding: 0 0.35em;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+  font-size: 0.72rem;
+  text-align: center;
+}
+
 /* „Neue Vorschläge“: leiser Textknopf neben der Überschrift. */
 .suggestions .recent-head {
   justify-content: flex-start;

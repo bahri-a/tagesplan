@@ -11,7 +11,7 @@
  * und „Aufschub“ für Vorschläge, die man für später beiseitegelegt hat.
  */
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   closestCenter,
   DndContext,
@@ -426,27 +426,32 @@ function useProjectSuggestions() {
   const [hidden, setHidden] = useState(() => loadHidden(localStorage))
   const [deferred, setDeferredState] = useState(() => loadDeferred(localStorage))
   const asked = useRef(new Set<string>())
+
+  /** Alles frisch aus dem Speicher lesen. Liefert die offenen Projekte-Aufgaben. */
+  const reload = useCallback(() => {
+    const fresh = readProjectTasks(localStorage)
+    setTasks(fresh)
+    setShortTitles(loadShortTitles(localStorage))
+    setHidden(loadHidden(localStorage))
+    setDeferredState(loadDeferred(localStorage))
+    return fresh
+  }, [])
   const mounted = useRef(true)
 
   useEffect(() => {
     mounted.current = true
-    const reload = () => {
-      setTasks(readProjectTasks(localStorage))
-      setShortTitles(loadShortTitles(localStorage))
-      setHidden(loadHidden(localStorage))
-      setDeferredState(loadDeferred(localStorage))
-    }
+    const onFocus = () => void reload()
     const onStorage = (e: StorageEvent) => {
       if (e.key === null || e.key === PROJECTS_KEY) reload()
     }
     window.addEventListener('storage', onStorage)
-    window.addEventListener('focus', reload)
+    window.addEventListener('focus', onFocus)
     return () => {
       mounted.current = false
       window.removeEventListener('storage', onStorage)
-      window.removeEventListener('focus', reload)
+      window.removeEventListener('focus', onFocus)
     }
-  }, [])
+  }, [reload])
 
   useEffect(() => {
     const missing = tasks.map((t) => t.title).filter((t) => !(t in shortTitles) && !asked.current.has(t))
@@ -463,7 +468,7 @@ function useProjectSuggestions() {
   const hide = (id: string) => setHidden(hideSuggestion(localStorage, id))
   const hideAll = (ids: string[]) => setHidden(hideSuggestions(localStorage, ids))
   const defer = (id: string, value: boolean) => setDeferredState(setDeferred(localStorage, id, value))
-  return { tasks, shortTitles, hidden, hide, hideAll, deferred, defer }
+  return { tasks, shortTitles, hidden, hide, hideAll, deferred, defer, reload }
 }
 
 /** Wo ein Vorschlag liegt: bei den „Vorschlägen“ oder im „Aufschub“. */
@@ -482,7 +487,7 @@ type SuggestionPlace = 'suggestions' | 'deferred'
  */
 function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onNotice }: TargetProps & { showTarget: boolean }) {
   const state = useAppState()
-  const { tasks, shortTitles, hidden, hide, hideAll, deferred, defer } = useProjectSuggestions()
+  const { tasks, shortTitles, hidden, hide, hideAll, deferred, defer, reload } = useProjectSuggestions()
   const [menu, setMenu] = useState<{ id: string; place: SuggestionPlace } | null>(null)
   const [dragging, setDragging] = useState<{ id: string; place: SuggestionPlace; title: string } | null>(null)
   const [dropPlace, setDropPlace] = useState<SuggestionPlace | null>(null)
@@ -503,13 +508,31 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
   const pick = (list: ProjectTask[], dayId: ID, limit: number) =>
     suggestionsFor(list, shortTitles, hidden, onDay(dayId), recentKey, limit)
   const suggestions = pick(open, target.day.id, SUGGESTIONS_COUNT)
+  // Wie viele warten noch hinter den fünf gezeigten?
+  const waiting = pick(open, target.day.id, Infinity).length - suggestions.length
   const deferredList = pick(later, target.day.id, Infinity)
-  const hasSuggestions = suggestions.length > 0 || pick(open, days[1 - targetIndex].day.id, 1).length > 0
+  // Sobald Projekte offene Aufgaben hat, bleibt „Vorschläge“ sichtbar – mit „Aktualisieren“.
+  const hasSuggestions = open.length > 0
   const hasDeferred = deferredList.length > 0 || pick(later, days[1 - targetIndex].day.id, 1).length > 0
   // Beim Ziehen ist die jeweils andere Ablage immer da – auch wenn sie noch leer ist.
   const showSuggestions = hasSuggestions || dragging?.place === 'deferred'
   const showDeferred = hasDeferred || dragging?.place === 'suggestions'
   if (!showSuggestions && !showDeferred) return null
+
+  /** „Aktualisieren“: Projekte neu lesen und sagen, ob etwas dazugekommen ist. */
+  const refresh = () => {
+    const before = new Set(tasks.map((t) => t.id))
+    const added = reload().filter((t) => !before.has(t.id)).length
+    onNotice(added > 0 ? T.plan.suggestionsUpdatedNew(added) : T.plan.suggestionsUpdated)
+  }
+  /** „Neue Vorschläge“: nur tauschen, wenn wirklich weitere warten – sonst bleibt alles stehen. */
+  const next = () => {
+    if (waiting <= 0) {
+      onNotice(T.plan.suggestionsNoMore)
+      return
+    }
+    hideAll(suggestions.map((x) => x.id))
+  }
 
   const move = (id: string, to: SuggestionPlace, title: string) => {
     setMenu(null)
@@ -578,25 +601,42 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
           dropHint={dragging?.place === 'deferred' ? T.plan.deferredDropBack : null}
           head={
             <>
-              {suggestions.length > 0 && !dragging && (
-                <button
-                  type="button"
-                  className="suggestions-refresh"
-                  title={T.plan.suggestionsRefreshHint}
-                  onClick={() => hideAll(suggestions.map((x) => x.id))}
-                >
-                  <svg viewBox="0 0 16 16" aria-hidden="true">
-                    <path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71" />
-                    <path d="M13.25 2.75v2.5h-2.5" />
-                  </svg>
-                  {T.plan.suggestionsRefresh}
-                </button>
+              {!dragging && (
+                <span className="suggestions-actions">
+                  <button type="button" className="suggestions-refresh" title={T.plan.suggestionsReloadHint} onClick={refresh}>
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                      <path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71" />
+                      <path d="M13.25 2.75v2.5h-2.5" />
+                    </svg>
+                    {T.plan.suggestionsReload}
+                  </button>
+                  {suggestions.length > 0 && (
+                    <button
+                      type="button"
+                      className="suggestions-refresh"
+                      title={waiting > 0 ? T.plan.suggestionsRefreshHint(waiting) : T.plan.suggestionsNoMore}
+                      onClick={next}
+                    >
+                      <svg viewBox="0 0 16 16" aria-hidden="true">
+                        <path d="M3 8h9.5M9 4.5 12.5 8 9 11.5" />
+                      </svg>
+                      {T.plan.suggestionsRefresh}
+                      {waiting > 0 && <span className="suggestions-count">{waiting}</span>}
+                    </button>
+                  )}
+                </span>
               )}
               {showTarget && <TargetSwitch days={days} targetIndex={targetIndex} onTargetChange={onTargetChange} />}
             </>
           }
         >
-          {suggestions.length === 0 && hasSuggestions && <p className="muted small">{T.plan.recentNone(target.label)}</p>}
+          {suggestions.length === 0 && hasSuggestions && !dragging && (
+            <p className="muted small">
+              {pick(open, target.day.id, 1).length === 0 && open.some((t) => hidden[t.id] === undefined)
+                ? T.plan.recentNone(target.label)
+                : T.plan.suggestionsNone}
+            </p>
+          )}
           {!hasSuggestions && <p className="suggestions-empty">{T.plan.deferredEmptyBack}</p>}
           <SuggestionList items={suggestions} {...chipProps('suggestions')} />
         </SuggestionArea>

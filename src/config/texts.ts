@@ -192,7 +192,14 @@ export const T = {
     suggestionSource: (title: string) => `Aus Projekte: „${title}“`,
     suggestionHide: (title: string) => `„${title}“ aus „Vorschläge“ entfernen`,
     suggestionsRefresh: 'Neue Vorschläge',
-    suggestionsRefreshHint: 'Diese Vorschläge ausblenden und die nächsten aus Projekte zeigen',
+    suggestionsRefreshHint: (waiting: number) =>
+      `Diese Vorschläge ausblenden und die nächsten zeigen (${waiting} ${waiting === 1 ? 'wartet' : 'warten'})`,
+    suggestionsNoMore: 'Gerade keine weiteren Vorschläge in Projekte.',
+    suggestionsReload: 'Aktualisieren',
+    suggestionsReloadHint: 'Offene Aufgaben aus Projekte neu laden',
+    suggestionsUpdated: 'Vorschläge sind aktuell.',
+    suggestionsUpdatedNew: (n: number) => `${n} ${n === 1 ? 'neue Aufgabe' : 'neue Aufgaben'} aus Projekte.`,
+    suggestionsNone: 'Gerade keine Vorschläge.',
     // „Aufschub“ unter den Vorschlägen
     deferredTitle: 'Aufschub',
     deferredMove: 'Aufschieben',
