@@ -84,11 +84,10 @@ export const T = {
     breakOver: 'Pause vorbei',
     // Ultra-Modus: Die fällige Pause muss bestätigt werden, sonst piept es weiter.
     ultraAsk: 'Zeit für die Pause!',
-    // „+2 Min.“ gibt es in jedem Modus: Die Pause beginnt 2 Minuten später.
-    breakSnoozed: 'Kurz weiterarbeiten – gleich ist Pause.',
     breakConfirm: 'Pause machen',
-    breakSnooze: '+2 Min.',
-    breakSnoozeHint: 'Noch 2 Minuten weiterarbeiten, dann beginnt die Pause (in voller Länge)',
+    // In den letzten 2 Minuten eines Blocks: den Block um 2 Minuten verlängern.
+    extendBlock: '+2 Min.',
+    extendBlockHint: 'Block um 2 Minuten verlängern',
     nextBlock: 'Nächsten Block starten',
     askDone: 'Hauptaufgabe erledigt oder noch ein Block?',
     // Karte über der aktuellen Aufgabe für jede heute erledigte Hauptaufgabe.

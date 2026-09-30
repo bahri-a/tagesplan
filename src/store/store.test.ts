@@ -171,31 +171,29 @@ describe('Ultra-Modus', () => {
     expect(actions.checkTimer(at(BLOCK + BREAK + 100))).toEqual([{ type: 'breakEnd', taskTitle: 'A', fresh: true }])
   })
 
-  it('„+2 Min.“ schiebt die Pause auf, danach piept es wieder', () => {
-    actions.updateSettings({ ultraMode: true })
+  it('„+2 Min.“ verlängert nur den Block, und nur in seinen letzten 2 Minuten', () => {
     const task = actions.addTask(today(), 'A')
     actions.startBlock(task.id)
-    actions.checkTimer(at(BLOCK))
-    actions.snoozeBreak(at(BLOCK + 5000))
-    expect(actions.isUltraRinging(at(BLOCK + MIN))).toBe(false)
-    // Während des Aufschubs startet die Pause nicht und läuft nicht ab.
-    expect(actions.checkTimer(at(BLOCK + BREAK))).toEqual([])
-    expect(actions.isUltraRinging(at(BLOCK + 5000 + 2 * MIN))).toBe(true)
-    actions.confirmBreak(at(BLOCK + 5000 + 2 * MIN + 1000))
-    const t = getState().timer
-    // Die Pause beginnt erst nach dem Aufschub und dauert voll.
-    expect(t.phase === 'break' && t.startedAt).toBe(START + BLOCK + 5000 + 2 * MIN)
-    expect(actions.checkTimer(at(BLOCK + 5000 + 2 * MIN + BREAK))).toEqual([{ type: 'breakEnd', taskTitle: 'A', fresh: true }])
-  })
-
-  it('„+2 Min.“ gibt es auch ohne Ultra-Modus – ohne Piepen', () => {
-    const task = actions.addTask(today(), 'A')
-    actions.startBlock(task.id)
-    actions.checkTimer(at(BLOCK))
-    actions.snoozeBreak(at(BLOCK + MIN))
-    expect(actions.checkTimer(at(BLOCK + BREAK))).toEqual([])
-    expect(actions.isUltraRinging(at(BLOCK + 3 * MIN))).toBe(false)
-    expect(actions.checkTimer(at(BLOCK + 3 * MIN + BREAK))).toEqual([{ type: 'breakEnd', taskTitle: 'A', fresh: true }])
+    // Vorher gibt es kein „+2 Min.“.
+    actions.extendBlock(at(BLOCK - 3 * MIN))
+    let t = getState().timer
+    expect(t.phase === 'block' && t.plannedMs).toBe(BLOCK)
+    expect(t.phase === 'block' && actions.canExtendBlock(t, at(BLOCK - 3 * MIN))).toBe(false)
+    expect(t.phase === 'block' && actions.canExtendBlock(t, at(BLOCK - MIN))).toBe(true)
+    actions.extendBlock(at(BLOCK - MIN))
+    t = getState().timer
+    expect(t.phase === 'block' && t.plannedMs).toBe(BLOCK + 2 * MIN)
+    // Der Block läuft 2 Minuten länger, danach beginnt die Pause in normaler Länge.
+    expect(actions.checkTimer(at(BLOCK)).map((e) => e.type)).not.toContain('blockEnd')
+    expect(getState().timer.phase).toBe('block')
+    actions.checkTimer(at(BLOCK + 2 * MIN))
+    t = getState().timer
+    expect(t.phase).toBe('break')
+    expect(t.phase === 'break' && t.startedAt).toBe(START + BLOCK + 2 * MIN)
+    expect(t.phase === 'break' && t.durationMs).toBe(BREAK)
+    // In der Pause verlängert „+2 Min.“ nichts.
+    actions.extendBlock(at(BLOCK + 3 * MIN))
+    expect(getState().timer).toEqual(t)
   })
 
   it('piept nicht, wenn die App lange zu war, nach dem letzten Block oder ohne Töne', () => {

@@ -196,7 +196,7 @@ export type TimerState =
       endSignaled: boolean
       /**
        * Ultra-Modus: Die Pause ist noch nicht bestätigt – ab `startedAt` piept es, bis „Pause machen“.
-       * „+2 Min.“ schiebt `startedAt` in die Zukunft. Fehlt in älteren Daten = nein.
+       * Fehlt in älteren Daten = nein.
        */
       nagging?: boolean
     }

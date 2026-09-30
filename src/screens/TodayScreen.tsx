@@ -32,13 +32,14 @@ import { requestNotificationPermission } from '../signals/notifications'
 import {
   abortCurrentBlock,
   addExtraBlock,
+  canExtendBlock,
   confirmBreak,
+  extendBlock,
   finishBlockEarly,
   finishTask,
   isInWarningTime,
   pauseCurrentBlock,
   resumeCurrentBlock,
-  snoozeBreak,
   updateSettings,
   startBlock,
   toggleStep,
@@ -242,10 +243,7 @@ function LongPauseCard({ task, onEnd }: { task: Task; onEnd: () => void }) {
   )
 }
 
-/**
- * Pause bestätigen oder um 2 Minuten aufschieben. Groß, wenn gerade etwas zu tun ist (Ultra-Modus
- * piept, oder die Pause ist aufgeschoben) – sonst nur ein kleiner, leiser „+2 Min.“-Knopf.
- */
+/** Ultra-Modus: Die fällige Pause bestätigen, damit das Piepen aufhört. */
 function BreakAsk({ question }: { question: string }) {
   return (
     <div className="ask-done">
@@ -254,22 +252,8 @@ function BreakAsk({ question }: { question: string }) {
         <button type="button" className="btn btn-primary btn-big" onClick={() => confirmBreak()}>
           {T.today.breakConfirm}
         </button>
-        <SnoozeButton big />
       </div>
     </div>
-  )
-}
-
-function SnoozeButton({ big = false }: { big?: boolean }) {
-  return (
-    <button
-      type="button"
-      className={big ? 'btn btn-big' : 'btn btn-small'}
-      title={T.today.breakSnoozeHint}
-      onClick={() => snoozeBreak()}
-    >
-      {T.today.breakSnooze}
-    </button>
   )
 }
 
@@ -358,15 +342,10 @@ function FocusCard({ task }: { task: Task }) {
                 totalMs={t.durationMs}
                 caption={T.today.breakTitle}
               />
-              {now < t.startedAt ? (
-                <BreakAsk question={T.today.breakSnoozed} />
-              ) : t.nagging && state.settings.ultraMode ? (
+              {t.nagging && state.settings.ultraMode ? (
                 <BreakAsk question={T.today.ultraAsk} />
               ) : (
-                <>
-                  <p className="phase-note">{pick(T.today.breakHints, t.startedAt)}</p>
-                  <SnoozeButton />
-                </>
+                <p className="phase-note">{pick(T.today.breakHints, t.startedAt)}</p>
               )}
             </>
           ))}
@@ -682,6 +661,16 @@ function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: 
           </span>
         ) : (
           <>
+            {canExtendBlock(timerState, now) && (
+              <button
+                type="button"
+                className="btn btn-small"
+                title={T.today.extendBlockHint}
+                onClick={() => extendBlock()}
+              >
+                {T.today.extendBlock}
+              </button>
+            )}
             {!paused && (
               <button type="button" className="btn btn-quiet btn-small" onClick={pauseCurrentBlock}>
                 {T.today.pause}

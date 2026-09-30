@@ -6,7 +6,7 @@
  * Funktionen auf.
  */
 
-import { BLOCK_WARNING_MS, SETTINGS_LIMITS, SIGNAL_MAX_DELAY_MS, BREAK_SNOOZE_MS } from '../config/defaults'
+import { BLOCK_WARNING_MS, SETTINGS_LIMITS, SIGNAL_MAX_DELAY_MS, BLOCK_EXTEND_MS } from '../config/defaults'
 import { mergeCarryOver, type CarryConflict, type ConflictChoices } from '../logic/carryOver'
 import { baseFields } from '../logic/records'
 import * as timer from '../logic/timer'
@@ -381,7 +381,7 @@ export function checkTimer(now = Date.now()): TimerEvent[] {
 
 /**
  * Ultra-Modus: Soll gerade gepiept werden? Ja, solange die fällige Pause nicht bestätigt ist,
- * nicht aufgeschoben ist (siehe `snoozeBreak`), noch läuft – und der Modus an ist.
+ * noch läuft – und der Modus an ist.
  */
 export function isUltraRinging(now = Date.now()): boolean {
   const s = getState()
@@ -397,24 +397,25 @@ export function isUltraRinging(now = Date.now()): boolean {
   )
 }
 
-/**
- * „Pause machen“: Die Pause läuft (spätestens ab jetzt) – im Ultra-Modus hört das Piepen auf,
- * nach „+2 Min.“ beginnt die Pause sofort.
- */
+/** „Pause machen“: Im Ultra-Modus hört das Piepen auf, die Pause läuft weiter. */
 export function confirmBreak(now = Date.now()): void {
   const t = getState().timer
   if (t.phase !== 'break' || t.endSignaled) return
   commit({ timer: { ...t, nagging: false, startedAt: Math.min(t.startedAt, now) } })
 }
 
-/**
- * „+2 Min.“ (in jedem Modus): noch kurz weiterarbeiten. Die Pause beginnt erst in 2 Minuten,
- * dann in voller Länge. Im Ultra-Modus piept es danach wieder, bis „Pause machen“.
- */
-export function snoozeBreak(now = Date.now()): void {
+/** Wird „+2 Min.“ gerade angeboten? Nur in den letzten 2 Minuten eines laufenden Blocks. */
+export function canExtendBlock(t: timer.BlockTimer, now: number): boolean {
+  if (t.pausedAt !== null) return false
+  const remaining = timer.blockRemainingMs(t, now)
+  return remaining > 0 && remaining <= BLOCK_EXTEND_MS
+}
+
+/** „+2 Min.“: Der laufende Block wird 2 Minuten länger. Die kurze Pause danach bleibt, wie sie ist. */
+export function extendBlock(now = Date.now()): void {
   const t = getState().timer
-  if (t.phase !== 'break' || t.endSignaled || timer.isBreakOver(t, now)) return
-  commit({ timer: { ...t, startedAt: now + BREAK_SNOOZE_MS } })
+  if (t.phase !== 'block' || !canExtendBlock(t, now)) return
+  commit({ timer: { ...t, plannedMs: t.plannedMs + BLOCK_EXTEND_MS } })
 }
 
 /**
