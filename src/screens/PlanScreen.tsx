@@ -62,7 +62,7 @@ import {
 } from '../logic/projectSuggestions'
 import { alive } from '../logic/records'
 import type { ID, Task } from '../model/types'
-import { addTask, copyTask, deleteTask, hideAllRecentTasks, hideRecentTask, moveTask, reorderTasks } from '../store/actions'
+import { addTask, copyTask, deleteTask, hideAllRecentTasks, hideRecentTask, moveTask, reorderTasks, swapDays } from '../store/actions'
 import { activeDay, plannedDay, recentKey, recentTasks, runningTimerOfTask, tasksOfDay } from '../store/selectors'
 import { getState, useAppState } from '../store/store'
 import './plan.css'
@@ -220,6 +220,8 @@ export function PlanScreen({ onTaskDeleted, onNotice }: Props) {
         </div>
       </DndContext>
 
+      <SwapDays days={days} onNotice={onNotice} />
+
       <RecentTasks days={days} targetIndex={targetIndex} onTargetChange={setTargetIndex} onNotice={onNotice} />
       <ProjectSuggestions
         days={days}
@@ -326,6 +328,40 @@ function DayColumn(props: DayColumnProps) {
         </button>
       </form>
     </section>
+  )
+}
+
+/**
+ * Leiser Knopf mittig unter beiden Spalten: „Heute ⇄ Morgen“ tauscht die Aufgaben der beiden Tage.
+ * Hat nur ein Tag Aufgaben, wandern sie auf den anderen. Nur sichtbar, wenn es etwas zu tauschen gibt.
+ */
+function SwapDays({ days, onNotice }: { days: PlanDays; onNotice: (message: string) => void }) {
+  const state = useAppState()
+  const [today, tomorrow] = days
+  const todayCount = tasksOfDay(state, today.day.id).length
+  const tomorrowCount = tasksOfDay(state, tomorrow.day.id).length
+  if (todayCount === 0 && tomorrowCount === 0) return null
+
+  const hint = todayCount === 0 ? T.plan.swapToToday : tomorrowCount === 0 ? T.plan.swapToTomorrow : T.plan.swapDays
+  const swap = () => {
+    if (!swapDays()) {
+      onNotice(T.plan.swapBlocked)
+      return
+    }
+    if (todayCount > 0 && tomorrowCount > 0) onNotice(T.plan.swapped)
+    else onNotice(T.plan.swappedTo(todayCount === 0 ? today.label : tomorrow.label))
+  }
+
+  return (
+    <div className="plan-swap">
+      <button type="button" className="plan-swap-button" onClick={swap} title={hint} aria-label={hint}>
+        <span>{today.label}</span>
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M2.5 5.5h11M10.5 2.5l3 3-3 3M13.5 10.5h-11M5.5 7.5l-3 3 3 3" />
+        </svg>
+        <span>{tomorrow.label}</span>
+      </button>
+    </div>
   )
 }
 

@@ -101,6 +101,30 @@ export function moveTask(taskId: ID, dayId: ID, index: number): boolean {
   return true
 }
 
+/**
+ * Heute und morgen tauschen: Alle Hauptaufgaben von heute wandern nach morgen und umgekehrt,
+ * jeweils in ihrer Reihenfolge. Hat nur ein Tag Aufgaben, landen sie einfach auf dem anderen.
+ * Läuft gerade ein Block, passiert nichts (Rückgabe `false`); eine kurze Pause endet dabei.
+ */
+export function swapDays(): boolean {
+  const s = getState()
+  if (s.timer.phase === 'block') return false
+  const today = activeDay(s).id
+  const tomorrow = plannedDay(s).id
+  const fromToday = tasksOfDay(s, today)
+  const fromTomorrow = tasksOfDay(s, tomorrow)
+  if (fromToday.length === 0 && fromTomorrow.length === 0) return false
+  const changes: Changes = {
+    tasks: [
+      ...fromToday.map((task, index) => ({ ...task, dayId: tomorrow, position: index })),
+      ...fromTomorrow.map((task, index) => ({ ...task, dayId: today, position: index })),
+    ],
+  }
+  if (s.timer.phase === 'break') changes.timer = { phase: 'idle' }
+  commit(changes)
+  return true
+}
+
 type TaskPatch = Partial<
   Pick<Task, 'title' | 'estimatedBlocks' | 'blockMinutesOverride' | 'shortBreakMinutesOverride' | 'startCue'>
 >
