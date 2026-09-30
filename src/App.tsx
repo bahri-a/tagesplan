@@ -16,7 +16,6 @@ import { MiniWindow } from './components/MiniWindow'
 import { QuickPark } from './components/QuickPark'
 import { Toast, type ToastAction } from './components/Toast'
 import { UpdateBanner } from './components/UpdateBanner'
-import { WelcomeBackDialog } from './components/WelcomeBackDialog'
 import { requestPersistentStorage } from './db/database'
 import { formatCountdown } from './logic/time'
 import * as timer from './logic/timer'
@@ -26,8 +25,7 @@ import { SettingsScreen } from './screens/SettingsScreen'
 import { TodayScreen } from './screens/TodayScreen'
 import { unlockAudio } from './signals/sounds'
 import { endDay, getEndDayConflicts, restoreTask } from './store/actions'
-import { shouldAskToEndPreviousDay } from './store/selectors'
-import { getState, initStore, useAppState } from './store/store'
+import { initStore, useAppState } from './store/store'
 import './components/components.css'
 
 type Screen = 'today' | 'plan' | 'settings'
@@ -73,7 +71,6 @@ function Shell() {
   const [screen, setScreen] = useState<Screen>('today')
   const [endDayDialog, setEndDayDialog] = useState<'closed' | 'confirm' | 'conflicts'>('closed')
   const [toast, setToast] = useState<ToastInfo | null>(null)
-  const askEndPrevious = useAskToEndPreviousDay()
 
   useTimerEngine()
   useNoise()
@@ -95,14 +92,12 @@ function Shell() {
 
   const dayEnded = () => {
     setEndDayDialog('closed')
-    askEndPrevious.hide()
     setScreen('today')
     showToast(T.endDay.finished)
   }
 
-  // „Ja, Tag beenden“ aus „Willkommen zurück“: ohne weitere Rückfrage.
-  const endPreviousDay = () => {
-    askEndPrevious.hide()
+  // „Neuen Tag beginnen“ (am nächsten Kalendertag): ohne weitere Rückfrage.
+  const startNewDay = () => {
     if (getEndDayConflicts().length > 0) {
       setEndDayDialog('conflicts')
     } else {
@@ -132,7 +127,11 @@ function Shell() {
 
       <main className="main">
         {screen === 'today' && (
-          <TodayScreen onPlan={() => setScreen('plan')} onEndDay={() => setEndDayDialog('confirm')} />
+          <TodayScreen
+            onPlan={() => setScreen('plan')}
+            onEndDay={() => setEndDayDialog('confirm')}
+            onStartNewDay={startNewDay}
+          />
         )}
         {screen === 'plan' && <PlanScreen onTaskDeleted={taskDeleted} onNotice={(message) => showToast(message)} />}
         {screen === 'settings' && <SettingsScreen />}
@@ -142,9 +141,6 @@ function Shell() {
       <MiniWindow />
       <QuickPark onParked={() => showToast(T.park.done, { duration: PARKED_TOAST_MS })} />
 
-      {askEndPrevious.visible && endDayDialog === 'closed' && (
-        <WelcomeBackDialog onEndDay={endPreviousDay} onKeepWorking={askEndPrevious.hide} />
-      )}
       {endDayDialog !== 'closed' && (
         <EndDayDialog
           skipConfirm={endDayDialog === 'conflicts'}
@@ -164,29 +160,6 @@ function Shell() {
       <UpdateBanner />
     </>
   )
-}
-
-/**
- * Soll „Willkommen zurück! Möchtest du den Tag von … beenden?“ erscheinen?
- * Geprüft wird beim Öffnen der App und immer, wenn du ins Fenster zurückkehrst.
- */
-function useAskToEndPreviousDay() {
-  const [visible, setVisible] = useState(() => shouldAskToEndPreviousDay(getState(), Date.now()))
-  useEffect(() => {
-    const check = () => {
-      if (document.visibilityState === 'visible') {
-        setVisible(shouldAskToEndPreviousDay(getState(), Date.now()))
-      }
-    }
-    document.addEventListener('visibilitychange', check)
-    window.addEventListener('focus', check)
-    return () => {
-      document.removeEventListener('visibilitychange', check)
-      window.removeEventListener('focus', check)
-    }
-  }, [])
-  const hide = useCallback(() => setVisible(false), [])
-  return { visible, hide }
 }
 
 /**

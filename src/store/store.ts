@@ -175,7 +175,7 @@ async function loadFromDatabase(): Promise<void> {
       : { ...baseFields(now), id: 'settings', ...DEFAULT_SETTINGS },
     note: data.notes[0] ?? { ...baseFields(now), id: 'note', text: '' },
     timer: data.timer ?? { phase: 'idle' },
-    local: data.local ?? { endDayPromptDismissedOn: null },
+    local: data.local ?? {},
   }
 
   const firstStart: Changes = {}

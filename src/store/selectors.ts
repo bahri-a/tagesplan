@@ -197,18 +197,16 @@ export function canUndoExtraBlock(s: AppState, task: Task, now: number): boolean
 }
 
 /**
- * Soll beim Öffnen gefragt werden, ob der vorherige Tag beendet werden soll?
- * Ja, wenn am aktiven Tag schon gearbeitet wurde, seitdem ein neuer
- * Kalendertag begonnen hat (Wechsel um 4 Uhr) und du heute noch nicht
- * „Nein“ gesagt hast. Während ein Block läuft, wird nie gefragt.
+ * Soll in „Heute“ der leise Link „Neuen Tag beginnen“ erscheinen?
+ * Ja, wenn am aktiven Tag schon gearbeitet wurde und seitdem ein neuer Kalendertag
+ * begonnen hat (Wechsel um 4 Uhr). Gefragt wird nicht mehr – die App geht davon aus,
+ * dass du am alten Tag weiterarbeitest. Während ein Block läuft, bleibt der Link weg.
  */
-export function shouldAskToEndPreviousDay(s: AppState, now: number): boolean {
+export function canStartNewDay(s: AppState, now: number): boolean {
   const day = activeDay(s)
   if (day.firstWorkAt === null) return false
   if (s.timer.phase === 'block') return false
-  const today = dayKey(now)
-  if (dayKey(day.firstWorkAt) >= today) return false
-  return s.local.endDayPromptDismissedOn !== today
+  return dayKey(day.firstWorkAt) < dayKey(now)
 }
 
 /**

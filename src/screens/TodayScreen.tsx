@@ -11,6 +11,7 @@
  *  - nach dem letzten geschätzten Block: KEINE kurze Pause, gleich „Erledigt oder noch ein Block?“
  *  - an einem früheren Tag angefangen, noch nicht fertig: „Weitermachen oder abschließen?“ – nach „Noch ein Block“
  *    führt oben links ein leises „← Zurück“ wieder zu dieser Frage (falls es ein Versehen war)
+ *  - am nächsten Kalendertag, solange der alte Tag noch offen ist: ganz oben leise „Neuen Tag beginnen →“
  *  - über der Karte: für jede heute erledigte Hauptaufgabe eine kleine Karte mit ✓ (motiviert)
  *  - unter der Karte: schlanke Leiste mit den Aufgaben des Tages (nicht während eines Blocks)
  * Im Hintergrund liegt ein sehr zarter Farbschimmer: grünlich im Block, bläulich in der Pause.
@@ -23,6 +24,7 @@ import { isTypingOrButton, useNow, WindowContext } from '../components/hooks'
 import { StepList } from '../components/StepList'
 import { TimerRing } from '../components/TimerRing'
 import { blockMarks, taskMark, type Mark } from '../logic/progress'
+import { formatDayName } from '../logic/time'
 import * as timer from '../logic/timer'
 import { cleanStartCue, pick, showsGentleLine } from '../logic/variety'
 import type { ID, Task, TimerState } from '../model/types'
@@ -46,6 +48,7 @@ import {
   activeDay,
   blockMinutesFor,
   blocksDone,
+  canStartNewDay,
   canUndoExtraBlock,
   currentStep,
   currentTask,
@@ -63,9 +66,10 @@ import './today.css'
 interface Props {
   onPlan: () => void
   onEndDay: () => void
+  onStartNewDay: () => void
 }
 
-export function TodayScreen({ onPlan, onEndDay }: Props) {
+export function TodayScreen({ onPlan, onEndDay, onStartNewDay }: Props) {
   const state = useAppState()
   const t = state.timer
   const tasks = tasksOfDay(state, activeDay(state).id)
@@ -78,6 +82,8 @@ export function TodayScreen({ onPlan, onEndDay }: Props) {
   return (
     <div className="today">
       <Ambient timerState={t} longPause={onLongPause} />
+
+      <NewDayLink onClick={onStartNewDay} />
 
       {/* Schon geschafft: erledigte Hauptaufgaben stehen als eigene Karten oben (nicht im Block). */}
       {t.phase !== 'block' && <DoneCards tasks={tasks.filter((x) => x.completedAt !== null)} />}
@@ -136,6 +142,40 @@ export function TodayScreen({ onPlan, onEndDay }: Props) {
         </div>
       )}
     </div>
+  )
+}
+
+/**
+ * „Neuen Tag beginnen →“: erscheint oben, wenn du die App an einem neuen Kalendertag öffnest
+ * und der alte Tag noch offen ist. Es wird nichts gefragt – du arbeitest einfach weiter,
+ * bis du den Link anklickst. Geprüft wird jede Minute und beim Zurückkehren ins Fenster.
+ */
+function NewDayLink({ onClick }: { onClick: () => void }) {
+  const state = useAppState()
+  const now = useNow(true, 60_000)
+  if (!canStartNewDay(state, now)) return null
+  const firstWorkAt = activeDay(state).firstWorkAt
+  const dayName = firstWorkAt === null ? '' : formatDayName(firstWorkAt).split(',')[0]
+  return (
+    <div className="new-day">
+      <button type="button" className="new-day-link" onClick={onClick} title={T.newDay.hint(dayName)}>
+        <SunriseIcon />
+        <span className="new-day-label">{T.newDay.link}</span>
+        <span className="new-day-arrow" aria-hidden="true">
+          →
+        </span>
+      </button>
+    </div>
+  )
+}
+
+function SunriseIcon() {
+  return (
+    <svg className="new-day-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 17a7 7 0 0 1 14 0" />
+      <path d="M3 20h18" />
+      <path d="M12 4v3M4.9 8.9l2.1 2.1M19.1 8.9 17 11" />
+    </svg>
   )
 }
 

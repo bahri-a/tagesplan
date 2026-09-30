@@ -198,10 +198,10 @@ export type TimerState =
 /** Sonstige gerätebezogene Werte. */
 export interface LocalState {
   /**
-   * An welchem (Kalender-)Tag du bei der Frage „Vorherigen Tag beenden?“
-   * auf „Nein“ geklickt hast. Format 'JJJJ-MM-TT'.
+   * Früher: an welchem Tag du bei „Vorherigen Tag beenden?“ auf „Nein“ geklickt hast.
+   * Die Frage gibt es nicht mehr (stattdessen „Neuen Tag beginnen“); steht nur noch in älteren Daten.
    */
-  endDayPromptDismissedOn: string | null
+  endDayPromptDismissedOn?: string | null
   /**
    * Zuletzt per „Noch ein Block“ erhöhte Aufgabe und ihre Schätzung davor – damit man
    * zurück zur Frage „Erledigt oder noch ein Block?“ kann. Fehlt in älteren Daten.

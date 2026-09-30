@@ -9,7 +9,6 @@
 import { BLOCK_WARNING_MS, SETTINGS_LIMITS, SIGNAL_MAX_DELAY_MS, BREAK_SNOOZE_MS } from '../config/defaults'
 import { mergeCarryOver, type CarryConflict, type ConflictChoices } from '../logic/carryOver'
 import { baseFields } from '../logic/records'
-import { dayKey } from '../logic/time'
 import * as timer from '../logic/timer'
 import type { Block, BlockStatus, ID, SettingsValues, Step, Task, TimerState } from '../model/types'
 import {
@@ -488,13 +487,8 @@ export function endDay(choices: ConflictChoices = {}, dropped: ReadonlySet<ID> =
     { ...nextDay, status: 'active', startedAt: now },
     { ...baseFields(now), status: 'planned', startedAt: null, endedAt: null, firstWorkAt: null },
   ]
-  changes.local = { ...s.local, endDayPromptDismissedOn: null, extraBlock: null }
+  changes.local = { ...s.local, extraBlock: null }
   commit(changes)
-}
-
-/** „Nein, ich arbeite noch daran“ – heute nicht mehr fragen. */
-export function dismissEndDayPrompt(now = Date.now()): void {
-  commit({ local: { ...getState().local, endDayPromptDismissedOn: dayKey(now) } })
 }
 
 /* ================================================================== */
