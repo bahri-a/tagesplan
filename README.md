@@ -160,7 +160,7 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   Vorschlag aus, und der nächste rückt nach. **Neue Vorschläge** neben der Überschrift blendet alle
   gezeigten auf einmal aus; dann erscheinen die, die wegen der Obergrenze warten mussten (die kleine
   Zahl zeigt, wie viele). Warten keine, bleibt alles stehen. Die Obergrenze stellst du mit
-  **(max. 5)** neben „Aktualisieren“ ein, von 1 bis 10 (Standard 5). **Aktualisieren** sucht direkt von hier aus
+  **(max. 5)** neben dem Aktualisieren-Symbol ein, von 1 bis 10 (Standard 5). **Aktualisieren** (das kleine Kreis-Symbol) sucht direkt von hier aus
   im Second Brain und in den Mails nach neuen Aufgaben (über den Projekte-Helfer auf dem Mac, dauert
   1 bis 3 Minuten, höchstens alle 60 Sekunden). Funde erscheinen sofort als Vorschläge und in Projekte
   unter „Automatisch“.
@@ -170,7 +170,7 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   zurück geht es genauso („Zu den Vorschlägen“). In Projekte ändert sich dabei nichts. Das klappt, weil
   beide Apps unter `bahri-a.github.io` liegen; formuliert wird über den Helfer von Projekte auf
   dem Mac. Läuft der Helfer nicht, werden die Titel einfach auf 4 Wörter gekürzt.
-- Planst du mehr als dein Limit, erscheint nur ein sanfter Hinweis.
+- Ab der fünften Hauptaufgabe an einem Tag erscheint ein leiser Tipp: lieber weniger Hauptaufgaben und dafür mehr Blöcke.
 - **Löschen:** der kleine Papierkorb rechts auf jeder Karte. Die Aufgabe ist sofort weg;
   unten steht 8 Sekunden lang **Aufgabe gelöscht · Rückgängig** – ein Klick holt sie mit
   allen Schritten auf ihren alten Platz zurück (nur die zuletzt gelöschte). Läuft für die

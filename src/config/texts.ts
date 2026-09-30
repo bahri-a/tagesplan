@@ -135,8 +135,7 @@ export const T = {
   plan: {
     today: 'Heute',
     tomorrow: 'Morgen',
-    overLimit: (max: number) =>
-      `Das sind mehr als deine üblichen ${max} Hauptaufgaben. Das ist okay – vielleicht passt eine auch auf einen anderen Tag.`,
+    manyTasks: 'Weniger Hauptaufgaben, dafür mehr Blöcke – so bleibt der Tag übersichtlich.',
     newTask: 'Neue Hauptaufgabe …',
     add: 'Hinzufügen',
     title: 'Titel',
@@ -296,8 +295,6 @@ export const T = {
     shortBreakHint: 'Pause nach jedem Block.',
     defaultBlocks: 'Blöcke pro Hauptaufgabe',
     defaultBlocksHint: 'Startwert für neue Hauptaufgaben.',
-    maxTasks: 'Hauptaufgaben pro Tag',
-    maxTasksHint: 'Darüber erscheint ein sanfter Hinweis.',
     minutes: 'Min.',
     appearance: 'Aussehen',
     themeSystem: 'Automatisch',

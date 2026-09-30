@@ -38,7 +38,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { RECENT_TASKS_COUNT, SUGGESTIONS_COUNT, SUGGESTIONS_MAX, SUGGESTIONS_MIN } from '../config/defaults'
+import { MANY_TASKS_HINT_FROM, RECENT_TASKS_COUNT, SUGGESTIONS_COUNT, SUGGESTIONS_MAX, SUGGESTIONS_MIN } from '../config/defaults'
 import { T } from '../config/texts'
 import { Dialog } from '../components/Dialog'
 import { TaskCard } from '../components/TaskCard'
@@ -265,7 +265,6 @@ function DayColumn(props: DayColumnProps) {
   const { dayId, label, isDropTarget, expandedId, justCreatedId, onToggle, onCreated, onDelete, onCopy } = props
   const state = useAppState()
   const tasks = tasksOfDay(state, dayId)
-  const max = state.settings.maxTasksPerDay
   const [newTitle, setNewTitle] = useState('')
   // Die ganze Spalte ist Ablagefläche – so klappt es auch, wenn der Tag noch leer ist.
   const { setNodeRef } = useDroppable({ id: COLUMN_PREFIX + dayId })
@@ -283,8 +282,6 @@ function DayColumn(props: DayColumnProps) {
         {label}
         {isDropTarget && <span className="drop-hint">{T.plan.dropHere}</span>}
       </h2>
-
-      {tasks.length > max && <p className="hint">{T.plan.overLimit(max)}</p>}
 
       <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
         <ol className="task-list">
@@ -304,6 +301,8 @@ function DayColumn(props: DayColumnProps) {
       </SortableContext>
 
       {tasks.length === 0 && <p className="muted small plan-empty">{T.plan.empty}</p>}
+      {/* Viele Hauptaufgaben? Ein leiser Tipp statt einer festen Grenze. */}
+      {tasks.length >= MANY_TASKS_HINT_FROM && <p className="plan-tip">{T.plan.manyTasks}</p>}
 
       <form
         className="new-task"
@@ -622,8 +621,9 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
                 <span className="suggestions-actions">
                   <button
                     type="button"
-                    className={`suggestions-refresh${searching ? ' is-busy' : ''}`}
-                    title={T.plan.suggestionsReloadHint}
+                    className={`suggestions-refresh suggestions-reload${searching ? ' is-busy' : ''}`}
+                    title={searching ? T.plan.suggestionsSearching : T.plan.suggestionsReloadHint}
+                    aria-label={searching ? T.plan.suggestionsSearching : T.plan.suggestionsReload}
                     aria-busy={searching}
                     disabled={searching}
                     onClick={() => void refresh()}
@@ -632,7 +632,6 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
                       <path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71" />
                       <path d="M13.25 2.75v2.5h-2.5" />
                     </svg>
-                    {searching ? T.plan.suggestionsSearching : T.plan.suggestionsReload}
                   </button>
                   {/* „(max. 5)“: sieht aus wie ein leiser Textknopf, darüber liegt unsichtbar die Auswahl 1–10. */}
                   <label className="suggestions-refresh suggestions-limit" title={T.plan.suggestionsLimitHint}>

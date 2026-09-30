@@ -123,6 +123,9 @@ export const MINI_WINDOW_SIZE = { width: 300, height: 380 }
  */
 export const UNDO_EXTRA_BLOCK_MS = 3 * 60_000
 
+/** Ab so vielen Hauptaufgaben an einem Tag erscheint der leise Tipp „Weniger Hauptaufgaben, mehr Blöcke“. */
+export const MANY_TASKS_HINT_FROM = 5
+
 /** Wie viele Hauptaufgaben „Zuletzt verwendet“ in „Planen“ zeigt. */
 export const RECENT_TASKS_COUNT = 5
 

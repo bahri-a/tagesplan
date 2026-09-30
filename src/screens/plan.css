@@ -43,6 +43,13 @@
   list-style: none;
 }
 
+/* Leiser Tipp ab der fünften Hauptaufgabe. */
+.plan-tip {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
 .new-task {
   display: flex;
   gap: 0.5rem;
@@ -416,6 +423,16 @@
     color 0.15s;
 }
 
+/* „Aktualisieren“ nur als Symbol, etwas größer. */
+.suggestions-reload {
+  padding: 0.3em;
+}
+
+.suggestions-reload svg {
+  width: 14px;
+  height: 14px;
+}
+
 /* „(max. 5)“: Die Auswahl liegt unsichtbar über dem Text, damit sich am iPhone das native Rad öffnet. */
 .suggestions-limit {
   position: relative;
@@ -445,6 +462,7 @@
 .suggestions-refresh svg {
   width: 12px;
   height: 12px;
+  flex: none;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.5;
