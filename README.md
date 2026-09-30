@@ -163,7 +163,7 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   im Second Brain und in den Mails nach neuen Aufgaben (über den Projekte-Helfer auf dem Mac, dauert
   1 bis 3 Minuten, höchstens alle 60 Sekunden). Funde erscheinen sofort als Vorschläge und in Projekte
   unter „Automatisch“.
-- **Aufschub** (unter den Vorschlägen): Vorschläge für später beiseitelegen. Einfach hineinziehen
+- **Aufgeschoben** (unter den Vorschlägen, fein abgetrennt, „Für die Zukunft“): Vorschläge für später beiseitelegen. Einfach hineinziehen
   (am iPhone kurz halten, dann ziehen) oder per Rechtsklick bzw. langem Drücken → **Aufschieben**.
   Aufgeschobene zählen nicht zu den 5 Vorschlägen; ein Klick legt sie wie gewohnt an, und
   zurück geht es genauso („Zu den Vorschlägen“). In Projekte ändert sich dabei nichts. Das klappt, weil

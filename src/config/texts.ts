@@ -201,8 +201,9 @@ export const T = {
     suggestionsUpdated: 'Nichts Neues gefunden.',
     suggestionsUpdatedNew: (n: number) => `${n} ${n === 1 ? 'neue Aufgabe' : 'neue Aufgaben'} gefunden.`,
     suggestionsNone: 'Gerade keine Vorschläge.',
-    // „Aufschub“ unter den Vorschlägen
-    deferredTitle: 'Aufschub',
+    // „Aufgeschoben“ unter den Vorschlägen
+    deferredTitle: 'Aufgeschoben',
+    deferredSubtitle: 'Für die Zukunft',
     deferredMove: 'Aufschieben',
     deferredMoveBack: 'Zu den Vorschlägen',
     deferredRemove: 'Entfernen',
@@ -210,7 +211,7 @@ export const T = {
     deferredDropBack: 'Hier ablegen',
     deferredEmpty: 'Hierher ziehen, um es für später beiseitezulegen',
     deferredEmptyBack: 'Hierher ziehen, um es wieder vorzuschlagen',
-    deferredMoved: (title: string) => `„${title}“ liegt jetzt im Aufschub.`,
+    deferredMoved: (title: string) => `„${title}“ ist jetzt aufgeschoben.`,
     deferredBack: (title: string) => `„${title}“ ist wieder bei den Vorschlägen.`,
     undo: 'Rückgängig',
     // Nur wenn für die Aufgabe gerade ein Block oder eine kurze Pause läuft (der Timer kommt nicht zurück).

@@ -8,7 +8,7 @@
  * „Rückgängig“ holt den Timer nämlich nicht zurück.
  * Ganz unten, leise: „Zuletzt verwendet“ – ein Klick legt eine frühere Aufgabe wieder an.
  * Darunter „Vorschläge“: offene Aufgaben aus der App „Projekte“, kurz als Hauptaufgabe formuliert,
- * und „Aufschub“ für Vorschläge, die man für später beiseitegelegt hat.
+ * und „Aufgeschoben“ für Vorschläge, die man für später beiseitegelegt hat.
  */
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
@@ -472,7 +472,7 @@ function useProjectSuggestions() {
   return { tasks, shortTitles, hidden, hide, hideAll, deferred, defer, reload }
 }
 
-/** Wo ein Vorschlag liegt: bei den „Vorschlägen“ oder im „Aufschub“. */
+/** Wo ein Vorschlag liegt: bei den „Vorschlägen“ oder unter „Aufgeschoben“. */
 type SuggestionPlace = 'suggestions' | 'deferred'
 
 /**
@@ -482,7 +482,7 @@ type SuggestionPlace = 'suggestions' | 'deferred'
  * blendet alle gezeigten aus; es erscheinen nur noch die, die wegen der Obergrenze warten mussten.
  * Der kleine Papierkorb blendet einen Vorschlag aus; in Projekte selbst ändert sich nichts.
  *
- * Darunter „Aufschub“: Vorschläge, die man für später beiseitegelegt hat. Verschieben geht auf
+ * Darunter „Aufgeschoben“: Vorschläge, die man für später beiseitegelegt hat. Verschieben geht auf
  * zwei Arten: ziehen (Maus sofort, Finger nach kurzem Halten) oder über das kleine Menü
  * (Rechtsklick bzw. lange drücken ohne zu ziehen). Aufgeschobene zählen nicht zu den fünf.
  */
@@ -663,6 +663,7 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
         <SuggestionArea
           place="deferred"
           title={T.plan.deferredTitle}
+          subtitle={T.plan.deferredSubtitle}
           isDropTarget={dragging?.place === 'suggestions' && dropPlace === 'deferred'}
           dropHint={dragging?.place === 'suggestions' ? T.plan.deferredDropHere : null}
           head={!showSuggestions && showTarget ? <TargetSwitch days={days} targetIndex={targetIndex} onTargetChange={onTargetChange} /> : null}
@@ -688,17 +689,19 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
   )
 }
 
-/** Überschrift und Ablagefläche für „Vorschläge“ bzw. „Aufschub“. */
+/** Überschrift und Ablagefläche für „Vorschläge“ bzw. „Aufgeschoben“. */
 function SuggestionArea(props: {
   place: SuggestionPlace
   title: string
+  /** Leiser Zusatz neben der Überschrift. */
+  subtitle?: string
   head: ReactNode
   isDropTarget: boolean
   /** Beim Ziehen aus dem anderen Bereich: kurzer Hinweis, dass man hier ablegen kann. */
   dropHint: string | null
   children: ReactNode
 }) {
-  const { place, title, head, isDropTarget, dropHint, children } = props
+  const { place, title, subtitle, head, isDropTarget, dropHint, children } = props
   const { setNodeRef } = useDroppable({ id: place })
   return (
     <section
@@ -708,6 +711,7 @@ function SuggestionArea(props: {
     >
       <div className="recent-head">
         <h2 className="recent-title">{title}</h2>
+        {subtitle && <span className="recent-subtitle">{subtitle}</span>}
         {dropHint && <span className="drop-hint">{dropHint}</span>}
         {head}
       </div>

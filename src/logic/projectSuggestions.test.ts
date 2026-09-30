@@ -128,7 +128,7 @@ describe('Vorschläge aus Projekte', () => {
     expect(await requestShortTitles(['Eins'], offline)).toBeNull()
   })
 
-  it('„Aufschub“: verschieben und zurückholen', () => {
+  it('„Aufgeschoben“: verschieben und zurückholen', () => {
     const storage = memoryStorage()
     expect(setDeferred(storage, 'a', true, 3)).toEqual({ a: 3 })
     setDeferred(storage, 'b', true, 4)

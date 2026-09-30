@@ -100,12 +100,33 @@
   border-top: none;
 }
 
-/* Etwas mehr Luft zwischen „Vorschläge“ und „Aufschub“. */
+/* „Aufgeschoben“ gehört in die Zukunft: mit Luft und einer feinen, zu den Seiten auslaufenden Linie
+   vom Rest getrennt. */
 .suggestions + .suggestions {
-  margin-top: 2.75rem;
+  position: relative;
+  margin-top: 3.5rem;
 }
 
-/* „Aufschub“ und „Vorschläge“ als Ablage beim Ziehen: leise gestrichelte Fläche, beim Drüberziehen
+.suggestions + .suggestions::before {
+  content: '';
+  position: absolute;
+  top: -1.75rem;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent);
+  pointer-events: none;
+}
+
+/* Leiser Zusatz neben der Überschrift, z. B. „Für die Zukunft“. */
+.recent-subtitle {
+  margin-left: -0.45rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+/* „Aufgeschoben“ und „Vorschläge“ als Ablage beim Ziehen: leise gestrichelte Fläche, beim Drüberziehen
    in der Akzentfarbe. Der Rahmen liegt als Umriss außen, damit nichts springt. */
 .suggestions {
   outline: 1.5px dashed transparent;
