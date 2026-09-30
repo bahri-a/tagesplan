@@ -454,8 +454,8 @@ function useProjectSuggestions() {
 /**
  * „Vorschläge“ unter „Zuletzt verwendet“, im selben Stil: offene Aufgaben aus der App „Projekte“,
  * von Claude kurz als Hauptaufgabe formuliert (1 bis 4 Wörter). Ein Klick legt sie als neue
- * Hauptaufgabe an – auf dem Tag, der oben bei „Hinzufügen zu“ gewählt ist. Das × blendet einen
- * Vorschlag aus; in Projekte selbst ändert sich nichts.
+ * Hauptaufgabe an – auf dem Tag, der oben bei „Hinzufügen zu“ gewählt ist. Der kleine Papierkorb
+ * blendet einen Vorschlag aus; in Projekte selbst ändert sich nichts.
  */
 function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onNotice }: TargetProps & { showTarget: boolean }) {
   const state = useAppState()
@@ -478,7 +478,7 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
           <li key={suggestion.id} className="recent-item">
             <button
               type="button"
-              className="recent-chip"
+              className="recent-chip suggestion-chip"
               aria-label={T.plan.recentAdd(suggestion.title, target.label)}
               title={T.plan.suggestionSource(suggestion.source)}
               onClick={() => {
@@ -491,15 +491,18 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
               </span>
               <span className="recent-chip-title">{suggestion.title}</span>
             </button>
+            {/* Kleiner, leiser Papierkorb oben rechts an der Pille. */}
             <button
               type="button"
-              className="recent-hide"
+              className="suggestion-remove"
               aria-label={T.plan.suggestionHide(suggestion.title)}
               title={T.plan.suggestionHide(suggestion.title)}
               onClick={() => hide(suggestion.id)}
             >
-              <svg viewBox="0 0 12 12" aria-hidden="true">
-                <path d="M3.5 3.5l5 5M8.5 3.5l-5 5" />
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M2.75 4.25h10.5" />
+                <path d="M6.25 4.25V3a1 1 0 0 1 1-1h1.5a1 1 0 0 1 1 1v1.25" />
+                <path d="M4 4.25l.65 8.6a1.2 1.2 0 0 0 1.2 1.15h4.3a1.2 1.2 0 0 0 1.2-1.15l.65-8.6" />
               </svg>
             </button>
           </li>
