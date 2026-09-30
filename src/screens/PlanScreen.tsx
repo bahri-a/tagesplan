@@ -41,6 +41,7 @@ import {
 import { RECENT_TASKS_COUNT, SUGGESTIONS_COUNT } from '../config/defaults'
 import { T } from '../config/texts'
 import { Dialog } from '../components/Dialog'
+import { useBalancedWrap } from '../components/hooks'
 import { TaskCard } from '../components/TaskCard'
 import {
   hideSuggestion,
@@ -672,9 +673,12 @@ interface SuggestionListProps {
 }
 
 function SuggestionList({ items, ...rest }: SuggestionListProps) {
+  const listRef = useRef<HTMLUListElement>(null)
+  // Gleichmäßig umbrechen: lieber 3 + 2 als 4 + 1 Pillen.
+  useBalancedWrap(listRef, items.map((i) => `${i.id}:${i.title}`).join('|'))
   if (items.length === 0) return null
   return (
-    <ul className="recent-list">
+    <ul ref={listRef} className="recent-list">
       {items.map((item) => (
         <SuggestionChip key={item.id} item={item} {...rest} />
       ))}
