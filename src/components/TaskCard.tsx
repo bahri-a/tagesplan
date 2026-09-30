@@ -7,7 +7,7 @@
  * Karten von heute haben daneben einen leisen Knopf „Für morgen kopieren“.
  */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { SETTINGS_LIMITS } from '../config/defaults'
@@ -116,6 +116,22 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
   const isDone = task.completedAt !== null
   // Kleines „i“ neben „Erste Schritte“: Erklärung auf- und zuklappen
   const [stepsInfoOpen, setStepsInfoOpen] = useState(false)
+  // Popup schließt bei Klick daneben oder mit Esc
+  useEffect(() => {
+    if (!stepsInfoOpen) return
+    const onPointer = (e: PointerEvent) => {
+      if (!(e.target as Element).closest?.('.field-info, .field-info-pop')) setStepsInfoOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setStepsInfoOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointer)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onPointer)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [stepsInfoOpen])
   const cueText = stripStartCuePrefix(task.startCue ?? '')
   const cueTrimmed = cueText.trim()
   // Angehakt, solange genau dieser Satz der gemerkte ist – wer ihn hier ändert, gilt die Änderung nur für diese Aufgabe.
@@ -133,10 +149,14 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
       </label>
 
       {/* Erste Schritte: nur zum Loslegen – keine Blöcke, keine Blocknamen. */}
-      <div className="field">
+      <div className="field has-info">
         <FieldLabel text={T.plan.steps} optional info={{ open: stepsInfoOpen, onToggle: () => setStepsInfoOpen((v) => !v) }} />
         <span className="field-hint">{T.plan.stepsHint}</span>
-        {stepsInfoOpen && <span className="field-info-text">{T.plan.stepsInfo}</span>}
+        {stepsInfoOpen && (
+          <span className="field-info-pop" role="note">
+            {T.plan.stepsInfo}
+          </span>
+        )}
         <StepList taskId={task.id} autoFocusNew={focusStepInput} />
       </div>
 
@@ -243,8 +263,9 @@ function FieldLabel({
         >
           {/* Dasselbe Info-Symbol wie beim Hinweis „erst ab 2 Blöcken“ */}
           <svg viewBox="0 0 16 16" aria-hidden="true">
-            <circle cx="8" cy="8" r="6.25" />
-            <path d="M8 7.25v3.75M8 5.1v.01" />
+            <circle cx="8" cy="8" r="6.6" />
+            <path d="M8 7.3v4" />
+            <circle className="field-info-dot" cx="8" cy="4.9" r="1" />
           </svg>
         </button>
       )}
