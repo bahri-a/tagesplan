@@ -144,7 +144,7 @@ export const T = {
     stepsHint: 'Nur für den Start: ein, zwei winzige Schritte.\nKlein anfangen, der Rest kommt von selbst.',
     // Kleines „i“ neben „Erste Schritte“: warum so klein? (nur Belegtes, vorsichtig formuliert)
     stepsInfo:
-      'Studien zeigen: Das Gefühl, voranzukommen, motiviert stark – auch bei kleinen Schritten. Ein winziger erster Schritt macht den Anfang leicht.',
+      'Studien zeigen:\nDas Gefühl, voranzukommen, motiviert stark – auch bei kleinen Schritten.\nEin winziger erster Schritt macht den Anfang leicht.',
     infoLabel: (label: string) => `Mehr zu „${label}“`,
     firstStep: 'Erster Schritt – sofort machbar, z. B. „PDF öffnen“',
     nextStep: 'Noch ein kleiner Schritt? (optional)',

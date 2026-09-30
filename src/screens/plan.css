@@ -853,6 +853,7 @@
   color: var(--text-muted);
   font-size: 0.82rem;
   line-height: 1.45;
+  white-space: pre-line;
   animation: field-info-pop 0.15s ease-out;
 }
 
