@@ -30,6 +30,11 @@
   font-weight: 500;
 }
 
+/* Hinweise dürfen Zeilenumbrüche (\n) enthalten. */
+.setting-hint {
+  white-space: pre-line;
+}
+
 .settings-buttons {
   display: flex;
   flex-wrap: wrap;

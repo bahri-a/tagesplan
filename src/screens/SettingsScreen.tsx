@@ -248,11 +248,11 @@ export function SettingsScreen() {
             onChange={(sounds) => updateSettings({ sounds })}
           />
         </SettingRow>
+        <SettingRow label={T.settings.noiseColor} hint={T.settings.noiseColorHint}>
+          <NoisePicker value={settings.noiseColor} onChange={(noiseColor) => updateSettings({ noiseColor })} />
+        </SettingRow>
         {settings.sounds && (
           <>
-            <SettingRow label={T.settings.noiseColor} hint={T.settings.noiseColorHint}>
-              <NoisePicker value={settings.noiseColor} onChange={(noiseColor) => updateSettings({ noiseColor })} />
-            </SettingRow>
             <SettingRow label={T.settings.ultraLabel} hint={T.settings.ultraHint}>
               <Segmented
                 label={T.settings.ultraLabel}
@@ -393,7 +393,7 @@ function SettingRow({ label, hint, children }: { label: string; hint: string; ch
     <div className="setting-row">
       <div>
         <div className="setting-label">{label}</div>
-        <div className="muted small">{hint}</div>
+        <div className="muted small setting-hint">{hint}</div>
       </div>
       {children}
     </div>
