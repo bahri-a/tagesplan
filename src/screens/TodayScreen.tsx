@@ -795,12 +795,11 @@ function CurrentStep({ task }: { task: Task }) {
 
 /**
  * Rauschen an/aus – ein einziger Knopf, gut sichtbar unter dem Ring (auch im Mini-Fenster).
- * Zeigt immer deutlich den Zustand („Rauschen an“ / „Rauschen aus“). Sind in den
- * Einstellungen alle Töne aus, erscheint er nicht.
+ * Zeigt immer deutlich den Zustand („Rauschen an“ / „Rauschen aus“). Unabhängig von der
+ * Einstellung „Töne“.
  */
 export function NoiseToggle() {
   const { settings } = useAppState()
-  if (!settings.sounds) return null
   const on = settings.noiseOn
   return (
     <button

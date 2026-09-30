@@ -15,7 +15,7 @@ import { noiseSamples } from '../logic/noise'
 import type { NoiseColor } from '../model/types'
 import { getState } from '../store/store'
 
-/** Einstellung „Töne“: Ist sie aus, bleibt die App komplett still (auch das Rauschen). */
+/** Einstellung „Töne“: Ist sie aus, erklingen keine Signaltöne mehr. Das Rauschen ist davon getrennt. */
 function soundsEnabled(): boolean {
   try {
     return getState().settings.sounds
@@ -178,7 +178,6 @@ let previewSource: AudioBufferSourceNode | null = null
  * ausgeblendet). Ein neuer Klick beendet ein noch laufendes Probehören.
  */
 export function previewNoise(color: NoiseColor): void {
-  if (!soundsEnabled()) return
   unlockAudio()
   if (!ctx) return
   previewSource?.stop()
@@ -201,8 +200,7 @@ export function previewNoise(color: NoiseColor): void {
  * Wird mit jeder Änderung von Timer oder Einstellungen aufgerufen (siehe useNoise).
  */
 export function setNoise(play: boolean, color: NoiseColor): void {
-  const shouldPlay = play && soundsEnabled()
-  if (!shouldPlay) {
+  if (!play) {
     stopNoise()
     return
   }

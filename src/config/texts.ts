@@ -333,7 +333,7 @@ export const T = {
     paletteLavendel: 'Lavendel',
     sounds: 'Töne & Benachrichtigungen',
     soundsLabel: 'Töne',
-    soundsHint: 'Aus = die App bleibt komplett still, auch Vorwarnung und Rauschen.',
+    soundsHint: 'Aus = keine Töne bei Block- und Pausenende.\nDas Rauschen bleibt davon unberührt.',
     soundsOn: 'An',
     soundsOff: 'Aus',
     noiseColor: 'Rauschen',
