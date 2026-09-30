@@ -628,6 +628,24 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
             <>
               {!dragging && (
                 <span className="suggestions-actions">
+                  {/* „max. 5 ⌄“: kleine Auswahl-Pille direkt neben der Überschrift, darüber liegt unsichtbar die Auswahl 1–10. */}
+                  <label className="suggestions-limit" title={T.plan.suggestionsLimitHint}>
+                    {T.plan.suggestionsLimit(limit)}
+                    <svg viewBox="0 0 12 12" aria-hidden="true">
+                      <path d="M3 4.75 6 7.75l3-3" />
+                    </svg>
+                    <select
+                      value={limit}
+                      aria-label={T.plan.suggestionsLimitHint}
+                      onChange={(e) => changeLimit(Number(e.target.value))}
+                    >
+                      {Array.from({ length: SUGGESTIONS_MAX - SUGGESTIONS_MIN + 1 }, (_, i) => SUGGESTIONS_MIN + i).map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                   <button
                     type="button"
                     className={`suggestions-refresh suggestions-reload${searching ? ' is-busy' : ''}`}
@@ -642,21 +660,6 @@ function ProjectSuggestions({ days, targetIndex, onTargetChange, showTarget, onN
                       <path d="M13.25 2.75v2.5h-2.5" />
                     </svg>
                   </button>
-                  {/* „(max. 5)“: sieht aus wie ein leiser Textknopf, darüber liegt unsichtbar die Auswahl 1–10. */}
-                  <label className="suggestions-refresh suggestions-limit" title={T.plan.suggestionsLimitHint}>
-                    {T.plan.suggestionsLimit(limit)}
-                    <select
-                      value={limit}
-                      aria-label={T.plan.suggestionsLimitHint}
-                      onChange={(e) => changeLimit(Number(e.target.value))}
-                    >
-                      {Array.from({ length: SUGGESTIONS_MAX - SUGGESTIONS_MIN + 1 }, (_, i) => SUGGESTIONS_MIN + i).map((n) => (
-                        <option key={n} value={n}>
-                          {n}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
                   {suggestions.length > 0 && (
                     <button
                       type="button"

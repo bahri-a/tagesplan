@@ -160,7 +160,7 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   Vorschlag aus, und der nächste rückt nach. **Neue Vorschläge** neben der Überschrift blendet alle
   gezeigten auf einmal aus; dann erscheinen die, die wegen der Obergrenze warten mussten (die kleine
   Zahl zeigt, wie viele). Warten keine, bleibt alles stehen. Die Obergrenze stellst du mit
-  **(max. 5)** neben dem Aktualisieren-Symbol ein, von 1 bis 10 (Standard 5). **Aktualisieren** (das kleine Kreis-Symbol) sucht direkt von hier aus
+  der kleinen Auswahl **max. 5 ⌄** neben „Vorschläge“ ein, von 1 bis 10 (Standard 5). **Aktualisieren** (das kleine Kreis-Symbol) sucht direkt von hier aus
   im Second Brain und in den Mails nach neuen Aufgaben (über den Projekte-Helfer auf dem Mac, dauert
   1 bis 3 Minuten, höchstens alle 60 Sekunden). Funde erscheinen sofort als Vorschläge und in Projekte
   unter „Automatisch“.
