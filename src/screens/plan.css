@@ -5,12 +5,6 @@
   margin: 0 auto;
 }
 
-.plan-hint {
-  margin-bottom: 1rem;
-  text-align: center;
-  font-size: 0.92rem;
-}
-
 .plan-columns {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -49,19 +43,26 @@
   list-style: none;
 }
 
+/* Beide Eingaben gleich breit: „Heute“ links, „Morgen“ rechts. */
 .new-task {
   display: flex;
   gap: 0.5rem;
+  width: 22rem;
   max-width: 100%;
   align-self: flex-start;
 }
 
 .new-task .input {
-  flex: 0 1 auto;
+  flex: 1;
   min-width: 0;
 }
 
-/* „Morgen“ hat seine Eingabe rechts, damit man die beiden Tage auf einen Blick unterscheidet. */
+/* „Morgen“ gespiegelt: Überschrift, Hinweis und Eingabe rechts – so unterscheidet man die Tage auf einen Blick. */
+.plan-column:nth-child(2) .plan-column-title,
+.plan-column:nth-child(2) .plan-empty {
+  text-align: right;
+}
+
 .plan-column:nth-child(2) .new-task {
   align-self: flex-end;
 }
