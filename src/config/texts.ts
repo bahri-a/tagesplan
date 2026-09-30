@@ -140,8 +140,8 @@ export const T = {
     add: 'Hinzufügen',
     title: 'Titel',
     steps: 'Erste Schritte',
-    stepsHint:
-      'Nur für den Start: ein, zwei winzige Schritte. Danach arbeitest du einfach weiter, bis der Block um ist.',
+    // Zwei Zeilen (Zeilenumbruch per \n, siehe .field-hint)
+    stepsHint: 'Nur für den Start: ein, zwei winzige Schritte.\nDopamin-Hack für den Anfang.',
     firstStep: 'Erster Schritt – sofort machbar, z. B. „PDF öffnen“',
     nextStep: 'Noch ein kleiner Schritt? (optional)',
     blocks: 'Blöcke',
