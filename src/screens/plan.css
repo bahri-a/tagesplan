@@ -847,12 +847,124 @@
   vertical-align: 0.08em;
 }
 
+/* Kleines „i“ hinter einer Feldbezeichnung – klappt eine kurze Erklärung auf */
+.field-info {
+  display: inline-grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  margin-left: 0.2em;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  vertical-align: -0.35em;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.field-info svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+/* Der i-Punkt gefüllt, damit man das „i“ auch klein sofort erkennt */
+.field-info .field-info-dot {
+  fill: currentColor;
+  stroke: none;
+}
+
+.field-info:hover,
+.field-info.is-open {
+  color: var(--accent);
+}
+
+.field-info:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* Kleines, dezentes Popup direkt unter der Bezeichnung – schwebt über dem Feld */
+.field.has-info {
+  position: relative;
+}
+
+.field-info-pop {
+  position: absolute;
+  top: 1.3rem;
+  left: 0;
+  z-index: 20;
+  width: min(290px, 100%);
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  white-space: pre-line;
+  animation: field-info-pop 0.15s ease-out;
+}
+
+@keyframes field-info-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
 /* Kurze Erklärung unter einer Feldbezeichnung (z. B. bei „Erste Schritte“) */
 .field-hint {
   margin-top: -0.2rem;
   color: var(--text-muted);
   font-size: 0.82rem;
   line-height: 1.4;
+  white-space: pre-line;
+}
+
+/* Leises Häkchen unter dem Startsignal: „Für alle neuen Hauptaufgaben“ */
+.start-cue-remember {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  align-self: flex-start;
+  margin-top: 0.15rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s, opacity 0.2s;
+}
+
+.start-cue-remember .checkbox {
+  width: 1.05em;
+  height: 1.05em;
+  border-radius: 5px;
+  border-color: var(--text-muted);
+}
+
+.start-cue-remember .checkbox:checked {
+  border-color: var(--accent);
+}
+
+.start-cue-remember:hover:not(.is-disabled),
+.start-cue-remember:has(.checkbox:checked) {
+  color: var(--text);
+}
+
+.start-cue-remember.is-disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.start-cue-remember.is-disabled .checkbox {
+  cursor: default;
 }
 
 /* Blöcke, Blocklänge, kurze Pause: je eine feste Zeile – Name links, Zahl rechts */

@@ -7,13 +7,14 @@
  * Karten von heute haben daneben einen leisen Knopf „Für morgen kopieren“.
  */
 
+import { useEffect, useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { SETTINGS_LIMITS } from '../config/defaults'
 import { T } from '../config/texts'
 import type { Task } from '../model/types'
 import { stripStartCuePrefix } from '../logic/variety'
-import { setTaskCompleted, updateTask } from '../store/actions'
+import { rememberStartCue, setTaskCompleted, updateTask } from '../store/actions'
 import { blockMinutesFor, stepsOfTask } from '../store/selectors'
 import { useAppState } from '../store/store'
 import { NumberStepper } from './NumberStepper'
@@ -113,6 +114,28 @@ export function TaskCard({ task, number, expanded, focusStepInput, onToggle, onD
 function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepInput: boolean; onClose: () => void }) {
   const state = useAppState()
   const isDone = task.completedAt !== null
+  // Kleines „i“ neben „Erste Schritte“: Erklärung auf- und zuklappen
+  const [stepsInfoOpen, setStepsInfoOpen] = useState(false)
+  // Popup schließt bei Klick daneben oder mit Esc
+  useEffect(() => {
+    if (!stepsInfoOpen) return
+    const onPointer = (e: PointerEvent) => {
+      if (!(e.target as Element).closest?.('.field-info, .field-info-pop')) setStepsInfoOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setStepsInfoOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointer)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onPointer)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [stepsInfoOpen])
+  const cueText = stripStartCuePrefix(task.startCue ?? '')
+  const cueTrimmed = cueText.trim()
+  // Angehakt, solange genau dieser Satz der gemerkte ist – wer ihn hier ändert, gilt die Änderung nur für diese Aufgabe.
+  const cueRemembered = cueTrimmed !== '' && cueTrimmed === state.settings.defaultStartCue
 
   return (
     <div className="task-editor">
@@ -126,27 +149,43 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
       </label>
 
       {/* Erste Schritte: nur zum Loslegen – keine Blöcke, keine Blocknamen. */}
-      <div className="field">
-        <FieldLabel text={T.plan.steps} optional />
+      <div className="field has-info">
+        <FieldLabel text={T.plan.steps} optional info={{ open: stepsInfoOpen, onToggle: () => setStepsInfoOpen((v) => !v) }} />
         <span className="field-hint">{T.plan.stepsHint}</span>
+        {stepsInfoOpen && (
+          <span className="field-info-pop" role="note">
+            {T.plan.stepsInfo}
+          </span>
+        )}
         <StepList taskId={task.id} autoFocusNew={focusStepInput} />
       </div>
 
-      {/* Startsignal (optional): „Ich starte, wenn“ steht fest vorn im Feld, getippt wird nur der Rest. */}
-      <label className="field">
+      {/* Startsignal (optional): „Ich starte, wenn“ steht fest vorn im Feld, getippt wird nur der Rest.
+          Darunter ein leises Häkchen: diesen Satz für alle neuen Hauptaufgaben merken. */}
+      <div className="field">
         <FieldLabel text={T.plan.startCue} optional />
-        <span className="input input-with-prefix">
+        <label className="input input-with-prefix">
           <span className="input-prefix" aria-hidden="true">
             {T.plan.startCuePrefix}
           </span>
           <input
-            value={stripStartCuePrefix(task.startCue ?? '')}
+            value={cueText}
             placeholder={T.plan.startCuePlaceholder}
             aria-label={`${T.plan.startCue}: ${T.plan.startCuePrefix} …`}
             onChange={(e) => updateTask(task.id, { startCue: e.target.value })}
           />
-        </span>
-      </label>
+        </label>
+        <label className={`start-cue-remember${cueTrimmed ? '' : ' is-disabled'}`} title={T.plan.startCueRememberHint}>
+          <input
+            type="checkbox"
+            className="checkbox"
+            checked={cueRemembered}
+            disabled={!cueTrimmed}
+            onChange={(e) => rememberStartCue(e.target.checked ? cueTrimmed : null)}
+          />
+          {T.plan.startCueRemember}
+        </label>
+      </div>
 
       {/* Zahlen der Aufgabe: immer dieselben drei Zeilen – beim Ändern springt nichts. */}
       <div className="task-numbers">
@@ -199,11 +238,37 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
  * Feldbezeichnung. `optional` hängt ein kleines, leises Schild „optional“ an –
  * damit niemand überlegen muss, ob er hier etwas eintragen muss.
  */
-function FieldLabel({ text, optional = false }: { text: string; optional?: boolean }) {
+function FieldLabel({
+  text,
+  optional = false,
+  info,
+}: {
+  text: string
+  optional?: boolean
+  /** Kleines „i“, das eine kurze Erklärung auf- und zuklappt (auch per Tippen auf dem iPhone). */
+  info?: { open: boolean; onToggle: () => void }
+}) {
   return (
     <span className="field-label">
       {text}
       {optional && <span className="field-optional">{T.plan.optional}</span>}
+      {info && (
+        <button
+          type="button"
+          className={`field-info${info.open ? ' is-open' : ''}`}
+          aria-label={T.plan.infoLabel(text)}
+          aria-expanded={info.open}
+          title={T.plan.infoLabel(text)}
+          onClick={info.onToggle}
+        >
+          {/* Dasselbe Info-Symbol wie beim Hinweis „erst ab 2 Blöcken“ */}
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <circle cx="8" cy="8" r="6.6" />
+            <path d="M8 7.3v4" />
+            <circle className="field-info-dot" cx="8" cy="4.9" r="1" />
+          </svg>
+        </button>
+      )}
     </span>
   )
 }

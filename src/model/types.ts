@@ -146,6 +146,12 @@ export interface SettingsValues {
    * danach wieder benutzt, taucht sie wieder auf. Seit 2026-09-28; fehlt in älteren Daten → {}.
    */
   recentHidden: Record<string, number>
+  /**
+   * Gemerktes Startsignal („Ich starte, wenn …“), mit dem jede neue Hauptaufgabe beginnt –
+   * oder `null`. Gesetzt über das Häkchen unter dem Startsignal einer Aufgabe.
+   * Seit 2026-09-30; fehlt in älteren Daten → `null`.
+   */
+  defaultStartCue: string | null
 }
 
 /** Einstellungen als gespeicherter Eintrag (es gibt genau einen). */

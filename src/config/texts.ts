@@ -140,8 +140,12 @@ export const T = {
     add: 'Hinzufügen',
     title: 'Titel',
     steps: 'Erste Schritte',
-    stepsHint:
-      'Nur für den Start: ein, zwei winzige Schritte. Danach arbeitest du einfach weiter, bis der Block um ist.',
+    // Zwei Zeilen (Zeilenumbruch per \n, siehe .field-hint)
+    stepsHint: 'Nur für den Start: ein, zwei winzige Schritte.\nKlein anfangen, der Rest kommt von selbst.',
+    // Kleines „i“ neben „Erste Schritte“: warum so klein? (nur Belegtes, vorsichtig formuliert)
+    stepsInfo:
+      'Studien zeigen:\nErste Schritte anzugehen und abzuhaken liefert Dopaminschübe und erleichtert das weitere Vorankommen und Durchhalten.',
+    infoLabel: (label: string) => `Mehr zu „${label}“`,
     firstStep: 'Erster Schritt – sofort machbar, z. B. „PDF öffnen“',
     nextStep: 'Noch ein kleiner Schritt? (optional)',
     blocks: 'Blöcke',
@@ -164,6 +168,9 @@ export const T = {
     // Kleines, leises Schild hinter „Erste Schritte“ und „Ich starte, wenn …“: nichts davon ist Pflicht.
     optional: 'optional',
     startCuePlaceholder: 'der Kaffee auf dem Tisch steht',
+    // Leises Häkchen unter dem Startsignal: Satz für alle neuen Hauptaufgaben vorausfüllen.
+    startCueRemember: 'Für alle neuen Hauptaufgaben',
+    startCueRememberHint: 'Neue Hauptaufgaben beginnen mit diesem Satz. Du kannst ihn bei jeder Aufgabe ändern.',
     done: 'Erledigt',
     reopen: 'Wieder öffnen',
     markDone: 'Als erledigt markieren',
