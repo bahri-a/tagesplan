@@ -137,8 +137,8 @@ export interface SettingsValues {
   /** Welches Rauschen. */
   noiseColor: NoiseColor
   /**
-   * Ultra-Modus: Ist eine kurze Pause fällig, piept es nervig und wiederholt, bis die Pause
-   * bestätigt (oder um 2 Minuten aufgeschoben) wird. Seit 2026-09-29; fehlt in älteren Daten → aus.
+   * Ultra-Modus: Endet ein Block, piept es nervig und wiederholt, bis die Pause bestätigt wird –
+   * nach dem letzten Block, bis „Erledigt“ oder „Noch ein Block“ gewählt ist. Seit 2026-09-29; fehlt in älteren Daten → aus.
    */
   ultraMode: boolean
   /**
@@ -172,7 +172,15 @@ export interface Note extends BaseRecord {
  * Der Timer rechnet nur mit Zeitpunkten, nicht mit mitgezählten Sekunden.
  */
 export type TimerState =
-  | { phase: 'idle' }
+  | {
+      phase: 'idle'
+      /**
+       * Ultra-Modus nach dem letzten Block (danach gibt es keine kurze Pause): Es piept ab `endedAt`,
+       * bis „Erledigt“ oder „Noch ein Block“ gewählt ist – höchstens `durationMs` lang
+       * (so lang wie die kurze Pause gewesen wäre). Fehlt in älteren Daten = nein.
+       */
+      ultra?: { taskId: ID; endedAt: number; durationMs: number }
+    }
   | {
       phase: 'block'
       taskId: ID

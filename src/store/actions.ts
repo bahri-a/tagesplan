@@ -18,6 +18,7 @@ import {
   blocksDone,
   canUndoExtraBlock,
   extraBlockStartsNow,
+  isAskingDone,
   lastBlockEndedAt,
   plannedDay,
   recentKey,
@@ -358,9 +359,11 @@ export function checkTimer(now = Date.now()): TimerEvent[] {
     const { lastBlock, ...completed } = completeBlockChanges(t, endedAt)
     const taskTitle = titleOf(t.taskId)
     const fresh = now - endedAt < SIGNAL_MAX_DELAY_MS
-    // Ultra-Modus: Die fällige Pause muss bestätigt werden (nur wenn das Blockende gerade erst war).
-    if (completed.timer.phase === 'break' && fresh && s.settings.ultraMode) {
-      completed.timer = { ...completed.timer, nagging: true }
+    // Ultra-Modus: Bei jedem Blockende piept es (nur wenn das Blockende gerade erst war) –
+    // bis die Pause bestätigt ist, nach dem letzten Block bis zur Antwort auf „Erledigt oder noch ein Block?“.
+    if (fresh && s.settings.ultraMode) {
+      if (completed.timer.phase === 'break') completed.timer = { ...completed.timer, nagging: true }
+      else if (lastBlock) completed.timer = { phase: 'idle', ultra: lastBlockUltra(t, endedAt) }
     }
     Object.assign(changes, completed)
     t = completed.timer
@@ -375,17 +378,43 @@ export function checkTimer(now = Date.now()): TimerEvent[] {
     events.push({ type: 'breakEnd', taskTitle: titleOf(t.taskId), fresh: now - endedAt < SIGNAL_MAX_DELAY_MS })
   }
 
+  // 3. Ultra nach dem letzten Block vorbei (beantwortet oder Zeit um) → aufräumen.
+  //    (Gerade erst gesetzt? Dann ist es noch nicht gespeichert und läuft sowieso.)
+  if (t.phase === 'idle' && t.ultra && t === s.timer && !isLastBlockUltraActive(now)) {
+    t = { phase: 'idle' }
+    changes.timer = t
+  }
+
   if (changes.timer) commit(changes)
   return events
 }
 
+/** Ultra nach dem letzten Block: so lang wie die kurze Pause gewesen wäre. */
+function lastBlockUltra(t: timer.BlockTimer, endedAt: number): { taskId: ID; endedAt: number; durationMs: number } {
+  const s = getState()
+  const task = s.tasks[t.taskId]
+  const minutes = task ? shortBreakMinutesFor(s, task) : s.settings.shortBreakMinutes
+  return { taskId: t.taskId, endedAt, durationMs: minutes * 60_000 }
+}
+
+/** Ultra nach dem letzten Block: Ist die Frage „Erledigt oder noch ein Block?“ noch offen und die Zeit nicht um? */
+function isLastBlockUltraActive(now: number): boolean {
+  const s = getState()
+  const t = s.timer
+  if (t.phase !== 'idle' || !t.ultra) return false
+  const task = s.tasks[t.ultra.taskId]
+  return !!task && isAskingDone(s, task) && now >= t.ultra.endedAt && now < t.ultra.endedAt + t.ultra.durationMs
+}
+
 /**
  * Ultra-Modus: Soll gerade gepiept werden? Ja, solange die fällige Pause nicht bestätigt ist,
- * noch läuft – und der Modus an ist.
+ * noch läuft – und der Modus an ist. Nach dem letzten Block: solange „Erledigt oder noch ein
+ * Block?“ offen ist (höchstens so lang wie die kurze Pause).
  */
 export function isUltraRinging(now = Date.now()): boolean {
   const s = getState()
   const t = s.timer
+  if (t.phase === 'idle') return s.settings.ultraMode && s.settings.sounds && isLastBlockUltraActive(now)
   return (
     t.phase === 'break' &&
     t.nagging === true &&
