@@ -91,8 +91,11 @@ export const WARNING_VOLUME = 0.08
 /** Ultra-Modus: so oft (Millisekunden) piept es, bis die Pause bestätigt ist. */
 export const ULTRA_REPEAT_MS = 2000
 
-/** Um so viel (Millisekunden) verlängert „+2 Min.“ den laufenden Block – nur in dessen letzten 2 Minuten. */
+/** Um so viel (Millisekunden) verlängert „+2 Min.“ den laufenden Block. */
 export const BLOCK_EXTEND_MS = 2 * 60_000
+
+/** „+2 Min.“ wird nur in den letzten 5 Minuten (Millisekunden) eines Blocks angeboten. */
+export const BLOCK_EXTEND_OFFER_MS = 5 * 60_000
 
 /** Lautstärke des Ultra-Tons (bewusst deutlich lauter und schärfer als die Glocken). */
 export const ULTRA_VOLUME = 0.3

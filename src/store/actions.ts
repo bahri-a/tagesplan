@@ -6,7 +6,7 @@
  * Funktionen auf.
  */
 
-import { BLOCK_WARNING_MS, SETTINGS_LIMITS, SIGNAL_MAX_DELAY_MS, BLOCK_EXTEND_MS } from '../config/defaults'
+import { BLOCK_WARNING_MS, SETTINGS_LIMITS, SIGNAL_MAX_DELAY_MS, BLOCK_EXTEND_MS, BLOCK_EXTEND_OFFER_MS } from '../config/defaults'
 import { mergeCarryOver, type CarryConflict, type ConflictChoices } from '../logic/carryOver'
 import { baseFields } from '../logic/records'
 import * as timer from '../logic/timer'
@@ -404,11 +404,11 @@ export function confirmBreak(now = Date.now()): void {
   commit({ timer: { ...t, nagging: false, startedAt: Math.min(t.startedAt, now) } })
 }
 
-/** Wird „+2 Min.“ gerade angeboten? Nur in den letzten 2 Minuten eines laufenden Blocks. */
+/** Wird „+2 Min.“ gerade angeboten? Nur in den letzten 5 Minuten eines laufenden Blocks. */
 export function canExtendBlock(t: timer.BlockTimer, now: number): boolean {
   if (t.pausedAt !== null) return false
   const remaining = timer.blockRemainingMs(t, now)
-  return remaining > 0 && remaining <= BLOCK_EXTEND_MS
+  return remaining > 0 && remaining <= BLOCK_EXTEND_OFFER_MS
 }
 
 /** „+2 Min.“: Der laufende Block wird 2 Minuten länger. Die kurze Pause danach bleibt, wie sie ist. */
