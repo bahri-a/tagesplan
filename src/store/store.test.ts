@@ -197,7 +197,44 @@ describe('Ultra-Modus', () => {
     expect(getState().timer).toEqual(t)
   })
 
-  it('piept nicht, wenn die App lange zu war, nach dem letzten Block oder ohne Töne', () => {
+  it('piept auch nach dem letzten Block, bis „Erledigt“ gewählt ist', () => {
+    actions.updateSettings({ ultraMode: true })
+    const task = actions.addTask(today(), 'A')
+    actions.updateTask(task.id, { estimatedBlocks: 1 })
+    actions.startBlock(task.id)
+    expect(actions.checkTimer(at(BLOCK + 500))).toEqual([{ type: 'blockEnd', taskTitle: 'A', fresh: true, lastBlock: true }])
+    expect(getState().timer.phase).toBe('idle')
+    expect(actions.isUltraRinging(at(BLOCK + 10_000))).toBe(true)
+    actions.finishTask(task.id)
+    expect(actions.isUltraRinging(at(BLOCK + 20_000))).toBe(false)
+    actions.checkTimer(at(BLOCK + 21_000))
+    expect(getState().timer).toEqual({ phase: 'idle' })
+  })
+
+  it('nach dem letzten Block: „Noch ein Block“ beendet das Piepen', () => {
+    actions.updateSettings({ ultraMode: true })
+    const task = actions.addTask(today(), 'A')
+    actions.updateTask(task.id, { estimatedBlocks: 1 })
+    actions.startBlock(task.id)
+    actions.checkTimer(at(BLOCK + 500))
+    expect(actions.isUltraRinging(at(BLOCK + MIN))).toBe(true)
+    actions.addExtraBlock(task.id, at(BLOCK + MIN))
+    expect(actions.isUltraRinging(at(BLOCK + MIN + 1000))).toBe(false)
+  })
+
+  it('nach dem letzten Block hört das Piepen spätestens nach der Länge der kurzen Pause auf', () => {
+    actions.updateSettings({ ultraMode: true })
+    const task = actions.addTask(today(), 'A')
+    actions.updateTask(task.id, { estimatedBlocks: 1 })
+    actions.startBlock(task.id)
+    actions.checkTimer(at(BLOCK + 500))
+    expect(actions.isUltraRinging(at(BLOCK + BREAK - 1000))).toBe(true)
+    expect(actions.isUltraRinging(at(BLOCK + BREAK + 1000))).toBe(false)
+    actions.checkTimer(at(BLOCK + BREAK + 1000))
+    expect(getState().timer).toEqual({ phase: 'idle' })
+  })
+
+  it('piept nicht, wenn die App lange zu war oder ohne Töne', () => {
     actions.updateSettings({ ultraMode: true })
     const a = actions.addTask(today(), 'A')
     actions.startBlock(a.id)

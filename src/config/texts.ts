@@ -346,7 +346,7 @@ export const T = {
     testBlockEnd: '▶ Ton „Block vorbei“',
     testBreakEnd: '▶ Ton „Pause vorbei“',
     ultraLabel: 'Ultra-Modus',
-    ultraHint: 'Beginnt die kurze Pause, piept es so lange, bis du „Pause machen“ drückst. So übergehst du keine Pause.',
+    ultraHint: 'Endet ein Block, piept es so lange, bis du „Pause machen“ drückst. Nach dem letzten Block: bis du „Erledigt“ oder „Noch ein Block“ wählst.',
     ultraOn: 'An',
     ultraOff: 'Aus',
     testUltra: '▶ Ton „Ultra“',

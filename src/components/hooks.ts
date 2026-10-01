@@ -72,7 +72,8 @@ export function useTimerEngine(): void {
     const worker = new Worker(new URL('../logic/ticker.worker.ts', import.meta.url), {
       type: 'module',
     })
-    // Ultra-Modus: Solange die fällige Pause nicht bestätigt ist, alle ULTRA_REPEAT_MS piepen.
+    // Ultra-Modus: Solange die fällige Pause nicht bestätigt ist (nach dem letzten Block: die Frage
+    // „Erledigt oder noch ein Block?“ offen ist), alle ULTRA_REPEAT_MS piepen.
     // Läuft im selben Sekundentakt wie der Timer – so klappt es auch im Hintergrund.
     let lastUltraAt = 0
     const check = () => {
@@ -88,7 +89,9 @@ export function useTimerEngine(): void {
     const syncTicking = () => {
       const t = getState().timer
       const shouldTick =
-        (t.phase === 'block' && t.pausedAt === null) || (t.phase === 'break' && !t.endSignaled)
+        (t.phase === 'block' && t.pausedAt === null) ||
+        (t.phase === 'break' && !t.endSignaled) ||
+        (t.phase === 'idle' && !!t.ultra)
       if (shouldTick !== ticking) {
         ticking = shouldTick
         worker.postMessage(shouldTick ? 'start' : 'stop')
