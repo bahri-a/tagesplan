@@ -622,13 +622,26 @@ function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: 
 
   return (
     <>
-      <TimerRing
-        remainingMs={timer.blockRemainingMs(timerState, now)}
-        totalMs={timerState.plannedMs}
-        caption={paused ? T.nav.timerPaused : T.today.remaining}
-        paused={paused}
-        warm={isInWarningTime(timerState, now)}
-      />
+      {/* „+2 Min.“ steht rechts neben dem Ring, mittig auf Höhe der Zeit. Der Ring bleibt dabei in der Mitte. */}
+      <div className="ring-with-side">
+        <TimerRing
+          remainingMs={timer.blockRemainingMs(timerState, now)}
+          totalMs={timerState.plannedMs}
+          caption={paused ? T.nav.timerPaused : T.today.remaining}
+          paused={paused}
+          warm={isInWarningTime(timerState, now)}
+        />
+        {canExtendBlock(timerState, now) && (
+          <button
+            type="button"
+            className="btn btn-small ring-side-action"
+            title={T.today.extendBlockHint}
+            onClick={() => extendBlock()}
+          >
+            {T.today.extendBlock}
+          </button>
+        )}
+      </div>
 
       <NoiseToggle />
 
@@ -661,16 +674,6 @@ function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: 
           </span>
         ) : (
           <>
-            {canExtendBlock(timerState, now) && (
-              <button
-                type="button"
-                className="btn btn-small"
-                title={T.today.extendBlockHint}
-                onClick={() => extendBlock()}
-              >
-                {T.today.extendBlock}
-              </button>
-            )}
             {!paused && (
               <button type="button" className="btn btn-quiet btn-small" onClick={pauseCurrentBlock}>
                 {T.today.pause}

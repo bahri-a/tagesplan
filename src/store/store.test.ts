@@ -171,14 +171,15 @@ describe('Ultra-Modus', () => {
     expect(actions.checkTimer(at(BLOCK + BREAK + 100))).toEqual([{ type: 'breakEnd', taskTitle: 'A', fresh: true }])
   })
 
-  it('„+2 Min.“ verlängert nur den Block, und nur in seinen letzten 2 Minuten', () => {
+  it('„+2 Min.“ verlängert nur den Block, und nur in seinen letzten 5 Minuten', () => {
     const task = actions.addTask(today(), 'A')
     actions.startBlock(task.id)
     // Vorher gibt es kein „+2 Min.“.
-    actions.extendBlock(at(BLOCK - 3 * MIN))
+    actions.extendBlock(at(BLOCK - 6 * MIN))
     let t = getState().timer
     expect(t.phase === 'block' && t.plannedMs).toBe(BLOCK)
-    expect(t.phase === 'block' && actions.canExtendBlock(t, at(BLOCK - 3 * MIN))).toBe(false)
+    expect(t.phase === 'block' && actions.canExtendBlock(t, at(BLOCK - 6 * MIN))).toBe(false)
+    expect(t.phase === 'block' && actions.canExtendBlock(t, at(BLOCK - 5 * MIN))).toBe(true)
     expect(t.phase === 'block' && actions.canExtendBlock(t, at(BLOCK - MIN))).toBe(true)
     actions.extendBlock(at(BLOCK - MIN))
     t = getState().timer

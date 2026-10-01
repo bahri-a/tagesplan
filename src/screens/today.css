@@ -217,6 +217,21 @@
 
 /* ---------- Der weiche Ring ---------- */
 
+/* Ring mit Knopf daneben („+2 Min.“): Der Ring bleibt mittig, der Knopf hängt rechts daneben auf halber Höhe. */
+.ring-with-side {
+  position: relative;
+  width: 280px;
+  max-width: 100%;
+}
+
+.ring-side-action {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 14px);
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+
 .timer-ring {
   position: relative;
   width: 280px;
@@ -832,6 +847,14 @@
 @media (max-width: 520px) {
   .focus-card {
     padding: 2rem 1.25rem 1.75rem;
+  }
+
+  /* Schmal ist neben dem Ring kein Platz: „+2 Min.“ sitzt dann mittig im Ring unter der Zeit. */
+  .ring-side-action {
+    top: auto;
+    bottom: 20%;
+    left: 50%;
+    transform: translateX(-50%);
   }
 
   .focus-title {
