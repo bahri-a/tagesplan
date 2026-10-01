@@ -422,15 +422,25 @@ export function isUltraRinging(now = Date.now()): boolean {
     s.settings.ultraMode &&
     s.settings.sounds &&
     now >= t.startedAt &&
-    !timer.isBreakOver(t, now)
+    now < t.startedAt + t.durationMs
   )
 }
 
-/** „Pause machen“: Im Ultra-Modus hört das Piepen auf, die Pause läuft weiter. */
+/** „Pause machen“: Im Ultra-Modus hört das Piepen auf – erst jetzt beginnt die Pause zu zählen. */
 export function confirmBreak(now = Date.now()): void {
   const t = getState().timer
+  if (t.phase !== 'break' || t.endSignaled || !t.nagging) return
+  commit({ timer: { ...t, nagging: false, startedAt: Math.max(t.startedAt, now) } })
+}
+
+/**
+ * „Pause überspringen“: Die kurze Pause ist sofort vorbei (ohne Ton), danach kommt wie
+ * gewohnt „Nächsten Block starten“. Im Ultra-Modus hört damit auch das Piepen auf.
+ */
+export function skipBreak(): void {
+  const t = getState().timer
   if (t.phase !== 'break' || t.endSignaled) return
-  commit({ timer: { ...t, nagging: false, startedAt: Math.min(t.startedAt, now) } })
+  commit({ timer: { ...t, nagging: false, endSignaled: true } })
 }
 
 /** Wird „+2 Min.“ gerade angeboten? Nur in den letzten 5 Minuten eines laufenden Blocks. */
@@ -561,6 +571,8 @@ export function updateSettings(patch: Partial<SettingsValues>): void {
     const { min, max } = SETTINGS_LIMITS[key]
     next[key] = clamp(Math.round(Number(next[key]) || min), min, max)
   }
+  // Ultra-Modus aus, während eine Pause auf Bestätigung wartet → die Pause beginnt jetzt.
+  if (current.ultraMode && !next.ultraMode) confirmBreak()
   commit({ settings: next })
 }
 

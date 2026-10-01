@@ -203,7 +203,8 @@ export type TimerState =
       /** Wurde das Pausenende schon mit Ton gemeldet? */
       endSignaled: boolean
       /**
-       * Ultra-Modus: Die Pause ist noch nicht bestätigt – ab `startedAt` piept es, bis „Pause machen“.
+       * Ultra-Modus: Die Pause ist noch nicht bestätigt – ab `startedAt` piept es, bis „Pause machen“
+       * (höchstens `durationMs` lang). Bis dahin zählt die Pause nicht, sie beginnt erst mit der Bestätigung.
        * Fehlt in älteren Daten = nein.
        */
       nagging?: boolean
