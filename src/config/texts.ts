@@ -85,6 +85,12 @@ export const T = {
     // Ultra-Modus: Die fällige Pause muss bestätigt werden, sonst piept es weiter.
     ultraAsk: 'Zeit für die Pause!',
     breakConfirm: 'Pause machen',
+    // Leise unten rechts in der Pause – mit kurzer Nachfrage.
+    skipBreak: 'Pause überspringen',
+    skipBreakTitle: 'Pause überspringen?',
+    skipBreakText: 'Kurze Pausen halten den Kopf klar.\nManchmal ist weniger mehr.',
+    skipBreakNo: 'Pause behalten',
+    skipBreakYes: 'Überspringen',
     // In den letzten 2 Minuten eines Blocks: den Block um 2 Minuten verlängern.
     extendBlock: '+2 Min.',
     extendBlockHint: 'Block um 2 Minuten verlängern',

@@ -11,6 +11,7 @@ import { resetDatabaseForTests } from '../db/database'
 import type { Settings } from '../model/types'
 import * as actions from './actions'
 import * as sel from './selectors'
+import * as timer from '../logic/timer'
 import { flushSaves, getState, initStore, resetStoreForTests } from './store'
 
 const MIN = 60_000
@@ -158,17 +159,49 @@ describe('Ultra-Modus', () => {
     expect(actions.isUltraRinging(at(BLOCK + MIN))).toBe(false)
   })
 
-  it('piept bei fälliger Pause, bis „Pause machen“ – die Pause läuft ab Blockende', () => {
+  it('piept bei fälliger Pause, bis „Pause machen“ – erst dann beginnt die Pause zu zählen', () => {
     actions.updateSettings({ ultraMode: true })
     const task = actions.addTask(today(), 'A')
     actions.startBlock(task.id)
     expect(actions.checkTimer(at(BLOCK + 500))).toEqual([{ type: 'blockEnd', taskTitle: 'A', fresh: true, lastBlock: false }])
     expect(actions.isUltraRinging(at(BLOCK + 10_000))).toBe(true)
+    // Vor der Bestätigung steht die Pause auf voller Länge.
+    let t = getState().timer
+    expect(t.phase === 'break' && timer.breakRemainingMs(t, at(BLOCK + 20_000))).toBe(BREAK)
     actions.confirmBreak(at(BLOCK + 20_000))
     expect(actions.isUltraRinging(at(BLOCK + 30_000))).toBe(false)
+    t = getState().timer
+    expect(t.phase === 'break' && t.startedAt).toBe(START + BLOCK + 20_000)
+    expect(actions.checkTimer(at(BLOCK + BREAK + 100))).toEqual([])
+    expect(actions.checkTimer(at(BLOCK + 20_000 + BREAK + 100))).toEqual([{ type: 'breakEnd', taskTitle: 'A', fresh: true }])
+  })
+
+  it('unbestätigte Pause läuft nicht ab – das Piepen hört nach der Pausenlänge trotzdem auf', () => {
+    actions.updateSettings({ ultraMode: true })
+    const task = actions.addTask(today(), 'A')
+    actions.startBlock(task.id)
+    actions.checkTimer(at(BLOCK + 500))
+    expect(actions.isUltraRinging(at(BLOCK + BREAK - 1000))).toBe(true)
+    expect(actions.isUltraRinging(at(BLOCK + BREAK + 1000))).toBe(false)
+    expect(actions.checkTimer(at(BLOCK + 2 * BREAK))).toEqual([])
     const t = getState().timer
-    expect(t.phase === 'break' && t.startedAt).toBe(START + BLOCK)
-    expect(actions.checkTimer(at(BLOCK + BREAK + 100))).toEqual([{ type: 'breakEnd', taskTitle: 'A', fresh: true }])
+    expect(t.phase === 'break' && t.nagging).toBe(true)
+    // Ultra-Modus aus → die Pause beginnt jetzt.
+    actions.updateSettings({ ultraMode: false })
+    const after = getState().timer
+    expect(after.phase === 'break' && after.nagging).toBe(false)
+  })
+
+  it('„Pause überspringen“ beendet die Pause sofort, ohne Ton', () => {
+    actions.updateSettings({ ultraMode: true })
+    const task = actions.addTask(today(), 'A')
+    actions.startBlock(task.id)
+    actions.checkTimer(at(BLOCK + 500))
+    actions.skipBreak()
+    expect(actions.isUltraRinging(at(BLOCK + 10_000))).toBe(false)
+    const t = getState().timer
+    expect(t.phase === 'break' && t.endSignaled).toBe(true)
+    expect(actions.checkTimer(at(BLOCK + BREAK + 100))).toEqual([])
   })
 
   it('„+2 Min.“ verlängert nur den Block, und nur in seinen letzten 5 Minuten', () => {

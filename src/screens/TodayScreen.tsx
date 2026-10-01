@@ -21,6 +21,7 @@ import { useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { GENTLE_LINE_EVERY, STEP_DONE_FEEDBACK_MS } from '../config/defaults'
 import { T } from '../config/texts'
 import { isTypingOrButton, useNow, WindowContext } from '../components/hooks'
+import { Dialog } from '../components/Dialog'
 import { StepList } from '../components/StepList'
 import { TimerRing } from '../components/TimerRing'
 import { blockMarks, taskMark, type Mark } from '../logic/progress'
@@ -40,6 +41,7 @@ import {
   isInWarningTime,
   pauseCurrentBlock,
   resumeCurrentBlock,
+  skipBreak,
   updateSettings,
   startBlock,
   toggleStep,
@@ -313,6 +315,7 @@ function FocusCard({ task }: { task: Task }) {
   return (
     <section className="card focus-card">
       {canUndoExtraBlock(state, task, now) && <BackToAsk />}
+      {t.phase === 'break' && !breakOver && <SkipBreak />}
       <BlockDots
         marks={blockMarks(done, task.estimatedBlocks, highlightBlock)}
         suffix={t.phase === 'idle' && !asking ? T.today.perBlock(minutes) : null}
@@ -413,6 +416,41 @@ function BackToAsk() {
       </svg>
       {T.today.backToAsk}
     </button>
+  )
+}
+
+/**
+ * Ganz leise unten rechts in der Karte, solange die kurze Pause läuft (oder auf „Pause machen“
+ * wartet): „Pause überspringen“. Erst ein kurzer Hinweis, dann wird wirklich übersprungen.
+ */
+function SkipBreak() {
+  const [asking, setAsking] = useState(false)
+  return (
+    <>
+      <button type="button" className="skip-break" onClick={() => setAsking(true)}>
+        {T.today.skipBreak}
+      </button>
+      {asking && (
+        <Dialog title={T.today.skipBreakTitle} onClose={() => setAsking(false)}>
+          <p className="dialog-text skip-break-text">{T.today.skipBreakText}</p>
+          <div className="dialog-actions">
+            <button type="button" className="btn btn-quiet" onClick={() => setAsking(false)}>
+              {T.today.skipBreakNo}
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => {
+                setAsking(false)
+                skipBreak()
+              }}
+            >
+              {T.today.skipBreakYes}
+            </button>
+          </div>
+        </Dialog>
+      )}
+    </>
   )
 }
 

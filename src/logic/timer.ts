@@ -56,14 +56,18 @@ export function breakEndsAt(t: BreakTimer): number {
   return t.startedAt + t.durationMs
 }
 
-/** Verbleibende Zeit der kurzen Pause. */
+/**
+ * Verbleibende Zeit der kurzen Pause. Im Ultra-Modus zählt sie erst, wenn die Pause
+ * bestätigt ist – bis dahin steht sie auf voller Länge.
+ */
 export function breakRemainingMs(t: BreakTimer, now: number): number {
+  if (t.nagging) return t.durationMs
   return Math.min(t.durationMs, Math.max(0, breakEndsAt(t) - now))
 }
 
-/** Ist die kurze Pause vorbei? */
+/** Ist die kurze Pause vorbei? (Eine noch nicht bestätigte Pause ist es nie.) */
 export function isBreakOver(t: BreakTimer, now: number): boolean {
-  return now >= breakEndsAt(t)
+  return !t.nagging && now >= breakEndsAt(t)
 }
 
 /** Anteil der vergangenen Zeit (0 bis 1) – für den Fortschrittsring. */

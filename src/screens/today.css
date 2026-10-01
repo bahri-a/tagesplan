@@ -179,6 +179,44 @@
   stroke-linejoin: round;
 }
 
+/* „Pause überspringen“: nur leiser Text unten rechts, kein Knopf-Look – mit eigener Zeile darunter. */
+.focus-card:has(> .skip-break) {
+  padding-bottom: 3.4rem;
+}
+
+.skip-break {
+  position: absolute;
+  right: 1.25rem;
+  bottom: 0.95rem;
+  padding: 0.25em 0.1em;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.78rem;
+  letter-spacing: 0.01em;
+  opacity: 0.55;
+  cursor: pointer;
+  transition: opacity 0.2s ease, color 0.2s ease;
+  animation: skip-break-in 1.2s ease 0.6s backwards;
+}
+
+.skip-break:hover,
+.skip-break:focus-visible {
+  opacity: 1;
+  color: var(--text);
+}
+
+@keyframes skip-break-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.skip-break-text {
+  white-space: pre-line;
+}
+
 .block-dots {
   display: flex;
   align-items: center;
@@ -526,6 +564,12 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.6rem;
+}
+
+/* Nur ein Knopf (z. B. „Pause machen“): mittig statt in der linken Spalte. */
+.ask-done-actions:has(> :only-child) {
+  grid-template-columns: auto;
+  justify-content: center;
 }
 
 /* ---------- Noch nichts geplant / alles geschafft ---------- */
