@@ -366,7 +366,9 @@ export function checkTimer(now = Date.now()): TimerEvent[] {
     const fresh = now - endedAt < SIGNAL_MAX_DELAY_MS
     // Ultra-Modus: Bei jedem Blockende piept es (nur wenn das Blockende gerade erst war) –
     // bis die Pause bestätigt ist, nach dem letzten Block bis zur Antwort auf „Erledigt oder noch ein Block?“.
-    if (fresh && s.settings.ultraMode) {
+    // In der iPhone-App auch, wenn das Blockende länger her ist: Dort hat die Mitteilung auf dem
+    // gesperrten Display schon geklingelt – die Pause beginnt trotzdem erst mit „Pause machen“.
+    if ((fresh || __NATIVE_APP__) && s.settings.ultraMode) {
       if (completed.timer.phase === 'break') completed.timer = { ...completed.timer, nagging: true }
       else if (lastBlock) completed.timer = { phase: 'idle', ultra: lastBlockUltra(t, endedAt) }
     }

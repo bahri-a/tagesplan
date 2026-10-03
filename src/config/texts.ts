@@ -361,9 +361,15 @@ export const T = {
     notifyDenied:
       'Chrome-Benachrichtigungen sind blockiert. Du kannst sie über das Schloss-Symbol links neben der Adresse wieder erlauben.',
     notifyAllow: 'Erlauben',
+    // iPhone-App: Mitteilungen statt Chrome-Benachrichtigungen
+    nativeNotifyGranted: 'Mitteilungen sind erlaubt – auch bei gesperrtem iPhone kommt das Signal.',
+    nativeNotifyDefault: 'Mitteilungen sind noch nicht erlaubt. Ohne sie klingelt nichts, wenn das iPhone gesperrt ist.',
+    nativeNotifyDenied:
+      'Mitteilungen sind ausgeschaltet. Du kannst sie in den iPhone-Einstellungen unter „Tagesplan“ → „Mitteilungen“ erlauben.',
     data: 'Daten',
     backup: 'Sichern',
     backupHint: 'Speichert alle deine Daten als Datei.',
+    backupShareTitle: 'Tagesplan-Sicherung',
     restore: 'Wiederherstellen',
     restoreHint: 'Lädt eine Sicherungsdatei – ersetzt die aktuellen Daten.',
     restoreConfirmTitle: 'Sicherung wiederherstellen?',

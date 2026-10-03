@@ -3,10 +3,11 @@
  *
  * Motiv: ein ruhiger Timer-Ring mit Punkt in der Mitte.
  * Aufruf (im Projektordner):   node scripts/make-icons.mjs
- * Die Bilder landen in public/icons/. Farben unten anpassbar.
+ * Die Bilder landen in public/icons/ – und das Icon der iPhone-App (1024 × 1024, ohne
+ * Transparenz, wie Apple es verlangt) in ios/App/App/Assets.xcassets/. Farben unten anpassbar.
  */
 
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { deflateSync } from 'node:zlib'
 
 const BACKGROUND = [59, 118, 103] // #3b7667 (Akzentfarbe der App)
@@ -56,7 +57,7 @@ function inRoundedSquare(x, y, inset, radius) {
  * weiche, glatte Kanten.
  * @param fullBleed true = Hintergrund füllt alles (für „maskable“-Icons)
  */
-function render(size, fullBleed) {
+function render(size, fullBleed, opaque = false) {
   const samples = 4
   const pixels = Buffer.alloc(size * size * 4)
   for (let py = 0; py < size; py++) {
@@ -83,7 +84,7 @@ function render(size, fullBleed) {
       pixels[i + 3] = Math.round(alpha * 255)
     }
   }
-  return encodePng(size, size, pixels)
+  return encodePng(size, size, pixels, opaque)
 }
 
 /* ---------- Minimaler PNG-Encoder ---------- */
@@ -109,16 +110,22 @@ function chunk(type, data) {
   return Buffer.concat([length, typeAndData, crc])
 }
 
-function encodePng(width, height, rgba) {
+/** @param opaque true = ohne Transparenz-Kanal (nur RGB) – für das iPhone-Icon */
+function encodePng(width, height, rgba, opaque = false) {
+  const channels = opaque ? 3 : 4
   const header = Buffer.alloc(13)
   header.writeUInt32BE(width, 0)
   header.writeUInt32BE(height, 4)
   header[8] = 8 // 8 Bit pro Kanal
-  header[9] = 6 // RGBA
+  header[9] = opaque ? 2 : 6 // RGB oder RGBA
   // Jede Bildzeile beginnt mit Filter-Byte 0 („kein Filter“).
-  const raw = Buffer.alloc(height * (width * 4 + 1))
+  const raw = Buffer.alloc(height * (width * channels + 1))
   for (let y = 0; y < height; y++) {
-    rgba.copy(raw, y * (width * 4 + 1) + 1, y * width * 4, (y + 1) * width * 4)
+    for (let x = 0; x < width; x++) {
+      const from = (y * width + x) * 4
+      const to = y * (width * channels + 1) + 1 + x * channels
+      for (let c = 0; c < channels; c++) raw[to + c] = rgba[from + c]
+    }
   }
   return Buffer.concat([
     Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
@@ -142,4 +149,11 @@ const files = {
 for (const [name, data] of Object.entries(files)) {
   writeFileSync(new URL(name, outDir), data)
   console.log(`✓ public/icons/${name}`)
+}
+
+// iPhone-App (nur, wenn das iOS-Projekt schon angelegt ist)
+const iosIcon = new URL('../ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png', import.meta.url)
+if (existsSync(new URL('.', iosIcon))) {
+  writeFileSync(iosIcon, render(1024, true, true))
+  console.log('✓ ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png')
 }

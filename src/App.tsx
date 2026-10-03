@@ -50,7 +50,11 @@ export default function App() {
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    void initStore().then(() => setReady(true))
+    void initStore().then(() => {
+      setReady(true)
+      // iPhone-App: Startbildschirm erst jetzt ausblenden (sonst blitzt kurz eine leere Seite auf).
+      if (__NATIVE_APP__) void import('./platform/nativeApp').then((m) => m.hideSplash())
+    })
     void requestPersistentStorage()
     // Chrome erlaubt Töne erst nach einem Klick – daher bei jedem Klick freischalten.
     document.addEventListener('pointerdown', unlockAudio)
@@ -116,7 +120,11 @@ function Shell() {
               type="button"
               className="nav-item"
               aria-current={screen === s.id ? 'page' : undefined}
-              onClick={() => setScreen(s.id)}
+              onClick={() => {
+                setScreen(s.id)
+                // iPhone-App: Jeder Reiter beginnt oben (sonst bleibt die Scrollposition des vorigen stehen).
+                if (__NATIVE_APP__) window.scrollTo(0, 0)
+              }}
             >
               {s.label}
             </button>
@@ -177,6 +185,8 @@ function useTheme(theme: ThemeSetting, palette: PaletteSetting) {
       // Die fertig ausgerechnete Farbe (die Farbwelten nutzen light-dark() in --bg).
       const background = getComputedStyle(document.body).backgroundColor
       document.querySelector('meta[name="theme-color"]')?.setAttribute('content', background)
+      // iPhone-App: Uhrzeit und Akku oben passend hell oder dunkel.
+      if (__NATIVE_APP__) void import('./platform/nativeApp').then((m) => m.updateStatusBar(background))
     }
     updateTitleBar()
     const darkMode = window.matchMedia('(prefers-color-scheme: dark)')

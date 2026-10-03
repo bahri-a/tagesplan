@@ -7,12 +7,45 @@
 
 export type PermissionState = NotificationPermission | 'unsupported'
 
+/**
+ * iPhone-App: Dort gibt es keine Chrome-Benachrichtigungen, sondern iPhone-Mitteilungen
+ * (signals/nativeNotifications.ts). Ihr Stand wird beim Start abgefragt und hier gemerkt.
+ */
+let nativePermission: PermissionState = 'default'
+
+export function setNativeNotificationPermission(state: PermissionState): void {
+  nativePermission = state
+}
+
+/** iPhone-App: Wann wurde die App zuletzt wieder geöffnet? */
+let becameVisibleAt = 0
+if (__NATIVE_APP__) {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') becameVisibleAt = Date.now()
+  })
+}
+
+/**
+ * iPhone-App: Hat die Mitteilung auf dem gesperrten iPhone schon geklingelt? Dann soll die App
+ * beim Öffnen nicht noch einmal denselben Ton spielen. (Während die App im Hintergrund ist oder
+ * gerade erst wieder geöffnet wurde, kam das Signal von der Mitteilung.)
+ */
+export function phoneAlreadySignaled(): boolean {
+  if (!__NATIVE_APP__ || nativePermission !== 'granted') return false
+  return document.visibilityState === 'hidden' || Date.now() - becameVisibleAt < 2000
+}
+
 export function notificationPermission(): PermissionState {
+  if (__NATIVE_APP__) return nativePermission
   return 'Notification' in window ? Notification.permission : 'unsupported'
 }
 
-/** Fragt Chrome einmalig um Erlaubnis (nur, solange noch nicht entschieden). */
+/** Fragt Chrome (bzw. das iPhone) einmalig um Erlaubnis (nur, solange noch nicht entschieden). */
 export async function requestNotificationPermission(): Promise<PermissionState> {
+  if (__NATIVE_APP__) {
+    const { requestNativePermission } = await import('./nativeNotifications')
+    return requestNativePermission()
+  }
   if (notificationPermission() !== 'default') return notificationPermission()
   try {
     return await Notification.requestPermission()
@@ -27,6 +60,8 @@ export function appIsInBackground(): boolean {
 }
 
 export function showNotification(title: string, body: string): void {
+  // iPhone-App: Die Mitteilungen sind dort schon im Voraus geplant (nativeNotifications.ts).
+  if (__NATIVE_APP__) return
   if (notificationPermission() !== 'granted') return
   try {
     const n = new Notification(title, {

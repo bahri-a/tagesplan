@@ -10,7 +10,16 @@
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  padding: 0.9rem 1rem 0.5rem;
+  padding: calc(0.9rem + var(--safe-top)) 1rem 0.5rem;
+}
+
+/* iPhone: ruhige Fläche hinter Uhrzeit und Akku, damit darunter durchscrollender Inhalt nicht stört. */
+.topbar::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--safe-top);
+  background: var(--bg);
 }
 
 /* Reiter als ruhige Leiste – die aktive Seite salbeigrün hinterlegt */
@@ -67,6 +76,18 @@
   box-shadow: var(--shadow);
 }
 
+/* Schmaler Bildschirm (iPhone): kein Platz neben den Reitern – die Anzeige rückt darunter. */
+@media (max-width: 560px) {
+  .topbar {
+    flex-wrap: wrap;
+    row-gap: 0.4rem;
+  }
+
+  .timer-pill {
+    position: static;
+  }
+}
+
 .timer-pill.is-break {
   background: var(--break-soft);
   color: var(--break);
@@ -75,7 +96,7 @@
 .main {
   position: relative;
   z-index: 1;
-  padding: 1.25rem 1.25rem 6rem;
+  padding: 1.25rem calc(1.25rem + var(--safe-right)) calc(6rem + var(--safe-bottom)) calc(1.25rem + var(--safe-left));
 }
 
 /* ---------- Dialog ---------- */
@@ -166,7 +187,7 @@
 .toast {
   position: fixed;
   left: 50%;
-  bottom: 1.5rem;
+  bottom: calc(1.5rem + var(--safe-bottom));
   z-index: 40;
   display: flex;
   align-items: center;
@@ -308,8 +329,8 @@
 
 .notes-button {
   position: fixed;
-  right: 1.25rem;
-  bottom: 1.25rem;
+  right: calc(1.25rem + var(--safe-right));
+  bottom: max(1.25rem, var(--safe-bottom));
   z-index: 20;
   padding: 0.5em 1.05em;
   border: 1px solid var(--accent-line);
@@ -332,6 +353,11 @@
   background: var(--accent-soft);
 }
 
+/* iPhone-App: Bei offener Tastatur keine Eckknöpfe über den Feldern. */
+[data-keyboard='open'] .notes-button {
+  display: none;
+}
+
 /* Ist das Fenster breit genug, rückt der Inhalt neben den Zettel statt darunter. */
 @media (min-width: 900px) {
   .notes-open .main {
@@ -341,9 +367,9 @@
 
 .notes-panel {
   position: fixed;
-  top: 4.5rem;
-  right: 1.25rem;
-  bottom: 1.25rem;
+  top: calc(4.5rem + var(--safe-top));
+  right: calc(1.25rem + var(--safe-right));
+  bottom: max(1.25rem, var(--safe-bottom));
   z-index: 20;
   display: flex;
   flex-direction: column;
@@ -390,7 +416,7 @@
 .quick-park {
   position: fixed;
   left: 50%;
-  bottom: 1.5rem;
+  bottom: calc(1.5rem + var(--safe-bottom));
   z-index: 45;
   width: min(30rem, calc(100vw - 2rem));
   transform: translateX(-50%);

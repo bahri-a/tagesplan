@@ -279,9 +279,9 @@ export function SettingsScreen() {
         {permission !== 'unsupported' && (
           <div className="settings-note">
             <span className="muted small">
-              {permission === 'granted' && T.settings.notifyGranted}
-              {permission === 'default' && T.settings.notifyDefault}
-              {permission === 'denied' && T.settings.notifyDenied}
+              {permission === 'granted' && (__NATIVE_APP__ ? T.settings.nativeNotifyGranted : T.settings.notifyGranted)}
+              {permission === 'default' && (__NATIVE_APP__ ? T.settings.nativeNotifyDefault : T.settings.notifyDefault)}
+              {permission === 'denied' && (__NATIVE_APP__ ? T.settings.nativeNotifyDenied : T.settings.notifyDenied)}
             </span>
             {permission === 'default' && (
               <button
@@ -365,7 +365,8 @@ function DataSection() {
 
       {message && <p className="hint">{message}</p>}
 
-      {persisted !== null && (
+      {/* In der iPhone-App liegen die Daten fest in der App – der Hinweis zu Chrome passt dort nicht. */}
+      {persisted !== null && !__NATIVE_APP__ && (
         <p className="muted small">{persisted ? T.settings.storagePersisted : T.settings.storageNotPersisted}</p>
       )}
 

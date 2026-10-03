@@ -25,3 +25,6 @@ dist-ssr
 
 # Lokale Einstellungen für Claude Code
 .claude/
+
+# iPhone-App: Bau-Ordner für den Simulator (npm run build:ios / xcodebuild)
+build-ios
