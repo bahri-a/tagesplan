@@ -98,7 +98,12 @@ export function moveTask(taskId: ID, dayId: ID, index: number): boolean {
   const target = tasksOfDay(s, dayId)
   const place = clamp(index, 0, target.length)
   target.splice(place, 0, { ...task, dayId })
-  const changes: Changes = { tasks: [...renumber(source), ...renumber(target)] }
+  // Die verschobene Aufgabe immer speichern – `renumber` lässt Einträge weg, deren Position
+  // gleich bleibt (z. B. erste Karte → leerer Tag), dann ginge der neue Tag verloren.
+  const renumbered = renumber(target).filter((t) => t.id !== taskId)
+  const changes: Changes = {
+    tasks: [...renumber(source), ...renumbered, { ...task, dayId, position: place }],
+  }
   if (s.timer.phase === 'break' && s.timer.taskId === taskId) changes.timer = { phase: 'idle' }
   commit(changes)
   return true
