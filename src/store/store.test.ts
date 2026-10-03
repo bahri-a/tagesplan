@@ -743,6 +743,13 @@ describe('Planen: kopieren, verschieben, zuletzt verwendet', () => {
     expect(sel.tasksOfDay(s, tomorrow()).map((t) => [t.title, t.position])).toEqual([['B', 0], ['C', 1]])
   })
 
+  it('verschiebt die einzige Aufgabe auf einen leeren Tag (Position bleibt 0)', () => {
+    const a = actions.addTask(today(), 'A')
+    expect(actions.moveTask(a.id, tomorrow(), 0)).toBe(true)
+    expect(sel.tasksOfDay(getState(), today())).toEqual([])
+    expect(sel.tasksOfDay(getState(), tomorrow()).map((t) => [t.title, t.position])).toEqual([['A', 0]])
+  })
+
   it('tauscht heute und morgen – nur eine Seite voll: alles wandert hinüber; nicht während eines Blocks', () => {
     const titles = (dayId: string) => sel.tasksOfDay(getState(), dayId).map((t) => [t.title, t.position])
     const a = actions.addTask(today(), 'A')

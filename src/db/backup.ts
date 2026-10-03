@@ -46,13 +46,21 @@ export function createBackup(state: AppState = getState()): BackupFile {
   }
 }
 
-/** Lädt die Sicherung als Datei herunter (landet im Ordner „Downloads“). */
+/**
+ * Lädt die Sicherung als Datei herunter (landet im Ordner „Downloads“).
+ * In der iPhone-App öffnet sich stattdessen das Teilen-Menü („In Dateien sichern“, AirDrop …).
+ */
 export function downloadBackup(): void {
   const json = JSON.stringify(createBackup(), null, 2)
+  const fileName = `${APP_NAME.toLowerCase()}-sicherung-${fileDate(Date.now())}.json`
+  if (__NATIVE_APP__) {
+    void import('../platform/nativeShare').then((m) => m.shareTextFile(fileName, json))
+    return
+  }
   const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }))
   const link = document.createElement('a')
   link.href = url
-  link.download = `${APP_NAME.toLowerCase()}-sicherung-${fileDate(Date.now())}.json`
+  link.download = fileName
   link.click()
   // Kurz warten, damit Chrome den Download sicher gestartet hat.
   setTimeout(() => URL.revokeObjectURL(url), 1000)

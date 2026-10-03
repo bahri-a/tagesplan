@@ -30,6 +30,15 @@
   font-weight: 500;
 }
 
+/* Schmaler Bildschirm (iPhone): Die Farbwelt-Auswahl ist zu breit für neben dem Text –
+   sie rutscht unter die Beschriftung, statt rechts über den Rand zu ragen. */
+@media (max-width: 480px) {
+  .setting-row:has(.palette-picker) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 /* Hinweise dürfen Zeilenumbrüche (\n) enthalten. */
 .setting-hint {
   white-space: pre-line;

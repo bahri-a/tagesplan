@@ -98,7 +98,12 @@ export function moveTask(taskId: ID, dayId: ID, index: number): boolean {
   const target = tasksOfDay(s, dayId)
   const place = clamp(index, 0, target.length)
   target.splice(place, 0, { ...task, dayId })
-  const changes: Changes = { tasks: [...renumber(source), ...renumber(target)] }
+  // Die verschobene Aufgabe immer speichern – `renumber` lässt Einträge weg, deren Position
+  // gleich bleibt (z. B. erste Karte → leerer Tag), dann ginge der neue Tag verloren.
+  const renumbered = renumber(target).filter((t) => t.id !== taskId)
+  const changes: Changes = {
+    tasks: [...renumber(source), ...renumbered, { ...task, dayId, position: place }],
+  }
   if (s.timer.phase === 'break' && s.timer.taskId === taskId) changes.timer = { phase: 'idle' }
   commit(changes)
   return true
@@ -361,7 +366,9 @@ export function checkTimer(now = Date.now()): TimerEvent[] {
     const fresh = now - endedAt < SIGNAL_MAX_DELAY_MS
     // Ultra-Modus: Bei jedem Blockende piept es (nur wenn das Blockende gerade erst war) –
     // bis die Pause bestätigt ist, nach dem letzten Block bis zur Antwort auf „Erledigt oder noch ein Block?“.
-    if (fresh && s.settings.ultraMode) {
+    // In der iPhone-App auch, wenn das Blockende länger her ist: Dort hat die Mitteilung auf dem
+    // gesperrten Display schon geklingelt – die Pause beginnt trotzdem erst mit „Pause machen“.
+    if ((fresh || __NATIVE_APP__) && s.settings.ultraMode) {
       if (completed.timer.phase === 'break') completed.timer = { ...completed.timer, nagging: true }
       else if (lastBlock) completed.timer = { phase: 'idle', ultra: lastBlockUltra(t, endedAt) }
     }

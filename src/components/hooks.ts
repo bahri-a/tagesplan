@@ -7,7 +7,7 @@ import { T } from '../config/texts'
 import { ULTRA_REPEAT_MS } from '../config/defaults'
 import { checkTimer, isUltraRinging, type TimerEvent } from '../store/actions'
 import { getState, subscribeToStore } from '../store/store'
-import { appIsInBackground, showNotification } from '../signals/notifications'
+import { appIsInBackground, phoneAlreadySignaled, showNotification } from '../signals/notifications'
 import { playBlockEnd, playBlockWarning, playBreakEnd, playUltraAlarm, setNoise } from '../signals/sounds'
 
 /**
@@ -44,6 +44,8 @@ export function useNow(active: boolean, intervalMs = 250): number {
 /** Ton + (im Hintergrund) Benachrichtigung für ein Timer-Ereignis. */
 function signal(event: TimerEvent): void {
   if (!event.fresh) return
+  // iPhone-App: Die Mitteilung hat schon geklingelt – nicht doppelt.
+  if (event.type !== 'blockWarning' && phoneAlreadySignaled()) return
   if (event.type === 'blockWarning') {
     playBlockWarning() // nur ein leiser Ton, keine Benachrichtigung
   } else if (event.type === 'blockEnd') {
