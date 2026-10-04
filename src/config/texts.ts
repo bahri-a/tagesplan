@@ -45,12 +45,8 @@ export const T = {
       'Nur anfangen – der Rest ergibt sich.',
       'Klein anfangen reicht völlig.',
     ],
-    // Ab und zu (nicht in jedem Block) ganz leise ganz unten in der Karte: Abschweifen ist okay.
-    gentleLines: [
-      'Abgeschweift? Macht nichts – einfach zurückkommen.',
-      'Gedanken wandern. Du holst sie einfach zurück.',
-      'Ablenkung ist normal. Weiter geht’s, bis der Ring voll ist.',
-    ],
+    // Ganz unten in der Karte während eines Blocks: anklickbar, zählt den Block als erledigt.
+    skipAsDone: 'Habe ich bereits erledigt,\naber vergessen die App zu starten.',
     startBlock: 'Starten',
     spaceHint: 'Leertaste',
     // Startknopf ab der zweiten Aufgabe – zwei Zeilen: oben die Frage, darunter „Weiter mit …“.

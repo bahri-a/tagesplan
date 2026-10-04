@@ -18,7 +18,7 @@
  */
 
 import { useContext, useEffect, useRef, useState, type ReactNode } from 'react'
-import { GENTLE_LINE_EVERY, STEP_DONE_FEEDBACK_MS } from '../config/defaults'
+import { STEP_DONE_FEEDBACK_MS } from '../config/defaults'
 import { T } from '../config/texts'
 import { isTypingOrButton, useNow, WindowContext } from '../components/hooks'
 import { StepList } from '../components/StepList'
@@ -26,7 +26,7 @@ import { TimerRing } from '../components/TimerRing'
 import { blockMarks, taskMark, type Mark } from '../logic/progress'
 import { formatDayName } from '../logic/time'
 import * as timer from '../logic/timer'
-import { cleanStartCue, pick, showsGentleLine } from '../logic/variety'
+import { cleanStartCue, pick } from '../logic/variety'
 import type { ID, Task, TimerState } from '../model/types'
 import { requestNotificationPermission } from '../signals/notifications'
 import {
@@ -36,6 +36,7 @@ import {
   confirmBreak,
   extendBlock,
   finishBlockEarly,
+  skipBlockAsDone,
   finishTask,
   isInWarningTime,
   pauseCurrentBlock,
@@ -352,9 +353,11 @@ function FocusCard({ task }: { task: Task }) {
 
         {t.phase === 'block' && <CurrentStep task={task} />}
 
-        {/* Ab und zu (nicht in jedem Block) ganz unten, abgesetzt: ein leiser Tipp – Abschweifen ist okay. */}
-        {t.phase === 'block' && t.pausedAt === null && showsGentleLine(t.startedAt, GENTLE_LINE_EVERY) && (
-          <p className="gentle-line">{pick(T.today.gentleLines, t.startedAt)}</p>
+        {/* Ganz unten, abgesetzt: Block schon ohne App gemacht → zählt als erledigt. */}
+        {t.phase === 'block' && (
+          <button type="button" className="gentle-line" onClick={() => skipBlockAsDone()}>
+            {T.today.skipAsDone}
+          </button>
         )}
 
         {asking ? (

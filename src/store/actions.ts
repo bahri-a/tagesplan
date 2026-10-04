@@ -312,6 +312,18 @@ export function finishBlockEarly(now = Date.now()): void {
 }
 
 /**
+ * „Habe ich bereits erledigt“: Der Block wurde ohne App gemacht. Er zählt als durchgehalten
+ * mit voller geplanter Zeit, danach geht es weiter wie nach einem normalen Blockende.
+ */
+export function skipBlockAsDone(now = Date.now()): void {
+  const t = getState().timer
+  if (t.phase !== 'block') return
+  const { blocks, timer: next } = completeBlockChanges(t, now)
+  const done = (blocks ?? []).map((b) => ({ ...b, pausedMs: 0, workedSeconds: Math.round(t.plannedMs / 1000) }))
+  commit({ blocks: done, timer: next })
+}
+
+/**
  * Block abbrechen. Die bis dahin gearbeitete Zeit wird gespeichert, der Block zählt aber nicht:
  * Beim nächsten Start kommt genau dieser Block noch einmal (fürs Beenden gibt es „Früher fertig“).
  */

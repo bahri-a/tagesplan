@@ -921,6 +921,18 @@
   border-top: 1px solid color-mix(in srgb, var(--text) 9%, transparent);
   font-size: 0.85rem;
   opacity: 0.75;
+  background: none;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  font-family: inherit;
+  white-space: pre-line;
+  cursor: pointer;
+}
+
+.gentle-line:hover {
+  opacity: 1;
+  text-decoration: underline;
 }
 
 /* Startknopf ab der zweiten Aufgabe: oben klein die Frage, darunter „Weiter mit „…““ */
