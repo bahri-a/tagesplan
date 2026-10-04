@@ -242,10 +242,6 @@ export const T = {
     deferredBack: (title: string) => `„${title}“ ist wieder bei den Vorschlägen.`,
     undo: 'Rückgängig',
     // Nur wenn für die Aufgabe gerade ein Block oder eine kurze Pause läuft (der Timer kommt nicht zurück).
-    deleteRunningBlock: 'Der laufende Block wird beendet. Trotzdem löschen?',
-    deleteRunningBreak: 'Die laufende kurze Pause wird beendet. Trotzdem löschen?',
-    deleteYes: 'Ja, löschen',
-    deleteNo: 'Nein',
     dragHandle: 'Ziehen zum Sortieren',
     removeStep: 'Schritt entfernen',
     close: 'Zuklappen',

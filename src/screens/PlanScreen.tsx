@@ -40,7 +40,6 @@ import {
 } from '@dnd-kit/sortable'
 import { MANY_TASKS_HINT_FROM, RECENT_TASKS_COUNT, SUGGESTIONS_COUNT, SUGGESTIONS_MAX, SUGGESTIONS_MIN } from '../config/defaults'
 import { T } from '../config/texts'
-import { Dialog } from '../components/Dialog'
 import { TaskCard } from '../components/TaskCard'
 import {
   hideSuggestion,
@@ -63,7 +62,7 @@ import {
 import { alive } from '../logic/records'
 import type { ID, Task } from '../model/types'
 import { addTask, copyTask, deleteTask, hideAllRecentTasks, hideRecentTask, moveTask, reorderTasks, swapDays } from '../store/actions'
-import { activeDay, plannedDay, recentKey, recentTasks, runningTimerOfTask, tasksOfDay } from '../store/selectors'
+import { activeDay, plannedDay, recentKey, recentTasks, tasksOfDay } from '../store/selectors'
 import { getState, useAppState } from '../store/store'
 import './plan.css'
 
@@ -94,8 +93,6 @@ export function PlanScreen({ onTaskDeleted, onNotice }: Props) {
   // Es ist immer höchstens eine Aufgabe aufgeklappt – das hält es ruhig.
   const [expandedId, setExpandedId] = useState<ID | null>(null)
   const [justCreatedId, setJustCreatedId] = useState<ID | null>(null)
-  // Rückfrage vor dem Löschen, wenn für die Aufgabe gerade ein Block oder eine Pause läuft.
-  const [confirmDelete, setConfirmDelete] = useState<{ task: Task; running: 'block' | 'break' } | null>(null)
   // Beim Ziehen auf den ANDEREN Tag: diese Spalte wird hervorgehoben.
   const [dropDayId, setDropDayId] = useState<ID | null>(null)
   // „Hinzufügen zu“ gilt für „Zuletzt verwendet“ und „Vorschläge“ gemeinsam. 1 = Morgen.
@@ -114,17 +111,10 @@ export function PlanScreen({ onTaskDeleted, onNotice }: Props) {
   }
 
   const remove = (id: ID) => {
-    setConfirmDelete(null)
     deleteTask(id)
     // Kommt die Aufgabe per „Rückgängig“ zurück, ist sie zugeklappt.
     setExpandedId((current) => (current === id ? null : current))
     onTaskDeleted(id)
-  }
-
-  const requestDelete = (task: Task) => {
-    const running = runningTimerOfTask(getState(), task.id, Date.now())
-    if (running) setConfirmDelete({ task, running })
-    else remove(task.id)
   }
 
   const copyToTomorrow = (task: Task) => {
@@ -212,7 +202,7 @@ export function PlanScreen({ onTaskDeleted, onNotice }: Props) {
               justCreatedId={justCreatedId}
               onToggle={toggle}
               onCreated={created}
-              onDelete={requestDelete}
+              onDelete={(task) => remove(task.id)}
               // Kopieren gibt es auf den Karten von heute (→ morgen).
               onCopy={index === 0 ? copyToTomorrow : undefined}
             />
@@ -232,21 +222,6 @@ export function PlanScreen({ onTaskDeleted, onNotice }: Props) {
         onNotice={onNotice}
       />
 
-      {confirmDelete && (
-        <Dialog title={`„${confirmDelete.task.title || '…'}“`} onClose={() => setConfirmDelete(null)}>
-          <p className="dialog-text">
-            {confirmDelete.running === 'block' ? T.plan.deleteRunningBlock : T.plan.deleteRunningBreak}
-          </p>
-          <div className="dialog-actions">
-            <button type="button" className="btn btn-quiet" onClick={() => setConfirmDelete(null)}>
-              {T.plan.deleteNo}
-            </button>
-            <button type="button" className="btn btn-primary" onClick={() => remove(confirmDelete.task.id)}>
-              {T.plan.deleteYes}
-            </button>
-          </div>
-        </Dialog>
-      )}
     </div>
   )
 }
