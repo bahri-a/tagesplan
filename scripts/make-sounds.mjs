@@ -26,7 +26,7 @@ const BREAK_END_NOTES = [
 ]
 
 /** Lautstärke der Datei (Spitze). Wie laut es klingt, regelt am iPhone die Klingel-Lautstärke. */
-const PEAK = 0.6
+const PEAK = 0.75
 
 /** Ein Glockenton wie in sounds.ts: Grundton + zwei leise Obertöne, weicher Einsatz, Ausklingen. */
 function addBell(samples, freq, start) {

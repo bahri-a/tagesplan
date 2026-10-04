@@ -68,7 +68,7 @@ export const DAY_ROLLOVER_HOUR = 4
 export const SIGNAL_MAX_DELAY_MS = 90_000
 
 /** Lautstärke der Töne (0 = stumm, 1 = sehr laut). */
-export const SOUND_VOLUME = 0.22
+export const SOUND_VOLUME = 0.32
 
 /** Wie lange nach dem Tippen der Notizzettel gespeichert wird (Millisekunden). */
 export const NOTE_SAVE_DELAY_MS = 400

@@ -391,6 +391,8 @@ export const T = {
     lastBlockEndBody: (title: string) => `Alle geplanten Blöcke geschafft. Erledigt oder noch einer? (${title})`,
     breakEndTitle: 'Pause vorbei',
     breakEndBody: (title: string) => `Bereit für den nächsten Block? (${title})`,
+    // iPhone-App: Pop-up beim Zurückkehren, wenn die Mitteilung während der Sperre schon geklingelt hat.
+    wakeButton: 'Weiter',
   },
 
   update: {
