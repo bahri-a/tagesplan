@@ -10,12 +10,13 @@ import { useCallback, useEffect, useState } from 'react'
 import { APP_NAME, PARKED_TOAST_MS, UNDO_DELETE_MS } from './config/defaults'
 import { T } from './config/texts'
 import { EndDayDialog } from './components/EndDayDialog'
-import { useNoise, useNow, useTimerEngine } from './components/hooks'
+import { useNoise, useNow, useTimerEngine, type WakeEvent } from './components/hooks'
 import { NotePad } from './components/NotePad'
 import { MiniWindow } from './components/MiniWindow'
 import { QuickPark } from './components/QuickPark'
 import { Toast, type ToastAction } from './components/Toast'
 import { UpdateBanner } from './components/UpdateBanner'
+import { WakeAlert } from './components/WakeAlert'
 import { requestPersistentStorage } from './db/database'
 import { formatCountdown } from './logic/time'
 import * as timer from './logic/timer'
@@ -80,8 +81,9 @@ function Shell() {
   const [screen, setScreen] = useState<Screen>('today')
   const [endDayDialog, setEndDayDialog] = useState<'closed' | 'confirm' | 'conflicts'>('closed')
   const [toast, setToast] = useState<ToastInfo | null>(null)
+  const [wakeEvent, setWakeEvent] = useState<WakeEvent | null>(null)
 
-  useTimerEngine()
+  useTimerEngine(useCallback((e: WakeEvent) => setWakeEvent(e), []))
   useNoise()
   useTheme(state.settings.theme, state.settings.palette)
   useSurfaces(state.settings.surfaces)
@@ -170,6 +172,7 @@ function Shell() {
           onDone={clearToast}
         />
       )}
+      {wakeEvent && <WakeAlert event={wakeEvent} onClose={() => setWakeEvent(null)} />}
       <UpdateBanner />
     </>
   )

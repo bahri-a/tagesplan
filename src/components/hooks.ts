@@ -2,7 +2,7 @@
  * Kleine React-Hilfen, die an mehreren Stellen gebraucht werden.
  */
 
-import { createContext, useContext, useEffect, useLayoutEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { T } from '../config/texts'
 import { ULTRA_REPEAT_MS } from '../config/defaults'
 import { checkTimer, isUltraRinging, type TimerEvent } from '../store/actions'
@@ -41,11 +41,30 @@ export function useNow(active: boolean, intervalMs = 250): number {
   return now
 }
 
+/** Block- oder Pausenende, nachdem die Mitteilung beim gesperrten iPhone schon geklingelt hat. */
+export interface WakeEvent {
+  kind: 'blockEnd' | 'breakEnd'
+  title: string
+  body: string
+}
+
 /** Ton + (im Hintergrund) Benachrichtigung für ein Timer-Ereignis. */
-function signal(event: TimerEvent): void {
+function signal(event: TimerEvent, onWake?: (e: WakeEvent) => void): void {
   if (!event.fresh) return
-  // iPhone-App: Die Mitteilung hat schon geklingelt – nicht doppelt.
-  if (event.type !== 'blockWarning' && phoneAlreadySignaled()) return
+  // iPhone-App: Die Mitteilung hat schon geklingelt – kein doppelter Ton, aber ein auffälliges
+  // Pop-up beim Zurückkehren, damit es nicht in der stillen Mitteilung untergeht.
+  if (event.type !== 'blockWarning' && phoneAlreadySignaled()) {
+    if (event.type === 'blockEnd') {
+      onWake?.({
+        kind: 'blockEnd',
+        title: T.notification.blockEndTitle,
+        body: event.lastBlock ? T.notification.lastBlockEndBody(event.taskTitle) : T.notification.blockEndBody(event.taskTitle),
+      })
+    } else if (event.type === 'breakEnd') {
+      onWake?.({ kind: 'breakEnd', title: T.notification.breakEndTitle, body: T.notification.breakEndBody(event.taskTitle) })
+    }
+    return
+  }
   if (event.type === 'blockWarning') {
     playBlockWarning() // nur ein leiser Ton, keine Benachrichtigung
   } else if (event.type === 'blockEnd') {
@@ -69,7 +88,13 @@ function signal(event: TimerEvent): void {
  * Ein Web Worker gibt im Sekundentakt Bescheid; dann wird geprüft, ob ein
  * Block oder eine Pause vorbei ist. Der Takt läuft nur, wenn nötig.
  */
-export function useTimerEngine(): void {
+export function useTimerEngine(onWake?: (e: WakeEvent) => void): void {
+  // Im Ref, damit eine neue `onWake`-Funktion nicht den ganzen Motor (inkl. Worker) neu startet.
+  const onWakeRef = useRef(onWake)
+  useLayoutEffect(() => {
+    onWakeRef.current = onWake
+  }, [onWake])
+
   useEffect(() => {
     const worker = new Worker(new URL('../logic/ticker.worker.ts', import.meta.url), {
       type: 'module',
@@ -79,7 +104,7 @@ export function useTimerEngine(): void {
     // Läuft im selben Sekundentakt wie der Timer – so klappt es auch im Hintergrund.
     let lastUltraAt = 0
     const check = () => {
-      checkTimer().forEach(signal)
+      checkTimer().forEach((e) => signal(e, onWakeRef.current))
       const now = Date.now()
       if (isUltraRinging(now) && now - lastUltraAt >= ULTRA_REPEAT_MS - 100) {
         lastUltraAt = now
