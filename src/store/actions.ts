@@ -313,14 +313,14 @@ export function finishBlockEarly(now = Date.now()): void {
 
 /**
  * „Habe ich bereits erledigt“: Der Block wurde ohne App gemacht. Er zählt als durchgehalten
- * mit voller geplanter Zeit, danach geht es weiter wie nach einem normalen Blockende.
+ * mit voller geplanter Zeit. Keine Pause danach – der nächste Block kann gleich starten.
  */
 export function skipBlockAsDone(now = Date.now()): void {
   const t = getState().timer
   if (t.phase !== 'block') return
-  const { blocks, timer: next } = completeBlockChanges(t, now)
+  const { blocks } = completeBlockChanges(t, now)
   const done = (blocks ?? []).map((b) => ({ ...b, pausedMs: 0, workedSeconds: Math.round(t.plannedMs / 1000) }))
-  commit({ blocks: done, timer: next })
+  commit({ blocks: done, timer: { phase: 'idle' } })
 }
 
 /**
