@@ -81,11 +81,12 @@ export function recentTasks(s: AppState, dayId: ID, limit: number): Task[] {
   for (const b of alive(Object.values(s.blocks))) {
     lastWork.set(b.taskId, Math.max(lastWork.get(b.taskId) ?? 0, b.endedAt))
   }
-  const usedAt = (t: Task) => Math.max(t.createdAt, t.completedAt ?? 0, lastWork.get(t.id) ?? 0)
+  // Auch gelöschte Aufgaben zählen: Löschen ist „gerade nicht, aber bald wieder“.
+  const usedAt = (t: Task) => Math.max(t.createdAt, t.completedAt ?? 0, t.deletedAt ?? 0, lastWork.get(t.id) ?? 0)
   const onDay = new Set(tasksOfDay(s, dayId).map((t) => key(t.title)))
   const seen = new Set<string>()
   const result: Task[] = []
-  const tasks = alive(Object.values(s.tasks)).sort((a, b) => usedAt(b) - usedAt(a))
+  const tasks = Object.values(s.tasks).sort((a, b) => usedAt(b) - usedAt(a))
   for (const task of tasks) {
     const k = key(task.title)
     if (!k || onDay.has(k) || seen.has(k)) continue
