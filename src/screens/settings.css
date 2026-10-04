@@ -33,7 +33,8 @@
 /* Schmaler Bildschirm (iPhone): Die Farbwelt-Auswahl ist zu breit für neben dem Text –
    sie rutscht unter die Beschriftung, statt rechts über den Rand zu ragen. */
 @media (max-width: 480px) {
-  .setting-row:has(.palette-picker) {
+  .setting-row:has(.palette-picker),
+  .setting-row:has(.noise-picker) {
     flex-direction: column;
     align-items: flex-start;
   }
@@ -183,6 +184,12 @@
   grid-row: 1;
   margin: 0.25rem 0;
   white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .noise-picker .segmented-item {
+    padding-inline: 0.5rem;
+  }
 }
 
 .noise-preview {

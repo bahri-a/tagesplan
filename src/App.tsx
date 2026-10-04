@@ -58,9 +58,14 @@ export default function App() {
     void requestPersistentStorage()
     // Chrome erlaubt Töne erst nach einem Klick – daher bei jedem Klick freischalten.
     document.addEventListener('pointerdown', unlockAudio)
+    // iPhone/Safari zählt nur Tippen am Ende (touchend/click) als Erlaubnis, nicht pointerdown.
+    document.addEventListener('touchend', unlockAudio)
+    document.addEventListener('click', unlockAudio)
     document.addEventListener('keydown', unlockAudio) // auch Tastenkürzel (Leertaste) zählen
     return () => {
       document.removeEventListener('pointerdown', unlockAudio)
+      document.removeEventListener('touchend', unlockAudio)
+      document.removeEventListener('click', unlockAudio)
       document.removeEventListener('keydown', unlockAudio)
     }
   }, [])

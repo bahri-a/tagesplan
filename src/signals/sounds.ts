@@ -57,12 +57,26 @@ let ctx: AudioContext | null = null
  */
 export function unlockAudio(): void {
   try {
+    // iPhone: Web Audio verstummt sonst bei aktivem Stumm-Schalter („Wiedergabe“ ignoriert ihn).
+    const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession
+    if (session) session.type = 'playback'
     ctx ??= new AudioContext()
-    if (ctx.state === 'suspended') void ctx.resume()
+    // Safari kennt auch den Zustand „interrupted“ (z. B. nach Anruf oder App-Wechsel).
+    if (ctx.state !== 'running') void ctx.resume()
+    if (!unlocked) {
+      // Safari schaltet erst frei, wenn im Tipp-Ereignis ein Ton gestartet wurde (hier: Stille).
+      const silent = ctx.createBufferSource()
+      silent.buffer = ctx.createBuffer(1, 1, 22050)
+      silent.connect(ctx.destination)
+      silent.start(0)
+      unlocked = true
+    }
   } catch {
     // Ohne Ton geht es auch – die Benachrichtigung kommt trotzdem.
   }
 }
+
+let unlocked = false
 
 /** Ein einzelner weicher Glockenton. */
 function bell(audio: AudioContext, out: AudioNode, freq: number, start: number) {
