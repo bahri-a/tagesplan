@@ -296,6 +296,23 @@ describe('Hauptaufgabe erledigt, lange Pause', () => {
     expect(sel.currentTask(s)?.id).toBe(b.id)
     expect(sel.needsLongPause(s, s.tasks[b.id])).toBe(true)
   })
+
+  it('„Weiter“ nach der langen Pause bleibt auch nach einem Neuladen gemerkt', async () => {
+    const a = actions.addTask(today(), 'A')
+    const b = actions.addTask(today(), 'B')
+    actions.updateTask(a.id, { estimatedBlocks: 1 })
+    actions.startBlock(a.id)
+    actions.checkTimer(at(BLOCK))
+    actions.finishTask(a.id)
+    expect(sel.isOnLongPause(getState(), getState().tasks[b.id])).toBe(true)
+
+    actions.endLongPause(b.id)
+    expect(sel.isOnLongPause(getState(), getState().tasks[b.id])).toBe(false)
+    await flushSaves()
+    resetStoreForTests()
+    await initStore()
+    expect(sel.isOnLongPause(getState(), getState().tasks[b.id])).toBe(false)
+  })
 })
 
 describe('Tag beenden', () => {

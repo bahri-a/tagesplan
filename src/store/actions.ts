@@ -458,6 +458,12 @@ export function isInWarningTime(t: timer.BlockTimer, now: number): boolean {
   return remaining > 0 && remaining <= BLOCK_WARNING_MS
 }
 
+/** Lange Pause vorbei („Weiter“): Die nächste Aufgabe erscheint – auch nach einem Neuladen. */
+export function endLongPause(taskId: ID): void {
+  const s = getState()
+  if (s.local.longPauseEndedFor !== taskId) commit({ local: { ...s.local, longPauseEndedFor: taskId } })
+}
+
 /** „Hauptaufgabe erledigt“ – beendet auch die kurze Pause. */
 export function finishTask(taskId: ID): void {
   setTaskCompleted(taskId, true)
@@ -547,7 +553,7 @@ export function endDay(choices: ConflictChoices = {}, dropped: ReadonlySet<ID> =
     { ...nextDay, status: 'active', startedAt: now },
     { ...baseFields(now), status: 'planned', startedAt: null, endedAt: null, firstWorkAt: null },
   ]
-  changes.local = { ...s.local, extraBlock: null }
+  changes.local = { ...s.local, extraBlock: null, longPauseEndedFor: null }
   commit(changes)
 }
 

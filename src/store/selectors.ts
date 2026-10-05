@@ -157,6 +157,14 @@ export function needsLongPause(s: AppState, task: Task): boolean {
 }
 
 /**
+ * Steht in „Heute“ gerade die Karte „Lange Pause“? Ja, nach einer erledigten Hauptaufgabe vor der
+ * nächsten (siehe `needsLongPause`), solange nichts läuft und „Weiter“ noch nicht gedrückt wurde.
+ */
+export function isOnLongPause(s: AppState, task: Task): boolean {
+  return s.timer.phase === 'idle' && needsLongPause(s, task) && s.local.longPauseEndedFor !== task.id
+}
+
+/**
  * Sind alle geschätzten Blöcke gemacht? Dann fragt die App:
  * „Hauptaufgabe erledigt oder noch ein Block?“
  */

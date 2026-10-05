@@ -1,35 +1,22 @@
 /**
- * BILDSCHIRM „HEUTE“ (Durchführen)
- * ================================
- * Zeigt immer die oberste noch nicht erledigte Hauptaufgabe – groß und ruhig:
- *  - oben in der Karte: die Block-Punkte (mit „je 25 Min.“), darunter der Titel
- *  - vor dem Start: die ersten Schritte zum Ansehen (noch nicht abhakbar), „Block starten“
- *    (ab der zweiten Aufgabe zweizeilig: „Lange Pause gemacht?“ / „Weiter mit „…““)
- *  - während des Blocks: weicher Ring mit Restzeit, dezent „Pausieren“ und „Abbrechen“,
- *    und „Zum Einstieg: …“ zum Abhaken; ab und zu ganz unten, abgesetzt, ein leiser Tipp
- *  - in der kurzen Pause: blauer Ring, danach „Nächsten Block starten“
- *  - nach dem letzten geschätzten Block: KEINE kurze Pause, gleich „Erledigt oder noch ein Block?“
- *  - an einem früheren Tag angefangen, noch nicht fertig: „Weitermachen oder abschließen?“ – nach „Noch ein Block“
- *    führt oben links ein leises „← Zurück“ wieder zu dieser Frage (falls es ein Versehen war)
- *  - am nächsten Kalendertag, solange der alte Tag noch offen ist: ganz oben leise „Neuen Tag beginnen →“
- *  - über der Karte: für jede heute erledigte Hauptaufgabe eine kleine Karte mit ✓ (motiviert)
- *  - unter der Karte: schlanke Leiste mit den Aufgaben des Tages (nicht während eines Blocks)
- * Im Hintergrund liegt ein sehr zarter Farbschimmer: grünlich im Block, bläulich in der Pause.
+ * DIE GROSSE KARTE IN „HEUTE“
+ * Die aktuelle Hauptaufgabe mit Block-Punkten, Titel und – je nach Phase – Startknopf,
+ * laufendem Block (Ring, Rauschen, Pausieren/Früher fertig/Abbrechen), kurzer Pause oder
+ * der Frage „Erledigt oder noch ein Block?“. Auch im Mini-Fenster.
  */
 
-import { useContext, useEffect, useRef, useState, type ReactNode } from 'react'
-import { STEP_DONE_FEEDBACK_MS } from '../config/defaults'
-import { T } from '../config/texts'
-import { isTypingOrButton, useNow, WindowContext } from '../components/hooks'
-import { Dialog } from '../components/Dialog'
-import { StepList } from '../components/StepList'
-import { TimerRing } from '../components/TimerRing'
-import { blockMarks, taskMark, type Mark } from '../logic/progress'
-import { formatDayName } from '../logic/time'
-import * as timer from '../logic/timer'
-import { cleanStartCue, pick } from '../logic/variety'
-import type { ID, Task, TimerState } from '../model/types'
-import { requestNotificationPermission } from '../signals/notifications'
+import { useEffect, useState, type ReactNode } from 'react'
+import { STEP_DONE_FEEDBACK_MS } from '../../config/defaults'
+import { T } from '../../config/texts'
+import { useNow } from '../../components/hooks'
+import { Dialog } from '../../components/Dialog'
+import { StepList } from '../../components/StepList'
+import { TimerRing } from '../../components/TimerRing'
+import { blockMarks, type Mark } from '../../logic/progress'
+import * as timer from '../../logic/timer'
+import { cleanStartCue, pick } from '../../logic/variety'
+import type { ID, Task } from '../../model/types'
+import { requestNotificationPermission } from '../../signals/notifications'
 import {
   abortCurrentBlock,
   addExtraBlock,
@@ -47,229 +34,25 @@ import {
   startBlock,
   toggleStep,
   undoExtraBlock,
-} from '../store/actions'
+} from '../../store/actions'
 import {
   activeDay,
   blockMinutesFor,
   blocksDone,
-  canStartNewDay,
   canUndoExtraBlock,
   currentStep,
-  currentTask,
   extraBlockStartsNow,
   isAskingDone,
   isAskingResume,
   needsLongPause,
   stepsOfTask,
   tasksOfDay,
-  taskWork,
-} from '../store/selectors'
-import { useAppState } from '../store/store'
-import './today.css'
-
-interface Props {
-  onPlan: () => void
-  onEndDay: () => void
-  onStartNewDay: () => void
-}
-
-export function TodayScreen({ onPlan, onEndDay, onStartNewDay }: Props) {
-  const state = useAppState()
-  const t = state.timer
-  const tasks = tasksOfDay(state, activeDay(state).id)
-  // Während eines Blocks: dessen Aufgabe. Sonst: die oberste offene Aufgabe.
-  const task = t.phase === 'block' ? state.tasks[t.taskId] : currentTask(state)
-  // Nach einer erledigten Hauptaufgabe: erst die lange Pause, die nächste Aufgabe nur leise als „Danach: …“.
-  const [pauseEndedFor, setPauseEndedFor] = useState(longPauseEndedFor)
-  const onLongPause = t.phase === 'idle' && !!task && needsLongPause(state, task) && pauseEndedFor !== task.id
-
-  return (
-    <div className="today">
-      <Ambient timerState={t} longPause={onLongPause} />
-
-      <NewDayLink onClick={onStartNewDay} />
-
-      {/* Schon geschafft: erledigte Hauptaufgaben stehen als eigene Karten oben (nicht im Block). */}
-      {t.phase !== 'block' && <DoneCards tasks={tasks.filter((x) => x.completedAt !== null)} />}
-
-      {tasks.length === 0 ? (
-        <section className="card focus-card is-message">
-          <div className="message-mark" aria-hidden="true">
-            <svg viewBox="0 0 76 76">
-              <circle className="message-mark-dashed" cx="38" cy="38" r="33" />
-              <path className="message-mark-plus" d="M38 29v18M29 38h18" />
-            </svg>
-          </div>
-          <h1 className="message-title">{T.today.emptyTitle}</h1>
-          <p className="message-text">{T.today.emptyText}</p>
-          <button type="button" className="btn btn-primary" onClick={onPlan}>
-            {T.today.goPlan}
-          </button>
-        </section>
-      ) : task && onLongPause ? (
-        <LongPauseCard
-          task={task}
-          onEnd={() => {
-            longPauseEndedFor = task.id
-            setPauseEndedFor(task.id)
-          }}
-        />
-      ) : task ? (
-        <FocusCard task={task} />
-      ) : (
-        <section className="card focus-card is-message">
-          <div className="message-mark" aria-hidden="true">
-            <svg viewBox="0 0 76 76">
-              <defs>
-                <linearGradient id="all-done-gradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" className="timer-ring-stop-a" />
-                  <stop offset="1" className="timer-ring-stop-b" />
-                </linearGradient>
-              </defs>
-              <circle className="message-mark-ring" cx="38" cy="38" r="33" stroke="url(#all-done-gradient)" />
-              <path className="message-mark-check" d="M27 39l7.5 7.5L50 31" />
-            </svg>
-          </div>
-          <h1 className="message-title">{T.today.allDoneTitle}</h1>
-          <p className="message-text">{pick(T.today.allDoneTexts, activeDay(state).createdAt)}</p>
-        </section>
-      )}
-
-      {/* Während ein Block läuft, bleibt nur das Wichtigste sichtbar. */}
-      {t.phase !== 'block' && tasks.length > 0 && <DayBar tasks={tasks} currentId={task?.id} />}
-
-      {t.phase !== 'block' && (
-        <div className="end-day">
-          <button type="button" className="btn btn-quiet" onClick={onEndDay}>
-            {T.today.endDay}
-          </button>
-        </div>
-      )}
-    </div>
-  )
-}
-
-/**
- * „Neuen Tag beginnen →“: erscheint oben, wenn du die App an einem neuen Kalendertag öffnest
- * und der alte Tag noch offen ist. Es wird nichts gefragt – du arbeitest einfach weiter,
- * bis du den Link anklickst. Geprüft wird jede Minute und beim Zurückkehren ins Fenster.
- */
-function NewDayLink({ onClick }: { onClick: () => void }) {
-  const state = useAppState()
-  const now = useNow(true, 60_000)
-  if (!canStartNewDay(state, now)) return null
-  const firstWorkAt = activeDay(state).firstWorkAt
-  const dayName = firstWorkAt === null ? '' : formatDayName(firstWorkAt).split(',')[0]
-  return (
-    <div className="new-day">
-      <button type="button" className="new-day-link" onClick={onClick} title={T.newDay.hint(dayName)}>
-        <SunriseIcon />
-        <span className="new-day-label">{T.newDay.link}</span>
-        <span className="new-day-arrow" aria-hidden="true">
-          →
-        </span>
-      </button>
-    </div>
-  )
-}
-
-function SunriseIcon() {
-  return (
-    <svg className="new-day-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 17a7 7 0 0 1 14 0" />
-      <path d="M3 20h18" />
-      <path d="M12 4v3M4.9 8.9l2.1 2.1M19.1 8.9 17 11" />
-    </svg>
-  )
-}
-
-/**
- * Heute erledigte Hauptaufgaben: je eine ruhige Karte mit Haken, Titel und dem, was du daran
- * gearbeitet hast („Erledigt · 3 Blöcke · 1 Std. 15 Min.“). Die aktuelle Aufgabe steht darunter.
- */
-function DoneCards({ tasks }: { tasks: Task[] }) {
-  const state = useAppState()
-  if (tasks.length === 0) return null
-  return (
-    <ul className="done-cards" aria-label={T.today.doneCardsLabel}>
-      {tasks.map((task) => {
-        const work = taskWork(state, task.id)
-        const parts = [T.today.doneCard]
-        if (work.blocks > 0) parts.push(T.endDay.yieldBlocks(work.blocks))
-        if (work.minutes > 0) parts.push(T.endDay.yieldTime(work.minutes))
-        return (
-          <li key={task.id} className="card done-card">
-            <span className="done-card-mark" aria-hidden="true">
-              <CheckIcon />
-            </span>
-            <span className="done-card-text">
-              <span className="done-card-title">{task.title}</span>
-              <span className="done-card-meta">{parts.join(' · ')}</span>
-            </span>
-          </li>
-        )
-      })}
-    </ul>
-  )
-}
-
-/**
- * Für welche Aufgabe die lange Pause schon beendet wurde. Liegt außerhalb der Komponente,
- * damit ein Wechsel zu „Planer“ und zurück die Pause nicht wieder zeigt (nach Neuladen schon – harmlos).
- */
-let longPauseEndedFor: ID | null = null
-
-/**
- * Lange Pause nach einer erledigten Hauptaufgabe: ruhige Karte statt der nächsten Aufgabe.
- * Erst „Pause beenden“ (oder Leertaste) zeigt die nächste Aufgabe – die steht vorher nur leise
- * als „Danach: …“ darunter, damit sie nicht überrascht.
- */
-function LongPauseCard({ task, onEnd }: { task: Task; onEnd: () => void }) {
-  useSpaceKey(onEnd)
-  return (
-    <section className="card focus-card is-message long-pause-card">
-      <div className="message-mark" aria-hidden="true">
-        <svg viewBox="0 0 76 76">
-          <circle className="long-pause-ring" cx="38" cy="38" r="33" />
-          <path className="long-pause-moon" d="M44 26a13 13 0 1 0 8 20a11 11 0 0 1-8-20z" />
-        </svg>
-      </div>
-      <h1 className="message-title">{T.today.longPauseTitle}</h1>
-      <p className="message-text">{T.today.longPauseText}</p>
-      <button type="button" className="btn btn-primary btn-big" title={T.today.spaceHint} onClick={onEnd}>
-        {T.today.longPauseEnd}
-      </button>
-      <p className="long-pause-next">
-        <span className="long-pause-next-label">{T.today.longPauseNext}</span> {task.title}
-      </p>
-    </section>
-  )
-}
-
-/** Ultra-Modus: Die fällige Pause bestätigen, damit das Piepen aufhört. */
-function BreakAsk({ question }: { question: string }) {
-  return (
-    <div className="ask-done">
-      <p className="ask-done-question">{question}</p>
-      <div className="ask-done-actions">
-        <button type="button" className="btn btn-primary btn-big" onClick={() => confirmBreak()}>
-          {T.today.breakConfirm}
-        </button>
-      </div>
-    </div>
-  )
-}
-
-/** Sehr zarter Farbschimmer hinter allem – zeigt die Phase, wechselt langsam (siehe today.css). */
-function Ambient({ timerState, longPause = false }: { timerState: TimerState; longPause?: boolean }) {
-  let phase = longPause ? 'break' : 'idle'
-  if (timerState.phase === 'block') phase = timerState.pausedAt === null ? 'block' : 'paused'
-  if (timerState.phase === 'break') phase = 'break'
-  return <div className="ambient" data-phase={phase} aria-hidden="true" />
-}
+} from '../../store/selectors'
+import { useAppState } from '../../store/store'
+import { useSpaceKey } from './useSpaceKey'
 
 /** Die große Karte mit der aktuellen Hauptaufgabe. */
-function FocusCard({ task }: { task: Task }) {
+export function FocusCard({ task }: { task: Task }) {
   const state = useAppState()
   const t = state.timer
   const asking = t.phase !== 'block' && isAskingDone(state, task)
@@ -400,6 +183,20 @@ function FocusCard({ task }: { task: Task }) {
   )
 }
 
+/** Ultra-Modus: Die fällige Pause bestätigen, damit das Piepen aufhört. */
+function BreakAsk({ question }: { question: string }) {
+  return (
+    <div className="ask-done">
+      <p className="ask-done-question">{question}</p>
+      <div className="ask-done-actions">
+        <button type="button" className="btn btn-primary btn-big" onClick={() => confirmBreak()}>
+          {T.today.breakConfirm}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 /**
  * Leises „← Zurück“ oben links in der Karte, nur kurz nach „Noch ein Block“:
  * Die Schätzung wird wie vorher, die Frage „Erledigt oder noch ein Block?“ ist wieder da.
@@ -485,127 +282,6 @@ function BlockDots({ marks, suffix, sentence }: BlockDotsProps) {
 }
 
 /**
- * Schlanke Leiste unter der Karte: alle Aufgaben des Tages als kleine Pillen.
- *  - erledigt: grün mit Haken
- *  - jetzt dran: mildes Honig-Orange (in Arbeit)
- *  - kommt noch: durchscheinendes Glas (noch nicht aktiv)
- * Ein Klick auf eine Pille zeigt darunter eine kurze Übersicht der Aufgabe, ein zweiter Klick
- * (oder das ×) schließt sie wieder.
- */
-function DayBar({ tasks, currentId }: { tasks: Task[]; currentId: ID | undefined }) {
-  const [openId, setOpenId] = useState<ID | null>(null)
-  const open = tasks.find((t) => t.id === openId)
-  return (
-    <nav className="day-bar" aria-label={T.today.dayList}>
-      <ol>
-        {tasks.map((item) => {
-          const mark = taskMark(item.completedAt !== null, item.id === currentId)
-          const isOpen = item.id === open?.id
-          return (
-            <li key={item.id} aria-current={mark === 'current' ? 'step' : undefined}>
-              <button
-                type="button"
-                className={`day-pill is-${mark}${isOpen ? ' is-expanded' : ''}`}
-                aria-expanded={isOpen}
-                title={T.today.peekHint(item.title)}
-                onClick={() => setOpenId(isOpen ? null : item.id)}
-              >
-                <span className="day-mark" aria-hidden="true">
-                  {mark === 'done' && <CheckIcon />}
-                </span>
-                <span className="day-title">{item.title}</span>
-                {mark === 'done' && <span className="visually-hidden"> ({T.today.stepDone})</span>}
-              </button>
-            </li>
-          )
-        })}
-      </ol>
-      {open && (
-        <DayPeek
-          key={open.id}
-          task={open}
-          mark={taskMark(open.completedAt !== null, open.id === currentId)}
-          onClose={() => setOpenId(null)}
-        />
-      )}
-    </nav>
-  )
-}
-
-/** Kurze Übersicht einer Aufgabe unter der Leiste: Stand, Blöcke, Startsignal, erste Schritte. */
-function DayPeek({ task, mark, onClose }: { task: Task; mark: Mark; onClose: () => void }) {
-  const state = useAppState()
-  const steps = stepsOfTask(state, task.id)
-  const work = taskWork(state, task.id)
-  const minutes = blockMinutesFor(state, task)
-  const cue = task.startCue ? cleanStartCue(task.startCue) : ''
-
-  let status: string = T.today.peekUpcoming
-  if (mark === 'current') status = T.today.peekCurrent
-  if (mark === 'done') status = T.today.doneCard
-  const meta = [T.endDay.yieldBlocks(task.estimatedBlocks), T.today.perBlock(minutes)]
-  if (work.blocks > 0) meta.push(T.today.peekWorked(work.blocks, T.endDay.yieldTime(work.minutes)))
-
-  return (
-    <section className={`day-peek is-${mark}`} aria-label={task.title}>
-      <button type="button" className="day-peek-close" aria-label={T.today.peekClose} onClick={onClose}>
-        <svg viewBox="0 0 12 12" aria-hidden="true">
-          <path d="M3.5 3.5l5 5M8.5 3.5l-5 5" />
-        </svg>
-      </button>
-      <p className="day-peek-status">{status}</p>
-      <h2 className="day-peek-title">{task.title}</h2>
-      <p className="day-peek-meta">{meta.join(' · ')}</p>
-      {cue && <p className="day-peek-cue">{T.today.startCue(cue)}</p>}
-      {steps.length > 0 && (
-        <>
-          <p className="day-peek-label">{T.today.firstStepsPreview}</p>
-          <ul className="day-peek-steps">
-            {steps.map((step) => (
-              <li key={step.id} className={step.doneAt !== null ? 'is-done' : undefined}>
-                {step.text}
-                {step.doneAt !== null && <span className="visually-hidden"> ({T.today.stepDone})</span>}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-    </section>
-  )
-}
-
-function CheckIcon() {
-  return (
-    <svg viewBox="0 0 16 16">
-      <path d="M4.2 8.4l2.4 2.4 5.2-5.4" />
-    </svg>
-  )
-}
-
-/**
- * Leertaste als Abkürzung für den Hauptknopf. Nicht, während du in ein Feld tippst,
- * und nicht, wenn gerade ein Knopf den Fokus hat (dann drückt die Leertaste ohnehin ihn).
- */
-function useSpaceKey(action: () => void) {
-  const latest = useRef(action)
-  // Im Mini-Fenster gilt die Leertaste dort (eigenes Dokument), sonst im App-Fenster.
-  const { document } = useContext(WindowContext)
-  useEffect(() => {
-    latest.current = action
-  })
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.code !== 'Space' || e.repeat || e.metaKey || e.ctrlKey || e.altKey) return
-      if (isTypingOrButton(e.target) || document.querySelector('[role="dialog"]')) return
-      e.preventDefault()
-      latest.current()
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [document])
-}
-
-/**
  * Rund um den Startknopf. Vor dem ersten Block einer Aufgabe:
  *  - darüber das Startsignal aus „Planen“ („Wenn der Kaffee auf dem Tisch steht → los.“), falls eingetragen,
  *  - darunter klein ein Startsatz („Du musst nur anfangen.“).
@@ -644,7 +320,7 @@ function StartButton({ task, label: ownLabel }: { task: Task; label?: string }) 
       ? state.timer.taskId === task.id ? T.today.nextBlock : T.today.nextTask
       : T.today.startBlock)
   // Mit eigener Beschriftung (z. B. „Weitermachen“) bleibt der Knopf bewusst einzeilig.
-  if (!ownLabel && needsLongPause(state, task) && longPauseEndedFor !== task.id) {
+  if (!ownLabel && needsLongPause(state, task) && state.local.longPauseEndedFor !== task.id) {
     label = (
       <span className="long-pause-label">
         <span className="long-pause-ask">{T.today.longPauseAsk}</span>
@@ -871,22 +547,5 @@ export function NoiseToggle() {
         {T.today.noise} <span className="noise-toggle-state">{on ? T.today.noiseOn : T.today.noiseOff}</span>
       </span>
     </button>
-  )
-}
-
-/**
- * Inhalt des Mini-Fensters: dieselbe Karte wie in „Heute“, nur kompakt (siehe mini.css –
- * erste Schritte, Punkte und leise Sätze sind dort ausgeblendet). Ring, Rauschen-Knopf,
- * Start/Pausieren/Weiter und das Startsignal bleiben.
- */
-export function MiniToday() {
-  const state = useAppState()
-  const t = state.timer
-  const task = t.phase === 'block' ? state.tasks[t.taskId] : currentTask(state)
-  return (
-    <div className="today mini-today">
-      <Ambient timerState={t} />
-      {task ? <FocusCard task={task} /> : <p className="mini-message">{T.mini.nothing}</p>}
-    </div>
   )
 }

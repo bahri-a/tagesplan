@@ -14,7 +14,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { MINI_WINDOW_SIZE } from '../config/defaults'
 import { T } from '../config/texts'
-import { MiniToday } from '../screens/TodayScreen'
+import { MiniToday } from '../screens/today/TodayScreen'
 import { WindowContext } from './hooks'
 import './mini.css'
 
