@@ -96,15 +96,12 @@ describe('Mitteilungen der iPhone-App', () => {
     expect(plan()).toEqual([{ kind: 'breakEnd', at: BLOCK + 2 * MIN + BREAK }])
   })
 
-  it('Ultra-Modus nach dem letzten Block → Mitteilung bleibt, bis die Frage beantwortet ist', () => {
+  it('Ultra-Modus nach dem letzten Block → Mitteilung muss nicht stehen bleiben', () => {
     actions.updateSettings({ ultraMode: true })
     const task = actions.addTask(today(), 'A')
     actions.updateTask(task.id, { estimatedBlocks: 1 })
     actions.startBlock(task.id)
     actions.checkTimer(at(BLOCK + 1000))
-    expect(keepDeliveredNotifications(getState())).toBe(true)
-    actions.finishTask(task.id)
-    actions.checkTimer(at(BLOCK + 2000))
     expect(keepDeliveredNotifications(getState())).toBe(false)
   })
 
