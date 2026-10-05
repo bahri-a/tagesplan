@@ -25,6 +25,7 @@ import {
   extendBlock,
   finishBlockEarly,
   skipBlockAsDone,
+  logBlockAsDone,
   finishTask,
   isInWarningTime,
   pauseCurrentBlock,
@@ -156,7 +157,7 @@ export function FocusCard({ task }: { task: Task }) {
             </div>
           </div>
         ) : (
-          view.action === 'start' && <StartArea task={task} firstBlock={view.firstBlock} />
+          view.action === 'start' && <StartArea task={task} firstBlock={view.firstBlock} breakOver={view.ring === 'breakOver'} />
         )}
       </div>
     </section>
@@ -265,13 +266,15 @@ function BlockDots({ marks, suffix, sentence }: BlockDotsProps) {
  * Rund um den Startknopf. Vor dem ersten Block einer Aufgabe:
  *  - darüber das Startsignal aus „Planen“ („Wenn der Kaffee auf dem Tisch steht → los.“), falls eingetragen,
  *  - darunter klein ein Startsatz („Du musst nur anfangen.“).
- * Danach nur noch der Knopf.
+ * Danach nur noch der Knopf. Ganz unten immer leise „Habe ich bereits erledigt …“
+ * (außer während der kurzen Pause).
  */
-function StartArea({ task, firstBlock }: { task: Task; firstBlock: boolean }) {
+function StartArea({ task, firstBlock, breakOver }: { task: Task; firstBlock: boolean; breakOver: boolean }) {
   const cue = task.startCue ? cleanStartCue(task.startCue) : ''
   const timer = useAppState().timer
   // Pause nach einer erledigten Hauptaufgabe: zeigen, welche als Nächstes drankommt.
   const upNext = timer.phase === 'break' && timer.taskId !== task.id
+  const inShortBreak = timer.phase === 'break' && timer.taskId === task.id && !breakOver
   return (
     <div className="start-area">
       {upNext && (
@@ -285,6 +288,12 @@ function StartArea({ task, firstBlock }: { task: Task; firstBlock: boolean }) {
       {firstBlock && cue && <p className="start-cue">{T.today.startCue(cue)}</p>}
       <StartButton task={task} />
       {firstBlock && <p className="start-nudge">{pick(T.today.startNudges, task.createdAt)}</p>}
+      {/* Block schon ohne App gemacht → gleich als erledigt eintragen (nicht mitten in der kurzen Pause). */}
+      {!inShortBreak && (
+        <button type="button" className="gentle-line link-quiet" onClick={() => logBlockAsDone(task.id)}>
+          {T.today.skipAsDone}
+        </button>
+      )}
     </div>
   )
 }

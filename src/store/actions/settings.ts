@@ -6,6 +6,7 @@ import { SETTINGS_LIMITS } from '../../config/defaults'
 import { stripStartCuePrefix } from '../../logic/variety'
 import type { SettingsValues } from '../../model/types'
 import { recentKey } from '../selectors'
+import { dayKey } from '../../logic/time'
 import { commit, getState } from '../store'
 import { clamp } from './helpers'
 import { confirmBreak } from './timer'
@@ -47,6 +48,18 @@ export function hideAllRecentTasks(titles: string[], now = Date.now()): void {
   const recentHidden = { ...current.recentHidden }
   for (const title of titles) recentHidden[recentKey(title)] = now
   commit({ settings: { ...current, recentHidden } })
+}
+
+/** „Sichern“ wurde gedrückt: merken, wann (für „Letzte Sicherung …“ und die Erinnerung). */
+export function markBackupMade(now = Date.now()): void {
+  const s = getState()
+  commit({ local: { ...s.local, lastBackupAt: now } })
+}
+
+/** Die Erinnerung ans Sichern kam heute schon – heute nicht noch einmal. */
+export function markBackupReminded(now = Date.now()): void {
+  const s = getState()
+  commit({ local: { ...s.local, backupReminderOn: dayKey(now) } })
 }
 
 export function updateNote(text: string): void {

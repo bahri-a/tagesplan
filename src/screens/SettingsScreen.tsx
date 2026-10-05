@@ -7,6 +7,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { NOISE_PREVIEW_S, SETTINGS_LIMITS } from '../config/defaults'
 import { T } from '../config/texts'
 import { Dialog } from '../components/Dialog'
+import { useNow } from '../components/hooks'
 import { NumberStepper } from '../components/NumberStepper'
 import { downloadBackup, parseBackup, restoreBackup, type BackupFile } from '../db/backup'
 import type { NoiseColor, PaletteSetting, SurfaceSetting, ThemeSetting } from '../model/types'
@@ -16,7 +17,8 @@ import {
   type PermissionState,
 } from '../signals/notifications'
 import { playBlockEnd, playBreakEnd, playUltraAlarm, previewNoise } from '../signals/sounds'
-import { updateSettings } from '../store/actions'
+import { markBackupMade, updateSettings } from '../store/actions'
+import { backupAgeDays } from '../store/selectors'
 import { useAppState } from '../store/store'
 import './settings.css'
 
@@ -307,6 +309,8 @@ export function SettingsScreen() {
 
 /** Sichern (Datei herunterladen) und Wiederherstellen (Datei einlesen). */
 function DataSection() {
+  const state = useAppState()
+  const now = useNow(true, 60_000)
   const fileInput = useRef<HTMLInputElement>(null)
   const [pending, setPending] = useState<BackupFile | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -339,8 +343,19 @@ function DataSection() {
       <h2>{T.settings.data}</h2>
 
       <div className="setting-row">
-        <div className="muted small">{T.settings.backupHint}</div>
-        <button type="button" className="btn" onClick={downloadBackup}>
+        <div className="muted small">
+          {T.settings.backupHint}
+          <br />
+          {T.settings.backupLast(backupAgeDays(state, now))}
+        </div>
+        <button
+          type="button"
+          className="btn"
+          onClick={() => {
+            downloadBackup()
+            markBackupMade()
+          }}
+        >
           {T.settings.backup}
         </button>
       </div>

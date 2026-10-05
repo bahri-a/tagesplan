@@ -82,6 +82,34 @@ export function skipBlockAsDone(now = Date.now()): void {
 }
 
 /**
+ * „Habe ich bereits erledigt“ schon vor dem Start: Der Block wurde ganz ohne App gemacht.
+ * Er wird mit voller geplanter Zeit (bis jetzt) als durchgehalten eingetragen, ohne Pause danach.
+ * Eine abgelaufene kurze Pause endet dabei.
+ */
+export function logBlockAsDone(taskId: ID, now = Date.now()): void {
+  const s = getState()
+  const task = s.tasks[taskId]
+  if (!task || task.completedAt !== null || s.timer.phase === 'block') return
+  const day = activeDay(s)
+  const plannedMs = blockMinutesFor(s, task) * 60_000
+  const ran: timer.BlockTimer = {
+    phase: 'block',
+    taskId,
+    dayId: day.id,
+    startedAt: now - plannedMs,
+    plannedMs,
+    pausedAt: null,
+    pausedMs: 0,
+  }
+  commit({
+    blocks: [blockRecord(ran, 'completed', now)],
+    timer: { phase: 'idle' },
+    days: day.firstWorkAt === null ? [{ ...day, firstWorkAt: ran.startedAt }] : undefined,
+    tasks: task.firstEstimatedBlocks === null ? [{ ...task, firstEstimatedBlocks: task.estimatedBlocks }] : undefined,
+  })
+}
+
+/**
  * Block abbrechen. Die bis dahin gearbeitete Zeit wird gespeichert, der Block zählt aber nicht:
  * Beim nächsten Start kommt genau dieser Block noch einmal (fürs Beenden gibt es „Früher fertig“).
  */

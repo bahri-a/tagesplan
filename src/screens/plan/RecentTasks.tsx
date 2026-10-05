@@ -6,8 +6,8 @@ import { RECENT_TASKS_COUNT } from '../../config/defaults'
 import { T } from '../../config/texts'
 import { alive } from '../../logic/records'
 import { copyTask, hideAllRecentTasks, hideRecentTask } from '../../store/actions'
-import { hasRecentTasks, recentTasks } from '../../store/selectors'
-import { useAppState } from '../../store/store'
+import { blocksNeeded, hasRecentTasks, recentTasks } from '../../store/selectors'
+import { getState, useAppState } from '../../store/store'
 import { ResetButton, TargetSwitch, type TargetProps } from './shared'
 
 export function RecentTasks({ days, targetIndex, onTargetChange, onNotice }: TargetProps) {
@@ -40,8 +40,13 @@ export function RecentTasks({ days, targetIndex, onTargetChange, onNotice }: Tar
               aria-label={T.plan.recentAdd(task.title, target.label)}
               title={T.plan.recentAdd(task.title, target.label)}
               onClick={() => {
-                copyTask(task.id, target.day.id)
-                onNotice(T.plan.recentAdded(task.title, target.label))
+                const copy = copyTask(task.id, target.day.id, { learn: true })
+                const learned = blocksNeeded(getState(), task.id)
+                onNotice(
+                  copy && learned === copy.estimatedBlocks && learned !== task.estimatedBlocks
+                    ? T.plan.recentAddedLearned(task.title, target.label, learned)
+                    : T.plan.recentAdded(task.title, target.label),
+                )
               }}
             >
               <span className="recent-plus" aria-hidden="true">

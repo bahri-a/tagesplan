@@ -6,12 +6,13 @@
  *  - vor dem Start: die ersten Schritte zum Ansehen (noch nicht abhakbar), „Block starten“
  *    (ab der zweiten Aufgabe zweizeilig: „Lange Pause gemacht?“ / „Weiter mit „…““)
  *  - während des Blocks: weicher Ring mit Restzeit, dezent „Pausieren“ und „Abbrechen“,
- *    und „Zum Einstieg: …“ zum Abhaken; ab und zu ganz unten, abgesetzt, ein leiser Tipp
+ *    und „Zum Einstieg: …“ zum Abhaken; ganz unten, abgesetzt, leise „Habe ich bereits erledigt …“
  *  - in der kurzen Pause: blauer Ring, danach „Nächsten Block starten“
  *  - nach dem letzten geschätzten Block: KEINE kurze Pause, gleich „Erledigt oder noch ein Block?“
  *  - an einem früheren Tag angefangen, noch nicht fertig: „Weitermachen oder abschließen?“ – nach „Noch ein Block“
  *    führt oben links ein leises „← Zurück“ wieder zu dieser Frage (falls es ein Versehen war)
  *  - am nächsten Kalendertag, solange der alte Tag noch offen ist: ganz oben leise „Neuen Tag beginnen →“
+ *    (dann ohne das untere „Tag beenden“ – es gibt immer nur einen Weg zum neuen Tag)
  *  - über der Karte: für jede heute erledigte Hauptaufgabe eine kleine Karte mit ✓ (motiviert)
  *  - unter der Karte: schlanke Leiste mit den Aufgaben des Tages (nicht während eines Blocks)
  * Im Hintergrund liegt ein sehr zarter Farbschimmer: grünlich im Block, bläulich in der Pause.
@@ -52,6 +53,8 @@ export function TodayScreen({ onPlan, onEndDay, onStartNewDay }: Props) {
   const task = t.phase === 'block' ? state.tasks[t.taskId] : currentTask(state)
   // Nach einer erledigten Hauptaufgabe: erst die lange Pause, die nächste Aufgabe nur leise als „Danach: …“.
   const onLongPause = !!task && isOnLongPause(state, task)
+  // Am nächsten Kalendertag steht oben „Neuen Tag beginnen“ – dann gibt es unten kein zweites „Tag beenden“.
+  const newDayOpen = canStartNewDay(state, useNow(true, 60_000))
 
   return (
     <div className="today">
@@ -102,7 +105,7 @@ export function TodayScreen({ onPlan, onEndDay, onStartNewDay }: Props) {
       {/* Während ein Block läuft, bleibt nur das Wichtigste sichtbar. */}
       {t.phase !== 'block' && tasks.length > 0 && <DayBar tasks={tasks} currentId={task?.id} />}
 
-      {t.phase !== 'block' && (
+      {t.phase !== 'block' && !newDayOpen && (
         <div className="end-day">
           <button type="button" className="btn btn-quiet" onClick={onEndDay}>
             {T.today.endDay}

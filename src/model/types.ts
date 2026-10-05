@@ -219,6 +219,10 @@ export interface LocalState {
    * Fehlt in älteren Daten.
    */
   longPauseEndedFor?: ID | null
+  /** Wann auf diesem Gerät zuletzt „Sichern“ gedrückt wurde. Fehlt in älteren Daten. */
+  lastBackupAt?: number | null
+  /** An welchem Tag (dayKey) die Erinnerung ans Sichern zuletzt kam – höchstens einmal am Tag. */
+  backupReminderOn?: string | null
 }
 
 /** Merkzettel für „Zurück“ nach „Noch ein Block“ (siehe `canUndoExtraBlock`). */

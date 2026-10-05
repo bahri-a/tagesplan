@@ -6,7 +6,13 @@
 import { SETTINGS_LIMITS } from '../../config/defaults'
 import { baseFields } from '../../logic/records'
 import type { ID, Step, Task } from '../../model/types'
-import { activeDay, plannedDay, stepsOfTask, tasksOfDay } from '../selectors'
+import {
+  activeDay,
+  blocksNeeded,
+  plannedDay,
+  stepsOfTask,
+  tasksOfDay,
+} from '../selectors'
 import { commit, getState, type Changes } from '../store'
 import { clamp, renumber, stopTimerChanges } from './helpers'
 
@@ -34,8 +40,10 @@ export function addTask(dayId: ID, title: string): Task {
  * Eine Hauptaufgabe auf einen Tag kopieren (ans Ende): Titel, erste Schritte (nicht abgehakt),
  * Blockanzahl, individuelle Blocklänge/Pause und Startsignal. Blöcke und „erledigt“ nicht.
  * Für „Für morgen kopieren“ und „Zuletzt verwendet“.
+ * `learn`: Wurde die Aufgabe schon einmal erledigt, bekommt die Kopie so viele Blöcke, wie damals
+ * wirklich gebraucht wurden (für „Zuletzt verwendet“ – aus Erfahrung schätzen).
  */
-export function copyTask(taskId: ID, dayId: ID): Task | null {
+export function copyTask(taskId: ID, dayId: ID, { learn = false } = {}): Task | null {
   const s = getState()
   const source = s.tasks[taskId]
   if (!source) return null
@@ -45,7 +53,7 @@ export function copyTask(taskId: ID, dayId: ID): Task | null {
     dayId,
     title: source.title,
     position: tasksOfDay(s, dayId).length,
-    estimatedBlocks: source.estimatedBlocks,
+    estimatedBlocks: (learn && blocksNeeded(s, taskId)) || source.estimatedBlocks,
     blockMinutesOverride: source.blockMinutesOverride,
     shortBreakMinutesOverride: source.shortBreakMinutesOverride,
     completedAt: null,

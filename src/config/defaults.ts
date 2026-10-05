@@ -132,5 +132,11 @@ export const SUGGESTIONS_COUNT = 5
 export const SUGGESTIONS_MIN = 1
 export const SUGGESTIONS_MAX = 10
 
+/** Nach so vielen Tagen ohne Sicherung erinnert die App beim Öffnen einmal leise ans Sichern. */
+export const BACKUP_REMINDER_DAYS = 7
+
+/** So lange steht die Erinnerung ans Sichern unten (Millisekunden). */
+export const BACKUP_REMINDER_MS = 10_000
+
 /** Wie lange nach dem Löschen einer Aufgabe „Rückgängig“ angeboten wird (Millisekunden). */
 export const UNDO_DELETE_MS = 8000

@@ -209,6 +209,9 @@ export const T = {
     recentHide: (title: string) => `„${title}“ aus „Zuletzt verwendet“ entfernen`,
     recentNone: (day: string) => `Steht alles schon bei ${day}.`,
     recentAdded: (title: string, day: string) => `„${title}“ steht jetzt bei ${day}.`,
+    // Beim letzten Mal wurden mehr oder weniger Blöcke gebraucht als geschätzt → diese Zahl übernommen.
+    recentAddedLearned: (title: string, day: string, blocks: number) =>
+      `„${title}“ steht jetzt bei ${day} – mit ${blocks === 1 ? '1 Block' : `${blocks} Blöcken`} wie beim letzten Mal.`,
     // „Vorschläge“ darunter: offene Aufgaben aus der App „Projekte“
     suggestionsTitle: 'Vorschläge',
     suggestionSource: (title: string) => `Aus Projekte: „${title}“`,
@@ -371,6 +374,19 @@ export const T = {
     backup: 'Sichern',
     backupHint: 'Speichert alle deine Daten als Datei.',
     backupShareTitle: 'Tagesplan-Sicherung',
+    // Unter „Sichern“: wann zuletzt gesichert wurde (auf diesem Gerät).
+    backupLast: (days: number | null) =>
+      days === null
+        ? 'Auf diesem Gerät noch nicht gesichert.'
+        : days === 0
+          ? 'Zuletzt gesichert: heute.'
+          : days === 1
+            ? 'Zuletzt gesichert: gestern.'
+            : `Zuletzt gesichert: vor ${days} Tagen.`,
+    // Leise Erinnerung beim Öffnen (höchstens einmal am Tag).
+    backupReminder: (days: number | null) =>
+      days === null ? 'Deine Daten sind noch nicht gesichert.' : `Letzte Sicherung vor ${days} Tagen.`,
+    backupReminderAction: 'Jetzt sichern',
     restore: 'Wiederherstellen',
     restoreHint: 'Lädt eine Sicherungsdatei – ersetzt die aktuellen Daten.',
     restoreConfirmTitle: 'Sicherung wiederherstellen?',
