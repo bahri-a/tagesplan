@@ -153,6 +153,8 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   Aufgabe steht mit ihren ersten Schritten und Einstellungen auch bei Morgen.
 - **Zuletzt verwendet** (ganz unten): deine letzten 5 Hauptaufgaben. Ein Klick legt sie wieder
   an – rechts wählst du, ob für **Heute** oder **Morgen** (Standard: Morgen).
+  War die Aufgabe erledigt, übernimmt die Kopie die Blöcke, die du wirklich gebraucht hast
+  (z. B. 5 statt 3 geschätzt) – die Meldung unten sagt es dir.
   Das kleine **×** in einer Pille nimmt sie aus der Liste (die Aufgabe selbst bleibt).
 - **Vorschläge** (darunter): bis zu 5 offene Aufgaben aus der App **Projekte**, von Claude kurz
   als Hauptaufgabe formuliert (1 bis 4 Wörter). Ein Klick legt sie auf dem oben gewählten Tag an,
@@ -199,8 +201,9 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   weiß oder Ultra (Mix)), stellst du unter **Einstellungen** ein.
 - **2 Minuten vor dem Ende** kommt ein ganz leiser Ton, und der Ring wird langsam wärmer –
   Zeit, den Gedanken zu Ende zu bringen.
-- Ab und zu steht im Block ganz unten ein leiser Tipp wie „Abgeschweift? Macht nichts – einfach
-  zurückkommen.“ Abschweifen passiert – wichtig ist nur das Zurückkommen.
+- Ganz unten in der Karte steht leise **Habe ich bereits erledigt, aber vergessen die App zu
+  starten.** Im Block: Der Block zählt mit voller Zeit, ohne Pause danach. Vor dem Start (nicht
+  während der kurzen Pause): Ein ganzer Block wird gleich als geschafft eingetragen.
 - Läuft der Block durch → sanfter Ton, die **kurze Pause** startet von selbst.
 - Pause vorbei → Ton und **Nächsten Block starten**. Wann du klickst, ist deine Sache.
 - Nach dem letzten geschätzten Block kommt **keine** kurze Pause, sondern gleich die Frage:
@@ -233,7 +236,8 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   Aufgaben nebeneinander und wählst mit einem Klick.
   Willst du eine davon gar nicht mehr? Das kleine **×** oben rechts auf der Karte streicht sie:
   eine Aufgabe von heute wird dann nicht mitgenommen, eine für morgen geplante fällt weg.
-- Vergessen? Kein Problem: Öffnest du die App am nächsten Tag, fragt sie freundlich nach.
+- Vergessen? Kein Problem: Am nächsten Tag steht oben in **Heute** der Link **Neuen Tag
+  beginnen** – solange er da ist, verschwindet unten „Tag beenden“, damit es nur einen Weg gibt.
   (Arbeit bis 4 Uhr nachts zählt noch zum alten Tag.)
 
 ### Aussehen
@@ -245,8 +249,9 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
 - Hast du in macOS „Bewegung reduzieren“ eingeschaltet, gibt es keine Animationen.
 
 ### Töne
-- **Einstellungen → Töne:** **An** oder **Aus**. Bei „Aus“ bleibt die App komplett still –
-  keine Töne am Block- und Pausenende, keine Vorwarnung, kein Rauschen.
+- **Einstellungen → Töne:** **An** oder **Aus**. Bei „Aus“ kommen keine Signaltöne mehr
+  (Block- und Pausenende, Vorwarnung, Ultra-Modus). Das Rauschen ist davon getrennt und
+  wird nur mit seinem eigenen Knopf in **Heute** ein- und ausgeschaltet.
 - Darunter: welches **Rauschen** (Braun = tief und weich, Rosa, Weiß = hell, **Ultra (Mix)** =
   braun, rosa und weiß im Wechsel, je 12 Sekunden – damit es nicht monoton wird). Unter Braun,
   Rosa und Weiß spielt ein kleiner **Lautsprecher** das Rauschen ein paar Sekunden zum
@@ -271,6 +276,11 @@ Website-Daten, sind sie weg. Sichere deshalb ab und zu:
   Tipp: Lege sie zusätzlich in iCloud Drive ab.
 - **Wiederherstellen:** Einstellungen → **Wiederherstellen** → Datei wählen → bestätigen.
   Das ersetzt alle aktuellen Daten durch die Sicherung.
+- In der Sicherung stecken auch deine Einstellungen zu den **Vorschlägen** (gekürzte Titel,
+  ausgeblendete, aufgeschobene, „max. N“). Die Daten der App Projekte bleiben unberührt.
+- Unter den Knöpfen steht **Zuletzt gesichert: vor N Tagen**. Hast du eine Woche nicht gesichert,
+  erscheint beim Öffnen einmal am Tag unten eine leise Meldung mit **Jetzt sichern**
+  (nie während eines Blocks). Ältere Sicherungsdateien lassen sich weiter einspielen.
 
 ---
 
@@ -283,6 +293,7 @@ Die meisten Wünsche lassen sich an **einer** Stelle ändern:
 | Startwerte, Tageswechsel (4 Uhr), Lautstärke | `src/config/defaults.ts` |
 | Alle Texte der Oberfläche | `src/config/texts.ts` |
 | Farben (hell und dunkel) | ganz oben in `src/index.css` (Farbwelten weiter unten unter FARBWELTEN) |
+| Schriftgrößen und Rundungen (feste Stufen) | ebenfalls oben in `src/index.css` (`--fs-…`, `--radius-…`) |
 | Töne (Noten) | `src/signals/sounds.ts` |
 
 Nach einer Änderung (lokal mit `npm run dev` ausprobieren) veröffentlichst du so:
@@ -291,7 +302,15 @@ git add -A
 git commit -m "Kurze Beschreibung der Änderung"
 git push
 ```
-Nach 1–2 Minuten ist die neue Version online. In der installierten App erscheint unten
+Nach 1–2 Minuten ist die neue Version online.
+
+**Prüfungen:** Bei jedem Pull Request prüft GitHub automatisch Lint, Tests, Bauen und einen
+**Klick-Test im Browser** (`e2e/`, Playwright: Aufgabe anlegen → Block → Pause → erledigt).
+Lokal: `npm run lint`, `npm test` und `npm run test:e2e`.
+
+**Zurück zu einer älteren Version:** GitHub → **Actions** → **Veröffentlichen** → **Run workflow**
+→ unter **Version** z. B. „Vor dem Umbau (5. Oktober 2026)“ wählen → **Run workflow**. Nach 1–2
+Minuten ist diese Version online (Daten bleiben erhalten). Mit „Neueste“ kommst du genauso zurück. In der installierten App erscheint unten
 der Hinweis **„Eine neue Version der App ist bereit“** → **Neu laden**.
 Ein laufender Timer läuft danach einfach weiter.
 
@@ -307,12 +326,19 @@ src/
   db/database.ts       ← Speichern/Laden in IndexedDB
   db/backup.ts         ← Sichern und Wiederherstellen
   logic/               ← reine Logik: Timer-Rechnung, Tageswechsel, Übertrag, Daten-Updates (+ Tests)
-  store/               ← App-Zustand, Aktionen (addTask, startBlock, endDay …), Abfragen
-  screens/             ← die drei Bildschirme: Heute, Planer, Einstellungen
+  logic/deviceStorage.ts ← kleiner Browser-Speicher (Vorschläge), teilt sich die Domain mit Projekte
+  store/               ← App-Zustand, Abfragen (selectors.ts)
+  store/actions/       ← Aktionen nach Bereichen: planning, timer, day, settings
+  store/focusView.ts   ← entscheidet, was die große Karte in „Heute“ gerade zeigt (+ Testtabelle)
+  screens/today/       ← Heute: TodayScreen, große Karte (FocusCard), Leiste (DayBar)
+  screens/plan/        ← Planer: PlanScreen, Zuletzt verwendet, Vorschläge
+  screens/SettingsScreen.tsx ← Einstellungen
   components/          ← Bausteine: Timer-Ring, Aufgaben-Karte, Dialoge, Notizzettel …
+  components/icons.tsx ← alle kleinen Symbole an einer Stelle
   signals/             ← sanfte Töne und Chrome-Benachrichtigungen
 scripts/make-icons.mjs ← erzeugt die App-Icons (node scripts/make-icons.mjs)
-.github/workflows/     ← automatisches Veröffentlichen auf GitHub Pages
+e2e/                   ← Klick-Test im Browser (Playwright)
+.github/workflows/     ← deploy.yml veröffentlicht (mit Versionswahl), check.yml prüft jeden PR
 ```
 
 **Technik:** React + TypeScript + Vite, installierbare PWA (offline), Daten nur lokal
