@@ -12,11 +12,6 @@ export function pick<T>(list: readonly T[], seed: number): T {
   return list[index]
 }
 
-/** Zeigt dieser Block den Satz „Abschweifen ist okay“? Nur ungefähr jeder `every`-te Block. */
-export function showsGentleLine(blockStartedAt: number, every: number): boolean {
-  return Math.abs(Math.floor(blockStartedAt / 1000)) % every === 0
-}
-
 /**
  * Ein am Anfang mitgetipptes „Ich starte, wenn“ entfernen – das steht im Planer schon fest vor
  * dem Feld (für ältere Einträge, damit es dort nicht doppelt steht).
