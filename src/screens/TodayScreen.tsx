@@ -588,7 +588,9 @@ function StartArea({ task, firstBlock }: { task: Task; firstBlock: boolean }) {
  */
 function StartButton({ task, label: ownLabel }: { task: Task; label?: string }) {
   const state = useAppState()
-  let label: ReactNode = ownLabel ?? (state.timer.phase === 'break' ? T.today.nextBlock : T.today.startBlock)
+  let label: ReactNode = ownLabel ?? (state.timer.phase === 'break'
+      ? state.timer.taskId === task.id ? T.today.nextBlock : T.today.nextTask
+      : T.today.startBlock)
   // Mit eigener Beschriftung (z. B. „Weitermachen“) bleibt der Knopf bewusst einzeilig.
   if (!ownLabel && needsLongPause(state, task) && longPauseEndedFor !== task.id) {
     label = (
