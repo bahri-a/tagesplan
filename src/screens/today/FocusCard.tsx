@@ -39,15 +39,12 @@ import {
   activeDay,
   blockMinutesFor,
   blocksDone,
-  canUndoExtraBlock,
   currentStep,
-  extraBlockStartsNow,
-  isAskingDone,
-  isAskingResume,
   needsLongPause,
   stepsOfTask,
   tasksOfDay,
 } from '../../store/selectors'
+import { focusNeedsClock, focusView } from '../../store/focusView'
 import { useAppState } from '../../store/store'
 import { useSpaceKey } from './useSpaceKey'
 
@@ -55,42 +52,25 @@ import { useSpaceKey } from './useSpaceKey'
 export function FocusCard({ task }: { task: Task }) {
   const state = useAppState()
   const t = state.timer
-  const asking = t.phase !== 'block' && isAskingDone(state, task)
-  // Auch bei der Frage nach dem letzten Block tickt die Uhr (Knopf „Noch ein Block“ hängt von der Zeit ab).
-  const now = useNow(t.phase !== 'idle' || asking)
+  const now = useNow(focusNeedsClock(state, task))
+  const view = focusView(state, task, now)
 
   const tasks = tasksOfDay(state, activeDay(state).id)
   const number = tasks.findIndex((x) => x.id === task.id) + 1
   const done = blocksDone(state, task.id)
   const minutes = blockMinutesFor(state, task)
-  const breakOver = t.phase === 'break' && (t.endSignaled || timer.isBreakOver(t, now))
-  // An einem früheren Tag angefangen, noch nicht fertig: „Weitermachen oder abschließen?“
-  const askingResume = t.phase === 'idle' && isAskingResume(state, task)
-  // Starten ist möglich, wenn nichts läuft oder die kurze Pause vorbei ist.
-  const canStart = t.phase === 'idle' || breakOver
 
   // Der ganze Stand als Satz – für den Hinweis beim Drüberfahren und für Screenreader.
   let blockLine: string
   if (t.phase === 'block') blockLine = T.today.blockOf(done + 1, task.estimatedBlocks)
-  else if (t.phase === 'break' || asking) blockLine = T.today.blockDoneOf(done, task.estimatedBlocks)
+  else if (t.phase === 'break' || view.action === 'askDone') blockLine = T.today.blockDoneOf(done, task.estimatedBlocks)
   else blockLine = `${T.today.blockOf(done + 1, task.estimatedBlocks)} · ${T.today.minutes(minutes)}`
-
-  // Nach dem letzten Block: Startet „Noch ein Block“ sofort oder erst nach dem Rest der Pause?
-  const startsNow = asking && extraBlockStartsNow(state, task, now)
-
-  // „Jetzt dran“ ist ein Block, wenn er läuft oder gleich gestartet werden kann.
-  const highlightBlock = t.phase === 'block' || (canStart && !asking)
-
-  // Wechselt die Phase, wird der untere Teil der Karte neu (weich) eingeblendet.
-  const paused = t.phase === 'block' && t.pausedAt !== null
-  const phaseKey = `${t.phase}-${paused}-${breakOver}-${asking}-${askingResume}`
 
   // Leertaste: Start / Pausieren / Weiter – je nachdem, was gerade dran ist.
   useSpaceKey(() => {
-    if (t.phase === 'block') {
-      if (t.pausedAt === null) pauseCurrentBlock()
-      else resumeCurrentBlock()
-    } else if (canStart && !asking) {
+    if (view.ring === 'running') pauseCurrentBlock()
+    else if (view.ring === 'paused') resumeCurrentBlock()
+    else if (view.action === 'start' || view.action === 'askResume') {
       void requestNotificationPermission()
       startBlock(task.id)
     }
@@ -98,44 +78,44 @@ export function FocusCard({ task }: { task: Task }) {
 
   return (
     <section className="card focus-card">
-      {canUndoExtraBlock(state, task, now) && <BackToAsk />}
-      {t.phase === 'break' && !breakOver && <SkipBreak />}
+      {view.canUndoExtra && <BackToAsk />}
+      {view.canSkipBreak && <SkipBreak />}
       <BlockDots
-        marks={blockMarks(done, task.estimatedBlocks, highlightBlock)}
-        suffix={t.phase === 'idle' && !asking ? T.today.perBlock(minutes) : null}
+        marks={blockMarks(done, task.estimatedBlocks, view.highlightBlock)}
+        suffix={t.phase === 'idle' && view.action !== 'askDone' ? T.today.perBlock(minutes) : null}
         sentence={`${T.today.taskOf(number, tasks.length)} · ${blockLine}`}
       />
       <h1 className="focus-title">{task.title}</h1>
 
-      <div className="focus-phase" key={phaseKey}>
+      <div className="focus-phase" key={view.key}>
         {/* Erst ansehen, abhaken erst im Block. */}
         {t.phase !== 'block' && <StepsPreview task={task} />}
 
         {t.phase === 'block' && <RunningBlock timerState={t} now={now} />}
 
-        {t.phase === 'break' &&
-          (breakOver ? (
+        {view.ring === 'breakOver' && t.phase === 'break' && (
+          <TimerRing
+            variant="break"
+            remainingMs={0}
+            totalMs={t.durationMs}
+            center={<span className="timer-ring-label">{T.today.breakOver}</span>}
+          />
+        )}
+        {(view.ring === 'break' || view.ring === 'breakNag') && t.phase === 'break' && (
+          <>
             <TimerRing
               variant="break"
-              remainingMs={0}
+              remainingMs={timer.breakRemainingMs(t, now)}
               totalMs={t.durationMs}
-              center={<span className="timer-ring-label">{T.today.breakOver}</span>}
+              caption={T.today.breakTitle}
             />
-          ) : (
-            <>
-              <TimerRing
-                variant="break"
-                remainingMs={timer.breakRemainingMs(t, now)}
-                totalMs={t.durationMs}
-                caption={T.today.breakTitle}
-              />
-              {t.nagging && state.settings.ultraMode ? (
-                <BreakAsk question={T.today.ultraAsk} />
-              ) : (
-                <p className="phase-note">{pick(T.today.breakHints, t.startedAt)}</p>
-              )}
-            </>
-          ))}
+            {view.ring === 'breakNag' ? (
+              <BreakAsk question={T.today.ultraAsk} />
+            ) : (
+              <p className="phase-note">{pick(T.today.breakHints, t.startedAt)}</p>
+            )}
+          </>
+        )}
 
         {t.phase === 'block' && <CurrentStep task={task} />}
 
@@ -146,7 +126,7 @@ export function FocusCard({ task }: { task: Task }) {
           </button>
         )}
 
-        {asking ? (
+        {view.action === 'askDone' ? (
           <div className="ask-done">
             <p className="ask-done-question">{T.today.askDone}</p>
             <div className="ask-done-actions">
@@ -157,15 +137,15 @@ export function FocusCard({ task }: { task: Task }) {
                 type="button"
                 className="btn btn-big"
                 onClick={() => {
-                  if (startsNow) void requestNotificationPermission()
+                  if (view.extraStartsNow) void requestNotificationPermission()
                   addExtraBlock(task.id)
                 }}
               >
-                {startsNow ? T.today.oneMoreStart : T.today.oneMore}
+                {view.extraStartsNow ? T.today.oneMoreStart : T.today.oneMore}
               </button>
             </div>
           </div>
-        ) : askingResume ? (
+        ) : view.action === 'askResume' ? (
           <div className="ask-done">
             <p className="ask-done-question">{T.today.askResume}</p>
             <div className="ask-done-actions">
@@ -176,7 +156,7 @@ export function FocusCard({ task }: { task: Task }) {
             </div>
           </div>
         ) : (
-          canStart && <StartArea task={task} firstBlock={t.phase === 'idle' && done === 0} />
+          view.action === 'start' && <StartArea task={task} firstBlock={view.firstBlock} />
         )}
       </div>
     </section>
