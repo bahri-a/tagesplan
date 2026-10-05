@@ -376,13 +376,12 @@ export function checkTimer(now = Date.now()): TimerEvent[] {
     const { lastBlock, ...completed } = completeBlockChanges(t, endedAt)
     const taskTitle = titleOf(t.taskId)
     const fresh = now - endedAt < SIGNAL_MAX_DELAY_MS
-    // Ultra-Modus: Bei jedem Blockende piept es (nur wenn das Blockende gerade erst war) –
-    // bis die Pause bestätigt ist, nach dem letzten Block bis zur Antwort auf „Erledigt oder noch ein Block?“.
+    // Ultra-Modus: Beginnt eine kurze Pause, piept es (nur wenn das Blockende gerade erst war),
+    // bis die Pause bestätigt ist. Nach dem letzten Block (keine kurze Pause) piept es nicht.
     // In der iPhone-App auch, wenn das Blockende länger her ist: Dort hat die Mitteilung auf dem
     // gesperrten Display schon geklingelt – die Pause beginnt trotzdem erst mit „Pause machen“.
-    if ((fresh || __NATIVE_APP__) && s.settings.ultraMode) {
-      if (completed.timer.phase === 'break') completed.timer = { ...completed.timer, nagging: true }
-      else if (lastBlock) completed.timer = { phase: 'idle', ultra: lastBlockUltra(t, endedAt) }
+    if ((fresh || __NATIVE_APP__) && s.settings.ultraMode && completed.timer.phase === 'break') {
+      completed.timer = { ...completed.timer, nagging: true }
     }
     Object.assign(changes, completed)
     t = completed.timer
@@ -408,14 +407,6 @@ export function checkTimer(now = Date.now()): TimerEvent[] {
   return events
 }
 
-/** Ultra nach dem letzten Block: so lang wie die kurze Pause gewesen wäre. */
-function lastBlockUltra(t: timer.BlockTimer, endedAt: number): { taskId: ID; endedAt: number; durationMs: number } {
-  const s = getState()
-  const task = s.tasks[t.taskId]
-  const minutes = task ? shortBreakMinutesFor(s, task) : s.settings.shortBreakMinutes
-  return { taskId: t.taskId, endedAt, durationMs: minutes * 60_000 }
-}
-
 /** Ultra nach dem letzten Block: Ist die Frage „Erledigt oder noch ein Block?“ noch offen und die Zeit nicht um? */
 function isLastBlockUltraActive(now: number): boolean {
   const s = getState()
@@ -427,13 +418,11 @@ function isLastBlockUltraActive(now: number): boolean {
 
 /**
  * Ultra-Modus: Soll gerade gepiept werden? Ja, solange die fällige Pause nicht bestätigt ist,
- * noch läuft – und der Modus an ist. Nach dem letzten Block: solange „Erledigt oder noch ein
- * Block?“ offen ist (höchstens so lang wie die kurze Pause).
+ * noch läuft – und der Modus an ist. Nach dem letzten Block piept es nicht.
  */
 export function isUltraRinging(now = Date.now()): boolean {
   const s = getState()
   const t = s.timer
-  if (t.phase === 'idle') return s.settings.ultraMode && s.settings.sounds && isLastBlockUltraActive(now)
   return (
     t.phase === 'break' &&
     t.nagging === true &&
