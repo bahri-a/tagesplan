@@ -91,6 +91,8 @@ export const T = {
     extendBlock: '+2 Min.',
     extendBlockHint: 'Block um 2 Minuten verlängern',
     nextBlock: 'Nächsten Block starten',
+    nextTask: 'Nächste Hauptaufgabe starten',
+    upNext: 'Als Nächstes:',
     askDone: 'Hauptaufgabe erledigt oder noch ein Block?',
     // Karte über der aktuellen Aufgabe für jede heute erledigte Hauptaufgabe.
     doneCard: 'Erledigt',

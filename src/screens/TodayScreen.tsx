@@ -613,8 +613,19 @@ function useSpaceKey(action: () => void) {
  */
 function StartArea({ task, firstBlock }: { task: Task; firstBlock: boolean }) {
   const cue = task.startCue ? cleanStartCue(task.startCue) : ''
+  const timer = useAppState().timer
+  // Pause nach einer erledigten Hauptaufgabe: zeigen, welche als Nächstes drankommt.
+  const upNext = timer.phase === 'break' && timer.taskId !== task.id
   return (
     <div className="start-area">
+      {upNext && (
+        <p className="up-next">
+          <span className="up-next-label">{T.today.upNext}</span>
+          <span>
+            <strong>„{task.title}“</strong> · {T.plan.blocksMeta(task.estimatedBlocks)}
+          </span>
+        </p>
+      )}
       {firstBlock && cue && <p className="start-cue">{T.today.startCue(cue)}</p>}
       <StartButton task={task} />
       {firstBlock && <p className="start-nudge">{pick(T.today.startNudges, task.createdAt)}</p>}
@@ -629,7 +640,9 @@ function StartArea({ task, firstBlock }: { task: Task; firstBlock: boolean }) {
  */
 function StartButton({ task, label: ownLabel }: { task: Task; label?: string }) {
   const state = useAppState()
-  let label: ReactNode = ownLabel ?? (state.timer.phase === 'break' ? T.today.nextBlock : T.today.startBlock)
+  let label: ReactNode = ownLabel ?? (state.timer.phase === 'break'
+      ? state.timer.taskId === task.id ? T.today.nextBlock : T.today.nextTask
+      : T.today.startBlock)
   // Mit eigener Beschriftung (z. B. „Weitermachen“) bleibt der Knopf bewusst einzeilig.
   if (!ownLabel && needsLongPause(state, task) && longPauseEndedFor !== task.id) {
     label = (

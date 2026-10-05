@@ -1125,3 +1125,17 @@
     transition: none;
   }
 }
+
+/* „Als Nächstes: „…“ · 3 Blöcke“ – nach einer erledigten Hauptaufgabe über dem Knopf */
+.up-next {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  max-width: 26rem;
+}
+
+.up-next-label {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
