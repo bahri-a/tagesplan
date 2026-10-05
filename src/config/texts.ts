@@ -152,6 +152,13 @@ export const T = {
     blocks: 'Blöcke',
     blockLength: 'Blocklänge',
     shortBreak: 'Kurze Pause',
+    // Leise Zeile unter den drei Zahlen: Blöcke + Pausen dazwischen
+    totalTime: (minutes: number) => {
+      const h = Math.floor(minutes / 60)
+      const m = minutes % 60
+      if (h === 0) return `Insgesamt ${m} Min.`
+      return m === 0 ? `Insgesamt ${h} Std.` : `Insgesamt ${h} Std. ${m} Min.`
+    },
     standard: 'Standard',
     // Hinweis neben „Kurze Pause“, wenn die Aufgabe nur einen Block hat
     shortBreakOneBlock: 'erst ab 2 Blöcken',

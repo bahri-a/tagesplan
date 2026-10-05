@@ -974,6 +974,13 @@
   gap: 0.5rem;
 }
 
+.task-total-time {
+  border-top: 1px solid var(--border);
+  padding-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
 .number-row {
   display: flex;
   align-items: center;
