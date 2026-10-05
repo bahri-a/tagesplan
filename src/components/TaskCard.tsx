@@ -15,7 +15,7 @@ import { T } from '../config/texts'
 import type { Task } from '../model/types'
 import { stripStartCuePrefix } from '../logic/variety'
 import { rememberStartCue, setTaskCompleted, updateTask } from '../store/actions'
-import { blockMinutesFor, stepsOfTask } from '../store/selectors'
+import { blockMinutesFor, shortBreakMinutesFor, stepsOfTask } from '../store/selectors'
 import { useAppState } from '../store/store'
 import { NumberStepper } from './NumberStepper'
 import { StepList } from './StepList'
@@ -219,6 +219,12 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
           // Bei nur einem Block folgt keine Pause – sie zählt erst, wenn ein weiterer Block dazukommt.
           note={task.estimatedBlocks === 1 ? { text: T.plan.shortBreakOneBlock, hint: T.plan.shortBreakOneBlockHint } : undefined}
         />
+
+        <div className="task-total-time">
+          {T.plan.totalTime(
+            task.estimatedBlocks * blockMinutesFor(state, task) + (task.estimatedBlocks - 1) * shortBreakMinutesFor(state, task),
+          )}
+        </div>
       </div>
 
       {/* Gelöscht wird nur über den Papierkorb oben in der Karte – überall gleich. */}
