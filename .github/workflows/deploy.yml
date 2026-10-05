@@ -3,14 +3,29 @@
 # Bei jedem Push auf den Branch „main“ baut GitHub die App, lässt die Tests
 # laufen und stellt das Ergebnis auf GitHub Pages online.
 # Den Fortschritt siehst du auf GitHub im Reiter „Actions“.
+#
+# ZURÜCK ZU EINER FRÜHEREN VERSION (ohne am Code etwas zu ändern):
+# Reiter „Actions“ → „Veröffentlichen auf GitHub Pages“ → „Run workflow“ →
+# bei „Version“ im Auswahlfeld „Vor dem Umbau (5. Oktober 2026)“ wählen → „Run workflow“.
+# Nach 1–2 Minuten ist genau diese Version online. Zurück zur neuesten: dasselbe mit „Neueste“.
+# Auch der nächste Push auf main veröffentlicht wieder die neueste Version.
+# Weitere feste Stände: unten bei „Version wählen“ eine Zeile ergänzen.
 
 name: Veröffentlichen auf GitHub Pages
 
 on:
   push:
     branches: [main]
-  # Erlaubt auch einen Start per Knopfdruck im Reiter „Actions“.
+  # Erlaubt auch einen Start per Knopfdruck im Reiter „Actions“ – auf Wunsch mit einer früheren Version.
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Welche Version?'
+        type: choice
+        default: 'Neueste'
+        options:
+          - 'Neueste'
+          - 'Vor dem Umbau (5. Oktober 2026)'
 
 permissions:
   contents: read
@@ -26,8 +41,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Version wählen
+        id: version
+        # Jede feste Version ist eine Commit-Kennung. „Neueste“ = der Stand, der den Lauf ausgelöst hat.
+        run: |
+          case "${{ inputs.version }}" in
+            'Vor dem Umbau (5. Oktober 2026)') echo "ref=0120f916d5c087617bd4a344313434d336bd1e43" >> "$GITHUB_OUTPUT" ;;
+            *) echo "ref=${{ github.sha }}" >> "$GITHUB_OUTPUT" ;;
+          esac
+
       - name: Code holen
         uses: actions/checkout@v5
+        with:
+          ref: ${{ steps.version.outputs.ref }}
 
       - name: Node.js einrichten
         uses: actions/setup-node@v5
@@ -37,6 +63,9 @@ jobs:
 
       - name: Bibliotheken installieren
         run: npm ci
+
+      - name: Lint
+        run: npm run lint
 
       - name: Tests
         run: npm test

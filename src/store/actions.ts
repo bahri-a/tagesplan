@@ -18,7 +18,6 @@ import {
   blocksDone,
   canUndoExtraBlock,
   extraBlockStartsNow,
-  isAskingDone,
   lastBlockEndedAt,
   plannedDay,
   recentKey,
@@ -396,24 +395,8 @@ export function checkTimer(now = Date.now()): TimerEvent[] {
     events.push({ type: 'breakEnd', taskTitle: titleOf(t.taskId), fresh: now - endedAt < SIGNAL_MAX_DELAY_MS })
   }
 
-  // 3. Ultra nach dem letzten Block vorbei (beantwortet oder Zeit um) → aufräumen.
-  //    (Gerade erst gesetzt? Dann ist es noch nicht gespeichert und läuft sowieso.)
-  if (t.phase === 'idle' && t.ultra && t === s.timer && !isLastBlockUltraActive(now)) {
-    t = { phase: 'idle' }
-    changes.timer = t
-  }
-
   if (changes.timer) commit(changes)
   return events
-}
-
-/** Ultra nach dem letzten Block: Ist die Frage „Erledigt oder noch ein Block?“ noch offen und die Zeit nicht um? */
-function isLastBlockUltraActive(now: number): boolean {
-  const s = getState()
-  const t = s.timer
-  if (t.phase !== 'idle' || !t.ultra) return false
-  const task = s.tasks[t.ultra.taskId]
-  return !!task && isAskingDone(s, task) && now >= t.ultra.endedAt && now < t.ultra.endedAt + t.ultra.durationMs
 }
 
 /**

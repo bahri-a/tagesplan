@@ -74,13 +74,9 @@ function breakEndNotification(at: number, title: string): PlannedNotification {
 
 /**
  * Ultra-Modus: Die Mitteilung zum Blockende bleibt auf dem Display stehen, bis die Pause
- * bestätigt ist („Pause machen“) – bzw. nach dem letzten Block, bis die Frage
- * „Erledigt oder noch ein Block?“ beantwortet ist. Sonst darf sie verschwinden,
- * sobald die App offen ist.
+ * bestätigt ist („Pause machen“). Sonst darf sie verschwinden, sobald die App offen ist.
  */
 export function keepDeliveredNotifications(s: AppState): boolean {
   const t = s.timer
-  if (t.phase === 'break') return t.nagging === true && !t.endSignaled
-  if (t.phase === 'idle') return t.ultra !== undefined
-  return false
+  return t.phase === 'break' && t.nagging === true && !t.endSignaled
 }

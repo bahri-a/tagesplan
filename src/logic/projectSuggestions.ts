@@ -18,14 +18,47 @@ export const SHORT_TITLES_KEY = 'tagesplan-kurztitel'
 export const HIDDEN_KEY = 'tagesplan-vorschlaege-ausgeblendet'
 /** Aufgeschobene Vorschläge: Kennung der Projekte-Aufgabe → wann. */
 export const DEFERRED_KEY = 'tagesplan-vorschlaege-aufschub'
-/** Der Helfer von Projekte auf dem Mac. */
 /** Wie viele Vorschläge höchstens gezeigt werden (vom Nutzer eingestellt). */
 export const LIMIT_KEY = 'tagesplan-vorschlaege-max'
+/** Der Helfer von Projekte auf dem Mac. */
 export const HELPER_URL = 'http://127.0.0.1:3290/kurztitel'
 /** Derselbe Helfer: sucht im Second Brain und in den Outlook-Mails nach neuen Aufgaben. */
 export const SEARCH_URL = 'http://127.0.0.1:3290/aktualisieren'
 /** Wann Projekte zuletzt gesucht hat (Projekte zeigt das im Reiter „Automatisch“). */
 export const LAST_SEARCH_KEY = 'projekte-zuletzt-aktualisiert'
+
+/**
+ * Was Tagesplan selbst im Browser-Speicher ablegt (die Daten von Projekte gehören nicht dazu).
+ * Diese Werte kommen mit in die Sicherungsdatei.
+ */
+export const OWN_KEYS = [SHORT_TITLES_KEY, HIDDEN_KEY, DEFERRED_KEY, LIMIT_KEY] as const
+
+/** Für die Sicherung: die eigenen Werte aus dem Browser-Speicher (Schlüssel → gespeicherter Wert). */
+export function exportOwnData(storage: Storage): Record<string, unknown> {
+  const result: Record<string, unknown> = {}
+  for (const key of OWN_KEYS) {
+    const value = read<unknown>(storage, key, undefined)
+    if (value !== undefined) result[key] = value
+  }
+  return result
+}
+
+/**
+ * Beim Wiederherstellen: die eigenen Werte durch die aus der Sicherung ersetzen. Was in der
+ * Sicherung fehlt, wird gelöscht (wie bei allen anderen Daten). Fremde Schlüssel bleiben unberührt.
+ */
+export function importOwnData(storage: Storage, data: Record<string, unknown>): void {
+  for (const key of OWN_KEYS) {
+    if (key in data) write(storage, key, data[key])
+    else {
+      try {
+        storage.removeItem(key)
+      } catch {
+        /* egal */
+      }
+    }
+  }
+}
 
 const MAX_WORDS = 4
 const MAX_LENGTH = 40

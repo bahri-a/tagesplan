@@ -174,7 +174,8 @@ async function loadFromDatabase(): Promise<void> {
       ? { ...DEFAULT_SETTINGS, ...data.settings[0] }
       : { ...baseFields(now), id: 'settings', ...DEFAULT_SETTINGS },
     note: data.notes[0] ?? { ...baseFields(now), id: 'note', text: '' },
-    timer: data.timer ?? { phase: 'idle' },
+    // Ältere Daten: ein Ruhezustand mit „ultra“ (Piepen nach dem letzten Block, gibt es nicht mehr) → schlicht ruhen.
+    timer: !data.timer || data.timer.phase === 'idle' ? { phase: 'idle' } : data.timer,
     local: data.local ?? {},
   }
 

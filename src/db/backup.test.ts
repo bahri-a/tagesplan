@@ -4,6 +4,8 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import * as actions from '../store/actions'
 import * as sel from '../store/selectors'
 import { flushSaves, getState, initStore, resetStoreForTests } from '../store/store'
+import { memoryStorage } from '../logic/deviceStorage'
+import { DEFERRED_KEY, HIDDEN_KEY, LIMIT_KEY, PROJECTS_KEY } from '../logic/projectSuggestions'
 import { createBackup, parseBackup, restoreBackup } from './backup'
 import { resetDatabaseForTests } from './database'
 
@@ -71,6 +73,32 @@ describe('Sichern und Wiederherstellen', () => {
     expect(s.tasks[task.id].shortBreakMinutesOverride).toBeNull()
     expect(s.settings.blockMinutes).toBe(25)
     expect(s.settings.shortBreakMinutes).toBe(7)
+  })
+
+  it('sichert die Vorschläge-Einstellungen aus dem Browser-Speicher mit, aber nicht die Daten von Projekte', async () => {
+    const storage = memoryStorage({
+      [HIDDEN_KEY]: JSON.stringify({ a: 1 }),
+      [DEFERRED_KEY]: JSON.stringify({ b: 2 }),
+      [LIMIT_KEY]: '7',
+      [PROJECTS_KEY]: JSON.stringify({ items: [] }),
+    })
+    const json = JSON.stringify(createBackup(getState(), storage))
+    expect(JSON.parse(json).deviceData).toEqual({ [HIDDEN_KEY]: { a: 1 }, [DEFERRED_KEY]: { b: 2 }, [LIMIT_KEY]: 7 })
+
+    // Anderes Gerät: andere Werte, Projekte-Daten gehören Projekte und bleiben.
+    const other = memoryStorage({ [HIDDEN_KEY]: JSON.stringify({ z: 9 }), [PROJECTS_KEY]: 'projekte' })
+    await restoreBackup(parseBackup(json)!, other)
+    expect(JSON.parse(other.getItem(HIDDEN_KEY)!)).toEqual({ a: 1 })
+    expect(other.getItem(LIMIT_KEY)).toBe('7')
+    expect(other.getItem(PROJECTS_KEY)).toBe('projekte')
+  })
+
+  it('lässt den Browser-Speicher in Ruhe, wenn eine ältere Sicherung ihn nicht enthält', async () => {
+    const backup = createBackup(getState(), memoryStorage())
+    delete backup.deviceData
+    const other = memoryStorage({ [HIDDEN_KEY]: JSON.stringify({ z: 9 }) })
+    await restoreBackup(parseBackup(JSON.stringify(backup))!, other)
+    expect(JSON.parse(other.getItem(HIDDEN_KEY)!)).toEqual({ z: 9 })
   })
 
   it('lehnt fremde oder kaputte Dateien freundlich ab', () => {
