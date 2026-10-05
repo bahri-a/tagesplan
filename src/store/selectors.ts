@@ -74,6 +74,11 @@ export function recentKey(title: string): string {
   return title.trim().toLocaleLowerCase('de')
 }
 
+/** Gibt es überhaupt etwas für „Zuletzt verwendet“ (auf einem der Tage)? */
+export function hasRecentTasks(s: AppState, dayIds: ID[]): boolean {
+  return dayIds.some((dayId) => recentTasks(s, dayId, 1).length > 0)
+}
+
 export function recentTasks(s: AppState, dayId: ID, limit: number): Task[] {
   const key = recentKey
   const hidden = s.settings.recentHidden ?? {}

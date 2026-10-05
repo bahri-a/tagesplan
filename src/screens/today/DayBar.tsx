@@ -9,6 +9,7 @@ import { cleanStartCue } from '../../logic/variety'
 import type { ID, Task } from '../../model/types'
 import { blockMinutesFor, stepsOfTask, taskWork } from '../../store/selectors'
 import { useAppState } from '../../store/store'
+import { CheckIcon } from '../../components/icons'
 
 /**
  * Schlanke Leiste unter der Karte: alle Aufgaben des Tages als kleine Pillen.
@@ -97,13 +98,5 @@ function DayPeek({ task, mark, onClose }: { task: Task; mark: Mark; onClose: () 
         </>
       )}
     </section>
-  )
-}
-
-export function CheckIcon() {
-  return (
-    <svg viewBox="0 0 16 16">
-      <path d="M4.2 8.4l2.4 2.4 5.2-5.4" />
-    </svg>
   )
 }

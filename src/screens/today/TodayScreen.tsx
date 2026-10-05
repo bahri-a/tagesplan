@@ -33,7 +33,8 @@ import {
 import { endLongPause } from '../../store/actions'
 import { useAppState } from '../../store/store'
 import { FocusCard } from './FocusCard'
-import { DayBar, CheckIcon } from './DayBar'
+import { DayBar } from './DayBar'
+import { CheckIcon, SunriseIcon } from '../../components/icons'
 import { useSpaceKey } from './useSpaceKey'
 import './today.css'
 
@@ -133,16 +134,6 @@ function NewDayLink({ onClick }: { onClick: () => void }) {
         </span>
       </button>
     </div>
-  )
-}
-
-function SunriseIcon() {
-  return (
-    <svg className="new-day-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 17a7 7 0 0 1 14 0" />
-      <path d="M3 20h18" />
-      <path d="M12 4v3M4.9 8.9l2.1 2.1M19.1 8.9 17 11" />
-    </svg>
   )
 }
 
