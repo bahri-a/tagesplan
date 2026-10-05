@@ -572,8 +572,19 @@ function useSpaceKey(action: () => void) {
  */
 function StartArea({ task, firstBlock }: { task: Task; firstBlock: boolean }) {
   const cue = task.startCue ? cleanStartCue(task.startCue) : ''
+  const timer = useAppState().timer
+  // Pause nach einer erledigten Hauptaufgabe: zeigen, welche als Nächstes drankommt.
+  const upNext = timer.phase === 'break' && timer.taskId !== task.id
   return (
     <div className="start-area">
+      {upNext && (
+        <p className="up-next">
+          <span className="up-next-label">{T.today.upNext}</span>
+          <span>
+            <strong>„{task.title}“</strong> · {T.plan.blocksMeta(task.estimatedBlocks)}
+          </span>
+        </p>
+      )}
       {firstBlock && cue && <p className="start-cue">{T.today.startCue(cue)}</p>}
       <StartButton task={task} />
       {firstBlock && <p className="start-nudge">{pick(T.today.startNudges, task.createdAt)}</p>}
