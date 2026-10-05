@@ -44,3 +44,17 @@ jobs:
 
       - name: App bauen
         run: npm run build
+
+      - name: Browser für den Klick-Test installieren
+        run: npx playwright install --with-deps chromium
+
+      - name: Klick-Test im Browser
+        run: npx playwright test
+
+      - name: Bei Fehler – Bilder vom Klick-Test aufheben
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: klick-test
+          path: test-results/
+          retention-days: 7

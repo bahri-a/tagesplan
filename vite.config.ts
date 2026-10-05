@@ -57,5 +57,7 @@ export default defineConfig({
   ],
   test: {
     environment: 'node',
+    // Die Klick-Tests im Browser (e2e/) laufen über Playwright, nicht hier.
+    include: ['src/**/*.test.ts'],
   },
 })
