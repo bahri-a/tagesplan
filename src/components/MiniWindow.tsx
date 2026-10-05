@@ -105,13 +105,14 @@ export function MiniWindow() {
         className="mini-button"
         aria-pressed={pip !== null}
         title={T.mini.hint}
+        aria-label={pip ? T.mini.close : T.mini.open}
         onClick={() => void toggle()}
       >
         <svg viewBox="0 0 16 16" aria-hidden="true">
           <rect x="1.75" y="2.75" width="12.5" height="10.5" rx="2" />
           <rect x="8" y="8" width="4.5" height="3.5" rx="0.8" className="mini-button-inner" />
         </svg>
-        {pip ? T.mini.close : T.mini.open}
+        <span className="corner-label">{pip ? T.mini.close : T.mini.open}</span>
       </button>
       {pip &&
         createPortal(

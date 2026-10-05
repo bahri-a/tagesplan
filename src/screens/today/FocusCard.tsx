@@ -121,7 +121,7 @@ export function FocusCard({ task }: { task: Task }) {
 
         {/* Ganz unten, abgesetzt: Block schon ohne App gemacht → zählt als erledigt. */}
         {t.phase === 'block' && (
-          <button type="button" className="gentle-line" onClick={() => skipBlockAsDone()}>
+          <button type="button" className="gentle-line link-quiet" onClick={() => skipBlockAsDone()}>
             {T.today.skipAsDone}
           </button>
         )}
@@ -207,7 +207,7 @@ function SkipBreak() {
   const [asking, setAsking] = useState(false)
   return (
     <>
-      <button type="button" className="skip-break" onClick={() => setAsking(true)}>
+      <button type="button" className="skip-break link-quiet" onClick={() => setAsking(true)}>
         {T.today.skipBreak}
       </button>
       {asking && (

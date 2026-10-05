@@ -42,7 +42,7 @@
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: var(--fs-base);
   font-weight: 500;
   transition:
     background 0.2s,
@@ -122,7 +122,7 @@
 
 .dialog-title {
   margin-bottom: 0.75rem;
-  font-size: 1.25rem;
+  font-size: var(--fs-xl);
 }
 
 .dialog-text {
@@ -150,7 +150,7 @@
   width: 2rem;
   height: 2rem;
   padding: 0;
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
 }
 
 .stepper-input {
@@ -170,7 +170,7 @@
 
 .stepper-unit {
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: var(--fs-base);
 }
 
 /* ---------- Kurze Rückfrage direkt im Text („Wirklich …? Ja / Nein“) ---------- */
@@ -179,7 +179,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.92rem;
+  font-size: var(--fs-base);
 }
 
 /* ---------- Kleine Meldung unten (Toast) ---------- */
@@ -194,7 +194,7 @@
   gap: 1rem;
   padding: 0.75em 1.25em;
   border: 1px solid var(--panel-border);
-  border-radius: 16px;
+  border-radius: var(--radius-medium);
   background: var(--panel-sheen), var(--panel-bg);
   -webkit-backdrop-filter: var(--panel-filter);
   backdrop-filter: var(--panel-filter);
@@ -311,11 +311,11 @@
 
 .conflict-origin {
   color: var(--text-muted);
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
 }
 
 .conflict-title {
-  font-size: 1.05rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
   overflow-wrap: anywhere;
 }
@@ -340,7 +340,7 @@
   backdrop-filter: var(--panel-filter);
   color: var(--accent);
   cursor: pointer;
-  font-size: 0.92rem;
+  font-size: var(--fs-base);
   font-weight: 500;
   box-shadow: var(--shadow);
   transition:
@@ -393,7 +393,7 @@
 }
 
 .notes-head h2 {
-  font-size: 1rem;
+  font-size: var(--fs-md);
 }
 
 .notes-text {
@@ -441,12 +441,12 @@
 
 .day-yield-title {
   color: var(--accent);
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
 }
 
 .day-yield-numbers {
-  font-size: 1.15rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
 }
 
@@ -455,4 +455,32 @@
   padding: 0;
   list-style: none;
   color: var(--text-muted);
+}
+
+/* Schmaler Bildschirm (iPhone): Die beiden Eckknöpfe (Mini-Fenster, Notizen) werden kleine,
+   gleich große Kreise nur mit Symbol – so verdecken sie beim Scrollen kaum etwas. */
+@media (max-width: 480px) {
+  body .notes-button,
+  body .mini-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+  }
+
+  body .notes-button .corner-label,
+  body .mini-button .corner-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .notes-button .corner-icon {
+    font-size: var(--fs-lg);
+  }
 }

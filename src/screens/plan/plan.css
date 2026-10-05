@@ -26,7 +26,7 @@
 }
 
 .plan-column-title {
-  font-size: 1.25rem;
+  font-size: var(--fs-xl);
   font-weight: 600;
 }
 
@@ -46,7 +46,7 @@
 /* Leiser Tipp ab der fünften Hauptaufgabe. */
 .plan-tip {
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
   opacity: 0.8;
 }
 
@@ -76,7 +76,7 @@
 .plan-column {
   margin: -0.6rem;
   padding: 0.6rem;
-  border-radius: 20px;
+  border-radius: var(--radius-medium);
   outline: 1.5px dashed transparent;
   transition:
     background 0.2s,
@@ -91,7 +91,7 @@
 .drop-hint {
   margin-left: 0.6rem;
   color: var(--accent);
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
 }
 
@@ -124,7 +124,7 @@
   color: var(--text-muted);
   cursor: pointer;
   font: inherit;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   transition:
     background 0.15s,
     border-color 0.15s,
@@ -196,7 +196,7 @@
 .recent-subtitle {
   margin-left: -0.45rem;
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
   opacity: 0.75;
 }
 
@@ -211,7 +211,7 @@
 }
 
 .suggestions.is-drop-zone {
-  border-radius: 16px;
+  border-radius: var(--radius-medium);
   outline-color: var(--border);
 }
 
@@ -230,7 +230,7 @@
   align-items: center;
   min-height: 2.4rem;
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
 }
 
 /* Die gezogene Pille bleibt als blasser Platzhalter stehen. */
@@ -262,7 +262,7 @@
   min-width: 12rem;
   padding: 0.3rem;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-small);
   background: var(--surface);
   box-shadow: var(--shadow-lift);
   animation: chip-menu-in 0.12s ease-out;
@@ -281,12 +281,12 @@
   gap: 0.55rem;
   padding: 0.5em 0.7em;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   background: transparent;
   color: var(--text);
   cursor: pointer;
   font: inherit;
-  font-size: 0.9rem;
+  font-size: var(--fs-base);
   text-align: left;
 }
 
@@ -328,7 +328,7 @@
 
 .reset-question {
   color: var(--text);
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
 }
 
 .reset-actions {
@@ -346,7 +346,7 @@
   color: var(--text-muted);
   cursor: pointer;
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
 }
 
 .reset-cancel:hover,
@@ -375,13 +375,13 @@
 
 .recent-title {
   color: var(--text-muted);
-  font-size: 0.95rem;
+  font-size: var(--fs-base);
   font-weight: 600;
 }
 
 .recent-target .segmented-item {
   padding: 0.25em 0.85em;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
 }
 
 .recent-list {
@@ -411,7 +411,7 @@
   color: var(--text);
   cursor: pointer;
   font: inherit;
-  font-size: 0.9rem;
+  font-size: var(--fs-base);
   transition:
     border-color 0.15s,
     background 0.15s;
@@ -504,7 +504,7 @@
   padding: 0 0.35em;
   border-radius: 999px;
   background: color-mix(in srgb, var(--text) 10%, transparent);
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   text-align: center;
 }
 
@@ -528,7 +528,7 @@
   color: var(--text-muted);
   cursor: pointer;
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
   opacity: 0.7;
   transition:
     opacity 0.15s,
@@ -559,7 +559,7 @@
   border-radius: 999px;
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   transition:
     background 0.15s,
     border-color 0.15s,
@@ -614,7 +614,7 @@
 .suggestion-chip {
   max-width: 16rem;
   padding-right: 0.9em;
-  border-radius: 14px;
+  border-radius: var(--radius-small);
   text-align: left;
 }
 
@@ -703,7 +703,7 @@
 
 .task-card {
   position: relative;
-  border-radius: 16px;
+  border-radius: var(--radius-medium);
   transition: box-shadow 0.2s;
 }
 
@@ -713,7 +713,7 @@
 
 .task-card.is-dragging {
   z-index: 5;
-  box-shadow: 0 10px 30px rgb(0 0 0 / 0.15);
+  box-shadow: var(--shadow-lift);
 }
 
 .task-card.is-done .task-card-summary {
@@ -779,7 +779,7 @@
 .task-meta {
   grid-area: meta;
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
 }
 
 /* Papierkorb rechts: immer da, aber blass – bei Maus oder Tastatur-Fokus kräftiger */
@@ -830,7 +830,7 @@
 
 .field-label {
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
 }
 
@@ -841,7 +841,7 @@
   border-radius: 999px;
   background: var(--surface-2);
   color: var(--text-muted);
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 500;
   letter-spacing: 0.02em;
   vertical-align: 0.08em;
@@ -902,11 +902,11 @@
   width: min(290px, 100%);
   padding: 0.65rem 0.8rem;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-small);
   background: var(--surface);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+  box-shadow: var(--shadow-lift);
   color: var(--text-muted);
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   line-height: 1.45;
   white-space: pre-line;
   animation: field-info-pop 0.15s ease-out;
@@ -923,7 +923,7 @@
 .field-hint {
   margin-top: -0.2rem;
   color: var(--text-muted);
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   line-height: 1.4;
   white-space: pre-line;
 }
@@ -936,7 +936,7 @@
   align-self: flex-start;
   margin-top: 0.15rem;
   color: var(--text-muted);
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   cursor: pointer;
   user-select: none;
   transition: color 0.2s, opacity 0.2s;
@@ -945,7 +945,7 @@
 .start-cue-remember .checkbox {
   width: 1.05em;
   height: 1.05em;
-  border-radius: 5px;
+  border-radius: var(--radius-xs);
   border-color: var(--text-muted);
 }
 
@@ -977,7 +977,7 @@
 .task-total-time {
   border-top: 1px solid var(--border);
   padding-top: 0.5rem;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
 }
 
@@ -1001,7 +1001,7 @@
 }
 
 .number-row-name {
-  font-size: 0.92rem;
+  font-size: var(--fs-base);
 }
 
 /* Leiser Hinweis zwischen Name und Zahlenfeld (z. B. „erst ab 2 Blöcken“ bei nur einem Block) */
@@ -1015,7 +1015,7 @@
   background: color-mix(in srgb, var(--text) 6%, transparent);
   color: var(--text-muted);
   cursor: help;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   white-space: nowrap;
 }
 
@@ -1023,8 +1023,8 @@
   /* Schmal: Hinweis darf umbrechen, statt das Zahlenfeld hinauszuschieben */
   .number-row-note {
     padding: 0.15em 0.5em;
-    border-radius: 10px;
-    font-size: 0.72rem;
+    border-radius: var(--radius-small);
+    font-size: var(--fs-xs);
     line-height: 1.2;
     white-space: normal;
   }
@@ -1044,7 +1044,7 @@
 /* „Standard“ bzw. „Individuell · zurücksetzen“ – klein und ruhig */
 .number-row-state {
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
 }
 
 .number-row-state.is-custom {
@@ -1125,7 +1125,7 @@
   min-width: 0;
   padding: 0.2em 0.35em;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   background: transparent;
 }
 
@@ -1143,11 +1143,11 @@
   width: 1.6rem;
   height: 1.6rem;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
   line-height: 1;
   opacity: 0;
   transition: opacity 0.15s;
