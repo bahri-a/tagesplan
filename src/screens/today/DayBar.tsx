@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { T } from '../../config/texts'
 import { taskMark, type Mark } from '../../logic/progress'
 import { cleanStartCue } from '../../logic/variety'
+import { SHOWS_START_CUE } from '../../platform/device'
 import type { ID, Task } from '../../model/types'
 import { blockMinutesFor, stepsOfTask, taskWork } from '../../store/selectors'
 import { useAppState } from '../../store/store'
@@ -65,7 +66,7 @@ function DayPeek({ task, mark, onClose }: { task: Task; mark: Mark; onClose: () 
   const steps = stepsOfTask(state, task.id)
   const work = taskWork(state, task.id)
   const minutes = blockMinutesFor(state, task)
-  const cue = task.startCue ? cleanStartCue(task.startCue) : ''
+  const cue = SHOWS_START_CUE && task.startCue ? cleanStartCue(task.startCue) : ''
 
   let status: string = T.today.peekUpcoming
   if (mark === 'current') status = T.today.peekCurrent

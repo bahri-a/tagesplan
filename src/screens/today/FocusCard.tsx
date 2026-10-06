@@ -15,6 +15,7 @@ import { TimerRing } from '../../components/TimerRing'
 import { blockMarks, type Mark } from '../../logic/progress'
 import * as timer from '../../logic/timer'
 import { cleanStartCue, pick } from '../../logic/variety'
+import { SHOWS_START_CUE } from '../../platform/device'
 import type { ID, Task } from '../../model/types'
 import { requestNotificationPermission } from '../../signals/notifications'
 import {
@@ -270,7 +271,8 @@ function BlockDots({ marks, suffix, sentence }: BlockDotsProps) {
  * (außer während der kurzen Pause).
  */
 function StartArea({ task, firstBlock, breakOver }: { task: Task; firstBlock: boolean; breakOver: boolean }) {
-  const cue = task.startCue ? cleanStartCue(task.startCue) : ''
+  // Startsignal nur auf dem Mac (auf dem Handy gibt es kein Feld dafür).
+  const cue = SHOWS_START_CUE && task.startCue ? cleanStartCue(task.startCue) : ''
   const timer = useAppState().timer
   // Pause nach einer erledigten Hauptaufgabe: zeigen, welche als Nächstes drankommt.
   const upNext = timer.phase === 'break' && timer.taskId !== task.id

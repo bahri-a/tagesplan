@@ -146,6 +146,8 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   z. B. „der Kaffee auf dem Tisch steht“. In „Heute“ steht es vor dem ersten Block der Aufgabe
   über dem Start-Knopf: „Ich starte, wenn der Kaffee auf dem Tisch steht.“ Solche
   Wenn-dann-Pläne helfen beim Anfangen.
+  Nur auf dem Mac: In der iPhone-App und im Browser auf iPhone, iPad und Android gibt es kein
+  Startsignal.
 - Reihenfolge: am Griff **⠿** links ziehen. **Schwerste Aufgabe nach oben.**
   Ziehst du eine Karte hinüber in die andere Spalte, liegt sie danach bei **Morgen** (oder
   **Heute**) – praktisch, wenn du heute etwas nicht schaffst.
@@ -302,17 +304,18 @@ git add -A
 git commit -m "Kurze Beschreibung der Änderung"
 git push
 ```
-Nach 1–2 Minuten ist die neue Version online.
+Nach 1–2 Minuten ist die neue Version online. In der installierten App erscheint unten
+der Hinweis **„Eine neue Version der App ist bereit“** → **Neu laden**.
+Ein laufender Timer läuft danach einfach weiter.
 
 **Prüfungen:** Bei jedem Pull Request prüft GitHub automatisch Lint, Tests, Bauen und einen
 **Klick-Test im Browser** (`e2e/`, Playwright: Aufgabe anlegen → Block → Pause → erledigt).
 Lokal: `npm run lint`, `npm test` und `npm run test:e2e`.
 
 **Zurück zu einer älteren Version:** GitHub → **Actions** → **Veröffentlichen** → **Run workflow**
-→ unter **Version** z. B. „Vor dem Umbau (5. Oktober 2026)“ wählen → **Run workflow**. Nach 1–2
-Minuten ist diese Version online (Daten bleiben erhalten). Mit „Neueste“ kommst du genauso zurück. In der installierten App erscheint unten
-der Hinweis **„Eine neue Version der App ist bereit“** → **Neu laden**.
-Ein laufender Timer läuft danach einfach weiter.
+→ unter **Version** z. B. „Old Design Version 1“ (die App vor dem Umbau, Stand 5. Oktober 2026,
+zusätzlich als Branch `old-design-version-1` gesichert) wählen → **Run workflow**. Nach 1–2
+Minuten ist diese Version online (Daten bleiben erhalten). Mit „Neueste“ kommst du genauso zurück.
 
 ---
 

@@ -15,6 +15,7 @@ import {
 } from '../selectors'
 import { commit, getState, type Changes } from '../store'
 import { clamp, renumber, stopTimerChanges } from './helpers'
+import { SHOWS_START_CUE } from '../../platform/device'
 
 /** Neue Hauptaufgabe am Ende des Tages anlegen. */
 export function addTask(dayId: ID, title: string): Task {
@@ -28,8 +29,8 @@ export function addTask(dayId: ID, title: string): Task {
     blockMinutesOverride: null,
     shortBreakMinutesOverride: null,
     completedAt: null,
-    // Gemerktes Startsignal (Häkchen „Für alle neuen Hauptaufgaben“) – pro Aufgabe änderbar.
-    startCue: s.settings.defaultStartCue,
+    // Gemerktes Startsignal (Häkchen „Für alle neuen Hauptaufgaben“) – pro Aufgabe änderbar. Nur auf dem Mac.
+    startCue: SHOWS_START_CUE ? s.settings.defaultStartCue : null,
     firstEstimatedBlocks: null,
   }
   commit({ tasks: [task] })

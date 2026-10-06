@@ -14,6 +14,7 @@ import { SETTINGS_LIMITS } from '../config/defaults'
 import { T } from '../config/texts'
 import type { Task } from '../model/types'
 import { stripStartCuePrefix } from '../logic/variety'
+import { SHOWS_START_CUE } from '../platform/device'
 import { rememberStartCue, setTaskCompleted, updateTask } from '../store/actions'
 import { blockMinutesFor, shortBreakMinutesFor, stepsOfTask } from '../store/selectors'
 import { useAppState } from '../store/store'
@@ -161,32 +162,34 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
         <StepList taskId={task.id} autoFocusNew={focusStepInput} />
       </div>
 
-      {/* Startsignal (optional): „Ich starte, wenn“ steht fest vorn im Feld, getippt wird nur der Rest.
-          Darunter ein leises Häkchen: diesen Satz für alle neuen Hauptaufgaben merken. */}
-      <div className="field">
-        <FieldLabel text={T.plan.startCue} optional />
-        <label className="input input-with-prefix">
-          <span className="input-prefix" aria-hidden="true">
-            {T.plan.startCuePrefix}
-          </span>
-          <input
-            value={cueText}
-            placeholder={T.plan.startCuePlaceholder}
-            aria-label={`${T.plan.startCue}: ${T.plan.startCuePrefix} …`}
-            onChange={(e) => updateTask(task.id, { startCue: e.target.value })}
-          />
-        </label>
-        <label className={`start-cue-remember${cueTrimmed ? '' : ' is-disabled'}`} title={T.plan.startCueRememberHint}>
-          <input
-            type="checkbox"
-            className="checkbox"
-            checked={cueRemembered}
-            disabled={!cueTrimmed}
-            onChange={(e) => rememberStartCue(e.target.checked ? cueTrimmed : null)}
-          />
-          {T.plan.startCueRemember}
-        </label>
-      </div>
+      {/* Startsignal (optional, nur auf dem Mac): „Ich starte, wenn“ steht fest vorn im Feld, getippt
+          wird nur der Rest. Darunter ein leises Häkchen: diesen Satz für alle neuen Hauptaufgaben merken. */}
+      {SHOWS_START_CUE && (
+        <div className="field">
+          <FieldLabel text={T.plan.startCue} optional />
+          <label className="input input-with-prefix">
+            <span className="input-prefix" aria-hidden="true">
+              {T.plan.startCuePrefix}
+            </span>
+            <input
+              value={cueText}
+              placeholder={T.plan.startCuePlaceholder}
+              aria-label={`${T.plan.startCue}: ${T.plan.startCuePrefix} …`}
+              onChange={(e) => updateTask(task.id, { startCue: e.target.value })}
+            />
+          </label>
+          <label className={`start-cue-remember${cueTrimmed ? '' : ' is-disabled'}`} title={T.plan.startCueRememberHint}>
+            <input
+              type="checkbox"
+              className="checkbox"
+              checked={cueRemembered}
+              disabled={!cueTrimmed}
+              onChange={(e) => rememberStartCue(e.target.checked ? cueTrimmed : null)}
+            />
+            {T.plan.startCueRemember}
+          </label>
+        </div>
+      )}
 
       {/* Zahlen der Aufgabe: immer dieselben drei Zeilen – beim Ändern springt nichts. */}
       <div className="task-numbers">
