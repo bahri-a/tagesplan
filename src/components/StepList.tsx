@@ -3,12 +3,12 @@
  * Wird im Bildschirm „Planen“ (bearbeitbar) und „Heute“ (nur abhaken) genutzt.
  */
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { T } from '../config/texts'
 import type { ID } from '../model/types'
 import { addStep, deleteStep, toggleStep, updateStepText } from '../store/actions'
 import { stepsOfTask } from '../store/selectors'
-import { useAppState } from '../store/store'
+import { getState, useAppState } from '../store/store'
 
 interface Props {
   taskId: ID
@@ -23,12 +23,24 @@ export function StepList({ taskId, editable = true, autoFocusNew = false, highli
   const state = useAppState()
   const steps = stepsOfTask(state, taskId)
   const [newText, setNewText] = useState('')
+  const pending = useRef('')
 
   const submit = () => {
     if (!newText.trim()) return
     addStep(taskId, newText)
     setNewText('')
+    pending.current = ''
   }
+
+  // Vergessenes Enter: Beim Zuklappen/Schließen den getippten Schritt trotzdem übernehmen.
+  useEffect(
+    () => () => {
+      const text = pending.current.trim()
+      const task = getState().tasks[taskId]
+      if (text && task && task.deletedAt === null) addStep(taskId, text)
+    },
+    [taskId],
+  )
 
   return (
     <div className="step-list">
@@ -95,7 +107,11 @@ export function StepList({ taskId, editable = true, autoFocusNew = false, highli
             autoFocus={autoFocusNew}
             placeholder={steps.length === 0 ? T.plan.firstStep : T.plan.nextStep}
             aria-label={steps.length === 0 ? T.plan.firstStep : T.plan.nextStep}
-            onChange={(e) => setNewText(e.target.value)}
+            onChange={(e) => {
+              setNewText(e.target.value)
+              pending.current = e.target.value
+            }}
+            onBlur={submit}
           />
         </form>
       )}
