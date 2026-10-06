@@ -27,6 +27,9 @@ test('Aufgabe planen, Block und Pause durchlaufen, Aufgabe erledigen', async ({ 
   // Block 1 starten und durchlaufen lassen → kurze Pause
   await page.getByRole('button', { name: 'Starten', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Früher fertig' })).toBeVisible()
+  // Auch im niedrigen Laptop-Fenster (1280 × 720) passt die Block-Karte ganz auf den Bildschirm.
+  const card = await page.locator('.focus-card').boundingBox()
+  expect(card!.y + card!.height).toBeLessThanOrEqual(page.viewportSize()!.height)
   await page.clock.fastForward(25 * MIN + 2000)
   await expect(page.getByText('Kurze Pause')).toBeVisible()
 

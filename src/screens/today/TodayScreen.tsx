@@ -22,7 +22,7 @@
  * Im Hintergrund liegt ein sehr zarter Farbschimmer: grünlich im Block, bläulich in der Pause.
  */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { EMPTY_TODAY_RECENT_COUNT } from '../../config/defaults'
 import { T } from '../../config/texts'
 import { useNow } from '../../components/hooks'
@@ -45,7 +45,7 @@ import { useAppState } from '../../store/store'
 import { FocusCard } from './FocusCard'
 import { DayBar } from './DayBar'
 import { CheckIcon, SunriseIcon } from '../../components/icons'
-import { useCountUp, wasJustFinished } from './celebrate'
+import { forgetFinished, useCountUp, wasJustFinished } from './celebrate'
 import { useSpaceKey } from './useSpaceKey'
 import './today.css'
 
@@ -68,6 +68,8 @@ export function TodayScreen({ onPlan, onEndDay, onStartNewDay }: Props) {
   const newDayOpen = canStartNewDay(state, useNow(true, 60_000))
   // Alles erledigt: „Tag beenden“ steht dann in der Karte selbst.
   const allDone = tasks.length > 0 && !task
+  // Wer „Heute“ verlässt, hat den Haken schon gesehen – beim Zurückkommen zeichnet er sich nicht noch einmal.
+  useEffect(() => forgetFinished, [])
 
   return (
     <div className="today">
@@ -139,8 +141,6 @@ function EmptyToday({ onPlan }: { onPlan: () => void }) {
           placeholder={T.plan.newTask}
           aria-label={`${T.plan.newTask} (${T.plan.today})`}
           enterKeyHint="go"
-          // Am Mac gleich lostippen; am Handy würde sonst sofort die Tastatur aufgehen.
-          autoFocus={!IS_MOBILE}
           onChange={(e) => setTitle(e.target.value)}
         />
         <button type="submit" className="btn new-task-add" disabled={!title.trim()} aria-label={T.plan.add} title={T.plan.add}>

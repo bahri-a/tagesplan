@@ -18,6 +18,11 @@ export function noteFinished(taskId: ID, now = Date.now()): void {
   lastFinished = { taskId, at: now }
 }
 
+/** Vergessen, was gerade erledigt wurde (beim Verlassen von „Heute“). */
+export function forgetFinished(): void {
+  lastFinished = null
+}
+
 /** Wurde diese Hauptaufgabe gerade eben (per Klick in „Heute“) erledigt? */
 export function wasJustFinished(taskId: ID, now = Date.now()): boolean {
   return lastFinished !== null && lastFinished.taskId === taskId && now - lastFinished.at < JUST_FINISHED_MS
