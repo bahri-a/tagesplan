@@ -4,10 +4,15 @@
  * „Sichern“ schreibt ALLE Daten in eine JSON-Datei (lesbarer Text).
  * „Wiederherstellen“ liest so eine Datei und ersetzt damit alle Daten.
  * Der laufende Timer wird dabei nicht mitgesichert.
+ * Seit 2026-10: auch die Einstellungen der „Vorschläge“ aus dem Browser-Speicher
+ * (ausgeblendet, aufgeschoben, Kurztitel, „max. N“) – als `deviceData`. Ältere Sicherungen
+ * haben das nicht; dann bleiben diese Werte beim Wiederherstellen, wie sie sind.
  */
 
 import { APP_NAME } from '../config/defaults'
+import { deviceStorage } from '../logic/deviceStorage'
 import { tablesToV2 } from '../logic/migrations'
+import { exportOwnData, importOwnData } from '../logic/projectSuggestions'
 import { fileDate } from '../logic/time'
 import { getState, reloadStore, type AppState } from '../store/store'
 import { replaceAll, TABLE_NAMES, type Tables } from './database'
@@ -27,10 +32,12 @@ export interface BackupFile {
   /** Zeitpunkt der Sicherung (ISO-Format) */
   exportedAt: string
   data: Tables
+  /** Werte aus dem Browser-Speicher (Vorschläge). Fehlt in älteren Sicherungen. */
+  deviceData?: Record<string, unknown>
 }
 
 /** Erstellt die Sicherung aus dem aktuellen Zustand (inkl. gelöschter Einträge). */
-export function createBackup(state: AppState = getState()): BackupFile {
+export function createBackup(state: AppState = getState(), storage: Storage = deviceStorage()): BackupFile {
   return {
     app: BACKUP_APP_ID,
     schemaVersion: BACKUP_SCHEMA_VERSION,
@@ -43,6 +50,7 @@ export function createBackup(state: AppState = getState()): BackupFile {
       settings: [state.settings],
       notes: [state.note],
     },
+    deviceData: exportOwnData(storage),
   }
 }
 
@@ -80,6 +88,7 @@ export function parseBackup(text: string): BackupFile | null {
   if (!isObject(parsed) || parsed.app !== BACKUP_APP_ID) return null
   if (typeof parsed.schemaVersion !== 'number' || parsed.schemaVersion > BACKUP_SCHEMA_VERSION) return null
   if (typeof parsed.exportedAt !== 'string' || !isObject(parsed.data)) return null
+  if (parsed.deviceData !== undefined && !isObject(parsed.deviceData)) return null
   const data = parsed.data
   for (const name of TABLE_NAMES) {
     const table = data[name]
@@ -90,10 +99,11 @@ export function parseBackup(text: string): BackupFile | null {
 }
 
 /** Ersetzt alle Daten durch die Sicherung und lädt die App-Daten neu. */
-export async function restoreBackup(backup: BackupFile): Promise<void> {
+export async function restoreBackup(backup: BackupFile, storage: Storage = deviceStorage()): Promise<void> {
   // Ältere Sicherungen erst auf den aktuellen Stand bringen.
   const data = backup.schemaVersion < 2 ? tablesToV2(backup.data, Date.now()) : backup.data
   await replaceAll(data)
+  if (backup.deviceData) importOwnData(storage, backup.deviceData)
   await reloadStore()
 }
 

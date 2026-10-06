@@ -16,7 +16,7 @@
 }
 
 .settings-section h2 {
-  font-size: 1.05rem;
+  font-size: var(--fs-lg);
 }
 
 .setting-row {
@@ -30,13 +30,50 @@
   font-weight: 500;
 }
 
-/* Schmaler Bildschirm (iPhone): Die Farbwelt-Auswahl ist zu breit für neben dem Text –
-   sie rutscht unter die Beschriftung, statt rechts über den Rand zu ragen. */
+/* Schmaler Bildschirm (iPhone): Beschriftung und Regler stehen in einer Zeile, der Hinweis
+   darunter über die ganze Breite – statt in einer schmalen Spalte drei, vier Mal umzubrechen.
+   Farbwelt und Rauschen sind zu breit für neben dem Text: Sie stehen unter dem Hinweis. */
 @media (max-width: 480px) {
-  .setting-row:has(.palette-picker),
-  .setting-row:has(.noise-picker) {
+  .setting-row:has(> div > .setting-label) {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    column-gap: 1rem;
+    row-gap: 0.15rem;
+    align-items: center;
+  }
+
+  .setting-row > div:has(> .setting-label) {
+    display: contents;
+  }
+
+  .setting-row .setting-label {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .setting-row .setting-hint {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .setting-row:has(> div > .setting-label) > :last-child {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .setting-row:has(> div > .setting-label):has(.palette-picker) > :last-child,
+  .setting-row:has(> div > .setting-label):has(.noise-picker) > :last-child {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    justify-self: start;
+    margin-top: 0.5rem;
+  }
+
+  /* Sichern / Wiederherstellen: Hinweis oben, Knopf darunter in voller Breite (beide gleich breit). */
+  .setting-row:not(:has(.setting-label)) {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 0.5rem;
   }
 }
 
@@ -45,9 +82,10 @@
   white-space: pre-line;
 }
 
+/* Ton-Probeknöpfe: alle gleich breit (nebeneinander, am iPhone untereinander). */
 .settings-buttons {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
   gap: 0.6rem;
 }
 
@@ -71,7 +109,8 @@
 .segmented-item {
   padding: 0.4em 1em;
   border: none;
-  border-radius: 7px;
+  /* passt genau in den Umschalter (dessen Rundung minus Innenabstand) */
+  border-radius: calc(var(--radius-small) - 0.25rem);
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
@@ -104,7 +143,7 @@
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
 }
 

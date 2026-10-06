@@ -22,8 +22,11 @@ export function NotePad() {
   return open ? (
     <NotePanel onClose={() => setOpen(false)} />
   ) : (
-    <button type="button" className="notes-button" title={T.park.hint} onClick={() => setOpen(true)}>
-      ✎ {T.notes.open}
+    <button type="button" className="notes-button" title={T.park.hint} aria-label={T.notes.open} onClick={() => setOpen(true)}>
+      <span className="corner-icon" aria-hidden="true">
+        ✎
+      </span>{' '}
+      <span className="corner-label">{T.notes.open}</span>
     </button>
   )
 }

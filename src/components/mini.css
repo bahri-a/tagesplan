@@ -21,7 +21,7 @@
   backdrop-filter: var(--panel-filter);
   color: var(--accent);
   cursor: pointer;
-  font-size: 0.92rem;
+  font-size: var(--fs-base);
   font-weight: 500;
   box-shadow: var(--shadow);
 }
@@ -64,12 +64,12 @@
 .mini-today .focus-card {
   gap: 0.7rem;
   padding: 1rem 0.9rem;
-  border-radius: 20px;
+  border-radius: var(--radius-medium);
   box-shadow: none;
 }
 
 .mini-today .focus-title {
-  font-size: 1rem;
+  font-size: var(--fs-md);
   line-height: 1.3;
 }
 
@@ -89,11 +89,11 @@
 .mini-today .btn-big {
   min-height: 42px;
   padding: 0.5em 1.1em;
-  font-size: 0.95rem;
+  font-size: var(--fs-base);
 }
 
 .mini-today .start-cue {
-  font-size: 0.9rem;
+  font-size: var(--fs-base);
 }
 
 /* Nicht nötig im kleinen Fenster */

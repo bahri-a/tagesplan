@@ -22,15 +22,13 @@ export const DEFAULT_SETTINGS: SettingsValues = {
   shortBreakMinutes: 7,
   /** Wie viele Blöcke eine neue Hauptaufgabe zunächst bekommt. */
   defaultBlocksPerTask: 3,
-  /** Ab wie vielen Hauptaufgaben pro Tag ein sanfter Hinweis erscheint. */
-  maxTasksPerDay: 3,
   /** Aussehen: 'system' (wie macOS), 'light' (hell) oder 'dark' (dunkel). */
   theme: 'system',
   /** Flächen: 'pur' (massiv) oder 'glass' (Milchglas). */
   surfaces: 'pur',
   /** Farbwelt: 'salbei' (Standard), 'fjord', 'rose' oder 'lavendel'. */
   palette: 'salbei',
-  /** Töne an (Timer-Töne, Vorwarnung, Rauschen). */
+  /** Signaltöne an (Block-/Pausenende, Vorwarnung, Ultra). Das Rauschen schaltet sein eigener Knopf. */
   sounds: true,
   /** Rauschen im Block – anfangs aus, der Knopf in „Heute“ schaltet es an. */
   noiseOn: false,
@@ -49,7 +47,6 @@ export const SETTINGS_LIMITS = {
   blockMinutes: { min: 1, max: 240 },
   shortBreakMinutes: { min: 1, max: 60 },
   defaultBlocksPerTask: { min: 1, max: 20 },
-  maxTasksPerDay: { min: 1, max: 20 },
 } as const
 
 /**
@@ -109,12 +106,6 @@ export const NOISE_PREVIEW_S = 2.5
 /** Wie lange das Rauschen beim Ein- und Ausschalten weich ein-/ausblendet (Sekunden). */
 export const NOISE_FADE_S = 1.5
 
-/**
- * Der Startsatz „Abschweifen ist okay …“ erscheint im Block nicht immer, sondern ab und zu:
- * ungefähr bei jedem so-vielten Block (gewählt nach der Startzeit – also zufällig, aber stabil).
- */
-export const GENTLE_LINE_EVERY = 3
-
 /** Wie lange nach Taste N die Meldung „Geparkt“ zu sehen ist (Millisekunden). */
 export const PARKED_TOAST_MS = 2500
 
@@ -140,6 +131,12 @@ export const SUGGESTIONS_COUNT = 5
 /** Kleinste und größte einstellbare Zahl der „Vorschläge“. */
 export const SUGGESTIONS_MIN = 1
 export const SUGGESTIONS_MAX = 10
+
+/** Nach so vielen Tagen ohne Sicherung erinnert die App beim Öffnen einmal leise ans Sichern. */
+export const BACKUP_REMINDER_DAYS = 7
+
+/** So lange steht die Erinnerung ans Sichern unten (Millisekunden). */
+export const BACKUP_REMINDER_MS = 10_000
 
 /** Wie lange nach dem Löschen einer Aufgabe „Rückgängig“ angeboten wird (Millisekunden). */
 export const UNDO_DELETE_MS = 8000

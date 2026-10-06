@@ -28,3 +28,7 @@ dist-ssr
 
 # iPhone-App: Bau-Ordner für den Simulator (npm run build:ios / xcodebuild)
 build-ios
+
+# Klick-Test (Playwright)
+test-results/
+playwright-report/

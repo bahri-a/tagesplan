@@ -209,6 +209,9 @@ export const T = {
     recentHide: (title: string) => `„${title}“ aus „Zuletzt verwendet“ entfernen`,
     recentNone: (day: string) => `Steht alles schon bei ${day}.`,
     recentAdded: (title: string, day: string) => `„${title}“ steht jetzt bei ${day}.`,
+    // Beim letzten Mal wurden mehr oder weniger Blöcke gebraucht als geschätzt → diese Zahl übernommen.
+    recentAddedLearned: (title: string, day: string, blocks: number) =>
+      `„${title}“ steht jetzt bei ${day} – mit ${blocks === 1 ? '1 Block' : `${blocks} Blöcken`} wie beim letzten Mal.`,
     // „Vorschläge“ darunter: offene Aufgaben aus der App „Projekte“
     suggestionsTitle: 'Vorschläge',
     suggestionSource: (title: string) => `Aus Projekte: „${title}“`,
@@ -357,12 +360,12 @@ export const T = {
     ultraOn: 'An',
     ultraOff: 'Aus',
     testUltra: '▶ Ton „Ultra“',
-    notifyGranted: 'Chrome-Benachrichtigungen sind erlaubt.',
-    notifyDefault: 'Chrome-Benachrichtigungen sind noch nicht erlaubt.',
+    notifyGranted: 'Benachrichtigungen sind erlaubt.',
+    notifyDefault: 'Benachrichtigungen sind noch nicht erlaubt.',
     notifyDenied:
-      'Chrome-Benachrichtigungen sind blockiert. Du kannst sie über das Schloss-Symbol links neben der Adresse wieder erlauben.',
+      'Benachrichtigungen sind blockiert. Du kannst sie über das Symbol links neben der Adresse wieder erlauben.',
     notifyAllow: 'Erlauben',
-    // iPhone-App: Mitteilungen statt Chrome-Benachrichtigungen
+    // iPhone-App: Mitteilungen statt Browser-Benachrichtigungen
     nativeNotifyGranted: 'Mitteilungen sind erlaubt – auch bei gesperrtem iPhone kommt das Signal.',
     nativeNotifyDefault: 'Mitteilungen sind noch nicht erlaubt. Ohne sie klingelt nichts, wenn das iPhone gesperrt ist.',
     nativeNotifyDenied:
@@ -371,6 +374,19 @@ export const T = {
     backup: 'Sichern',
     backupHint: 'Speichert alle deine Daten als Datei.',
     backupShareTitle: 'Tagesplan-Sicherung',
+    // Unter „Sichern“: wann zuletzt gesichert wurde (auf diesem Gerät).
+    backupLast: (days: number | null) =>
+      days === null
+        ? 'Auf diesem Gerät noch nicht gesichert.'
+        : days === 0
+          ? 'Zuletzt gesichert: heute.'
+          : days === 1
+            ? 'Zuletzt gesichert: gestern.'
+            : `Zuletzt gesichert: vor ${days} Tagen.`,
+    // Leise Erinnerung beim Öffnen (höchstens einmal am Tag).
+    backupReminder: (days: number | null) =>
+      days === null ? 'Deine Daten sind noch nicht gesichert.' : `Letzte Sicherung vor ${days} Tagen.`,
+    backupReminderAction: 'Jetzt sichern',
     restore: 'Wiederherstellen',
     restoreHint: 'Lädt eine Sicherungsdatei – ersetzt die aktuellen Daten.',
     restoreConfirmTitle: 'Sicherung wiederherstellen?',
@@ -381,9 +397,9 @@ export const T = {
     restoreDone: 'Fertig – deine Sicherung ist wiederhergestellt.',
     restoreInvalid: 'Diese Datei konnte ich nicht lesen. Ist es eine Tagesplan-Sicherung (.json)?',
     version: (date: string) => `Version vom ${date}`,
-    storagePersisted: 'Chrome behält deine Daten dauerhaft.',
+    storagePersisted: 'Der Browser behält deine Daten dauerhaft.',
     storageNotPersisted:
-      'Chrome hat den dauerhaften Speicher noch nicht bestätigt. Das passiert meist automatisch, sobald die App installiert ist. Sichere zur Sicherheit ab und zu.',
+      'Der Browser hat den dauerhaften Speicher noch nicht bestätigt. Das passiert meist automatisch, sobald die App installiert ist. Sichere zur Sicherheit ab und zu.',
   },
 
   notification: {

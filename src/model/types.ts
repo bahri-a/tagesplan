@@ -124,13 +124,12 @@ export interface SettingsValues {
   blockMinutes: number
   shortBreakMinutes: number
   defaultBlocksPerTask: number
-  maxTasksPerDay: number
   theme: ThemeSetting
   /** Seit 2026-09-28. Fehlt in älteren Daten → Standard aus DEFAULT_SETTINGS. */
   surfaces: SurfaceSetting
   /** Farbwelt. Seit 2026-09-29; fehlt in älteren Daten → 'salbei' (das bisherige Aussehen). */
   palette: PaletteSetting
-  /** Töne überhaupt an? `false` = komplett still (Timer-Töne, Vorwarnung, Rauschen). Seit 2026-09-28. */
+  /** Signaltöne an? `false` = keine Töne bei Block-/Pausenende, keine Vorwarnung, kein Ultra-Ton. Das Rauschen bleibt davon unberührt. Seit 2026-09-28. */
   sounds: boolean
   /** Rauschen während eines laufenden Blocks an? (Knopf in „Heute“ und im Mini-Fenster) */
   noiseOn: boolean
@@ -172,15 +171,7 @@ export interface Note extends BaseRecord {
  * Der Timer rechnet nur mit Zeitpunkten, nicht mit mitgezählten Sekunden.
  */
 export type TimerState =
-  | {
-      phase: 'idle'
-      /**
-       * Ultra-Modus nach dem letzten Block (danach gibt es keine kurze Pause): Es piept ab `endedAt`,
-       * bis „Erledigt“ oder „Noch ein Block“ gewählt ist – höchstens `durationMs` lang
-       * (so lang wie die kurze Pause gewesen wäre). Fehlt in älteren Daten = nein.
-       */
-      ultra?: { taskId: ID; endedAt: number; durationMs: number }
-    }
+  | { phase: 'idle' }
   | {
       phase: 'block'
       taskId: ID
@@ -222,6 +213,16 @@ export interface LocalState {
    * zurück zur Frage „Erledigt oder noch ein Block?“ kann. Fehlt in älteren Daten.
    */
   extraBlock?: ExtraBlockMark | null
+  /**
+   * Für welche Aufgabe die lange Pause (nach einer erledigten Hauptaufgabe) schon beendet wurde.
+   * Gespeichert, damit die Karte „Lange Pause“ nach einem Neuladen nicht wieder erscheint.
+   * Fehlt in älteren Daten.
+   */
+  longPauseEndedFor?: ID | null
+  /** Wann auf diesem Gerät zuletzt „Sichern“ gedrückt wurde. Fehlt in älteren Daten. */
+  lastBackupAt?: number | null
+  /** An welchem Tag (dayKey) die Erinnerung ans Sichern zuletzt kam – höchstens einmal am Tag. */
+  backupReminderOn?: string | null
 }
 
 /** Merkzettel für „Zurück“ nach „Noch ein Block“ (siehe `canUndoExtraBlock`). */

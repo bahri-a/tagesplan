@@ -296,6 +296,23 @@ describe('Hauptaufgabe erledigt, lange Pause', () => {
     expect(sel.currentTask(s)?.id).toBe(b.id)
     expect(sel.needsLongPause(s, s.tasks[b.id])).toBe(true)
   })
+
+  it('„Weiter“ nach der langen Pause bleibt auch nach einem Neuladen gemerkt', async () => {
+    const a = actions.addTask(today(), 'A')
+    const b = actions.addTask(today(), 'B')
+    actions.updateTask(a.id, { estimatedBlocks: 1 })
+    actions.startBlock(a.id)
+    actions.checkTimer(at(BLOCK))
+    actions.finishTask(a.id)
+    expect(sel.isOnLongPause(getState(), getState().tasks[b.id])).toBe(true)
+
+    actions.endLongPause(b.id)
+    expect(sel.isOnLongPause(getState(), getState().tasks[b.id])).toBe(false)
+    await flushSaves()
+    resetStoreForTests()
+    await initStore()
+    expect(sel.isOnLongPause(getState(), getState().tasks[b.id])).toBe(false)
+  })
 })
 
 describe('Tag beenden', () => {
@@ -704,6 +721,18 @@ describe('Planen: kopieren, verschieben, zuletzt verwendet', () => {
     expect(sel.stepsOfTask(s, task.id)).toHaveLength(1) // das Original bleibt
   })
 
+  it('„Zuletzt verwendet“ lernt die Blockzahl: Kopie bekommt die wirklich gebrauchten Blöcke', () => {
+    const task = actions.addTask(today(), 'Lernen')
+    actions.updateTask(task.id, { estimatedBlocks: 2 })
+    for (let i = 0; i < 3; i++) actions.logBlockAsDone(task.id, at((i + 1) * BLOCK))
+    actions.finishTask(task.id)
+    expect(sel.blocksNeeded(getState(), task.id)).toBe(3)
+    expect(actions.copyTask(task.id, tomorrow(), { learn: true })!.estimatedBlocks).toBe(3)
+    expect(actions.copyTask(task.id, tomorrow())!.estimatedBlocks).toBe(2) // ohne Lernen wie vorher
+    const open = actions.addTask(today(), 'Offen')
+    expect(sel.blocksNeeded(getState(), open.id)).toBeNull() // nicht erledigt → keine Erfahrung
+  })
+
   it('verschiebt eine Aufgabe von heute auf morgen – nicht, solange ihr Block läuft', () => {
     const a = actions.addTask(today(), 'A')
     const b = actions.addTask(today(), 'B')
@@ -788,5 +817,63 @@ describe('Tag beenden: streichen bei der Platzwahl', () => {
     expect(s.tasks[a.id].dayId).toBe(oldDay) // nicht mitgenommen, aber nicht gelöscht
     expect(s.tasks[a.id].deletedAt).toBeNull()
     expect(s.tasks[x.id].deletedAt).not.toBeNull()
+  })
+})
+
+describe('Erinnerung ans Sichern', () => {
+  const DAY = 24 * 60 * MIN
+
+  it('erinnert erst nach einer Woche Nutzung ohne Sicherung, höchstens einmal am Tag', () => {
+    expect(sel.shouldRemindBackup(getState(), at(3 * DAY))).toBe(false) // App noch keine Woche alt
+    expect(sel.shouldRemindBackup(getState(), at(7 * DAY))).toBe(true)
+    actions.markBackupReminded(at(7 * DAY))
+    expect(sel.shouldRemindBackup(getState(), at(7 * DAY + 60 * MIN))).toBe(false) // heute schon
+    expect(sel.shouldRemindBackup(getState(), at(8 * DAY))).toBe(true)
+  })
+
+  it('nach dem Sichern ist eine Woche Ruhe, und „zuletzt gesichert“ zählt die Tage', () => {
+    expect(sel.backupAgeDays(getState(), at(0))).toBeNull()
+    actions.markBackupMade(at(10 * DAY))
+    expect(sel.backupAgeDays(getState(), at(10 * DAY + MIN))).toBe(0)
+    expect(sel.backupAgeDays(getState(), at(11 * DAY))).toBe(1)
+    expect(sel.shouldRemindBackup(getState(), at(16 * DAY))).toBe(false)
+    expect(sel.shouldRemindBackup(getState(), at(17 * DAY))).toBe(true)
+  })
+
+  it('stört nie während eines Blocks', () => {
+    const task = actions.addTask(today(), 'A')
+    at(7 * DAY)
+    actions.startBlock(task.id)
+    expect(sel.shouldRemindBackup(getState(), at(7 * DAY + MIN))).toBe(false)
+  })
+})
+
+describe('Bereits erledigt, ohne die App zu starten', () => {
+  it('trägt vor dem Start einen vollen Block ein – ohne Pause, der nächste kann gleich starten', () => {
+    const task = actions.addTask(today(), 'A')
+    actions.updateTask(task.id, { estimatedBlocks: 2 })
+    actions.logBlockAsDone(task.id, at(BLOCK))
+    const s = getState()
+    expect(sel.blocksDone(s, task.id)).toBe(1)
+    expect(sel.taskWork(s, task.id)).toEqual({ blocks: 1, minutes: BLOCK / MIN })
+    expect(s.timer.phase).toBe('idle')
+    expect(sel.activeDay(s).firstWorkAt).toBe(START)
+    expect(s.tasks[task.id].firstEstimatedBlocks).toBe(2)
+  })
+
+  it('nach dem letzten geschätzten Block kommt die Frage „Erledigt oder noch ein Block?“', () => {
+    const task = actions.addTask(today(), 'A')
+    actions.updateTask(task.id, { estimatedBlocks: 1 })
+    actions.logBlockAsDone(task.id, at(BLOCK))
+    expect(sel.blocksDone(getState(), task.id)).toBe(1)
+    expect(sel.isAskingDone(getState(), getState().tasks[task.id])).toBe(true)
+  })
+
+  it('tut nichts, während ein Block läuft', () => {
+    const task = actions.addTask(today(), 'A')
+    actions.startBlock(task.id)
+    actions.logBlockAsDone(task.id, at(BLOCK / 2))
+    expect(sel.blocksDone(getState(), task.id)).toBe(0)
+    expect(getState().timer.phase).toBe('block')
   })
 })

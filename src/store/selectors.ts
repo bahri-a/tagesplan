@@ -5,7 +5,7 @@
  * „Welche Aufgabe ist gerade dran?“. Sie ändern nichts.
  */
 
-import { UNDO_EXTRA_BLOCK_MS } from '../config/defaults'
+import { BACKUP_REMINDER_DAYS, UNDO_EXTRA_BLOCK_MS } from '../config/defaults'
 import { dayKey } from '../logic/time'
 import { blockWorkedMs, isBreakOver } from '../logic/timer'
 import { alive, sortByPosition } from '../logic/records'
@@ -74,6 +74,11 @@ export function recentKey(title: string): string {
   return title.trim().toLocaleLowerCase('de')
 }
 
+/** Gibt es überhaupt etwas für „Zuletzt verwendet“ (auf einem der Tage)? */
+export function hasRecentTasks(s: AppState, dayIds: ID[]): boolean {
+  return dayIds.some((dayId) => recentTasks(s, dayId, 1).length > 0)
+}
+
 export function recentTasks(s: AppState, dayId: ID, limit: number): Task[] {
   const key = recentKey
   const hidden = s.settings.recentHidden ?? {}
@@ -111,6 +116,16 @@ export function lastBlockEndedAt(s: AppState, taskId: ID): number | null {
  */
 export function blocksDone(s: AppState, taskId: ID): number {
   return countedBlocks(s, taskId).length
+}
+
+/**
+ * Wie viele Blöcke hat die Aufgabe wirklich gebraucht? Nur bei erledigten Aufgaben mit
+ * mindestens einem geschafften Block – sonst `null` (noch keine Erfahrung).
+ */
+export function blocksNeeded(s: AppState, taskId: ID): number | null {
+  const task = s.tasks[taskId]
+  if (!task || task.completedAt === null) return null
+  return blocksDone(s, taskId) || null
 }
 
 /** Blocklänge für diese Aufgabe in Minuten (individuell oder Standard). */
@@ -154,6 +169,14 @@ export function needsLongPause(s: AppState, task: Task): boolean {
   const dayId = activeDay(s).id
   const blocksToday = alive(Object.values(s.blocks)).filter((b) => b.dayId === dayId)
   return blocksToday.length > 0 && !blocksToday.some((b) => b.taskId === task.id)
+}
+
+/**
+ * Steht in „Heute“ gerade die Karte „Lange Pause“? Ja, nach einer erledigten Hauptaufgabe vor der
+ * nächsten (siehe `needsLongPause`), solange nichts läuft und „Weiter“ noch nicht gedrückt wurde.
+ */
+export function isOnLongPause(s: AppState, task: Task): boolean {
+  return s.timer.phase === 'idle' && needsLongPause(s, task) && s.local.longPauseEndedFor !== task.id
 }
 
 /**
@@ -235,4 +258,34 @@ export function dayYield(s: AppState, dayId: ID, now: number) {
       .filter((t) => t.completedAt !== null)
       .map((t) => t.title),
   }
+}
+
+/**
+ * Vor wie vielen Kalendertagen wurde auf diesem Gerät zuletzt gesichert? 0 = heute,
+ * `null` = noch nie.
+ */
+export function backupAgeDays(s: AppState, now: number): number | null {
+  const last = s.local.lastBackupAt
+  if (last === undefined || last === null) return null
+  return daysBetween(last, now)
+}
+
+/**
+ * Soll beim Öffnen die leise Erinnerung ans Sichern kommen? Ja, wenn die App schon mindestens
+ * BACKUP_REMINDER_DAYS Tage benutzt wird, so lange nicht gesichert wurde, heute noch nicht
+ * erinnert wurde und gerade kein Block läuft.
+ */
+export function shouldRemindBackup(s: AppState, now: number): boolean {
+  if (s.timer.phase === 'block') return false
+  if (s.local.backupReminderOn === dayKey(now)) return false
+  const firstUse = Math.min(...Object.values(s.days).map((d) => d.createdAt))
+  if (!Number.isFinite(firstUse) || daysBetween(firstUse, now) < BACKUP_REMINDER_DAYS) return false
+  const age = backupAgeDays(s, now)
+  return age === null || age >= BACKUP_REMINDER_DAYS
+}
+
+/** Wie viele Kalendertage (Wechsel um 4 Uhr) liegen zwischen zwei Zeitpunkten? */
+function daysBetween(from: number, to: number): number {
+  const day = (t: number) => Date.parse(`${dayKey(t)}T00:00:00Z`) / 86_400_000
+  return Math.round(day(to) - day(from))
 }

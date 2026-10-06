@@ -1,0 +1,60 @@
+# PRÜFEN VOR DEM ÜBERNEHMEN
+# =========================
+# Bei jedem Pull Request (und jeder neuen Änderung daran) prüft GitHub,
+# ob alles stimmt: Lint, Tests, Bauen und ein Klick-Test im Browser.
+# Erst wenn hier alles grün ist, sollte der PR übernommen werden.
+# Den Fortschritt siehst du im PR unten bei „Checks“.
+
+name: Prüfen
+
+on:
+  pull_request:
+  # Erlaubt auch einen Start per Knopfdruck im Reiter „Actions“.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Neue Änderung am selben PR → alte Prüfung abbrechen.
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code holen
+        uses: actions/checkout@v5
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Bibliotheken installieren
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm test
+
+      - name: App bauen
+        run: npm run build
+
+      - name: Browser für den Klick-Test installieren
+        run: npx playwright install --with-deps chromium
+
+      - name: Klick-Test im Browser
+        run: npx playwright test
+
+      - name: Bei Fehler – Bilder vom Klick-Test aufheben
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: klick-test
+          path: test-results/
+          retention-days: 7

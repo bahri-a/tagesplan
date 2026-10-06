@@ -6,8 +6,8 @@
  * Dialoge, die überall erscheinen können.
  */
 
-import { useCallback, useEffect, useState } from 'react'
-import { APP_NAME, PARKED_TOAST_MS, UNDO_DELETE_MS } from './config/defaults'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { APP_NAME, BACKUP_REMINDER_MS, PARKED_TOAST_MS, UNDO_DELETE_MS } from './config/defaults'
 import { T } from './config/texts'
 import { EndDayDialog } from './components/EndDayDialog'
 import { useNoise, useNow, useTimerEngine, type WakeEvent } from './components/hooks'
@@ -21,12 +21,14 @@ import { requestPersistentStorage } from './db/database'
 import { formatCountdown } from './logic/time'
 import * as timer from './logic/timer'
 import type { ID, PaletteSetting, SurfaceSetting, ThemeSetting, TimerState } from './model/types'
-import { PlanScreen } from './screens/PlanScreen'
+import { PlanScreen } from './screens/plan/PlanScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
-import { TodayScreen } from './screens/TodayScreen'
+import { TodayScreen } from './screens/today/TodayScreen'
 import { unlockAudio } from './signals/sounds'
-import { endDay, getEndDayConflicts, restoreTask } from './store/actions'
-import { initStore, useAppState } from './store/store'
+import { downloadBackup } from './db/backup'
+import { endDay, getEndDayConflicts, markBackupMade, markBackupReminded, restoreTask } from './store/actions'
+import { backupAgeDays, shouldRemindBackup } from './store/selectors'
+import { getState, initStore, useAppState } from './store/store'
 import './components/components.css'
 
 type Screen = 'today' | 'plan' | 'settings'
@@ -84,6 +86,7 @@ function Shell() {
   const [wakeEvent, setWakeEvent] = useState<WakeEvent | null>(null)
 
   useTimerEngine(useCallback((e: WakeEvent) => setWakeEvent(e), []))
+  useBackupReminder((message, action) => setToast({ id: nextToastId++, message, duration: BACKUP_REMINDER_MS, action }))
   useNoise()
   useTheme(state.settings.theme, state.settings.palette)
   useSurfaces(state.settings.surfaces)
@@ -201,6 +204,27 @@ function useTheme(theme: ThemeSetting, palette: PaletteSetting) {
     darkMode.addEventListener('change', updateTitleBar)
     return () => darkMode.removeEventListener('change', updateTitleBar)
   }, [theme, palette])
+}
+
+/**
+ * Leise Erinnerung ans Sichern: Wurde lange nicht gesichert, steht beim Öffnen einmal (höchstens
+ * einmal am Tag) unten „Letzte Sicherung vor 9 Tagen · Jetzt sichern“. Nie während eines Blocks.
+ */
+function useBackupReminder(show: (message: string, action: ToastAction) => void) {
+  const showRef = useRef(show)
+  useEffect(() => {
+    const now = Date.now()
+    const s = getState()
+    if (!shouldRemindBackup(s, now)) return
+    markBackupReminded(now)
+    showRef.current(T.settings.backupReminder(backupAgeDays(s, now)), {
+      label: T.settings.backupReminderAction,
+      onClick: () => {
+        downloadBackup()
+        markBackupMade()
+      },
+    })
+  }, [])
 }
 
 /** Pur oder Milchglas: steuert die Flächen-Variablen in index.css. */
