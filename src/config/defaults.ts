@@ -140,3 +140,8 @@ export const BACKUP_REMINDER_MS = 10_000
 
 /** Wie lange nach dem Löschen einer Aufgabe „Rückgängig“ angeboten wird (Millisekunden). */
 export const UNDO_DELETE_MS = 8000
+
+/** Fokus-Ansicht am Handy: so lange bleiben die Knöpfe nach einem Tippen sichtbar (ms). */
+export const FOCUS_CONTROLS_MS = 5_000
+/** Fokus-Ansicht am Handy: so dunkel wird der Bildschirm bis zum Blockende (0 = gar nicht, 1 = schwarz). */
+export const FOCUS_DIM_MAX = 0.35

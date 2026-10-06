@@ -12,6 +12,7 @@ import { T } from './config/texts'
 import { EndDayDialog } from './components/EndDayDialog'
 import { useNoise, useNow, useTimerEngine, type WakeEvent } from './components/hooks'
 import { NotePad } from './components/NotePad'
+import { openNotePad } from './components/notePadEvents'
 import { MiniWindow } from './components/MiniWindow'
 import { QuickPark } from './components/QuickPark'
 import { Toast, type ToastAction } from './components/Toast'
@@ -25,6 +26,8 @@ import { PlanScreen } from './screens/plan/PlanScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
 import { TodayScreen } from './screens/today/TodayScreen'
 import { unlockAudio } from './signals/sounds'
+import { IS_MOBILE } from './platform/device'
+import { useFocusMode } from './platform/focusMode'
 import { downloadBackup } from './db/backup'
 import { endDay, getEndDayConflicts, markBackupMade, markBackupReminded, restoreTask } from './store/actions'
 import { backupAgeDays, shouldRemindBackup } from './store/selectors'
@@ -91,6 +94,8 @@ function Shell() {
   useTheme(state.settings.theme, state.settings.palette)
   useSurfaces(state.settings.surfaces)
   useWindowTitle(state.timer)
+  // Handy: ruhige Fokus-Ansicht, solange in „Heute“ ein Block läuft (siehe platform/focusMode.ts).
+  useFocusMode(state.timer, screen === 'today')
 
   const clearToast = useCallback(() => setToast(null), [])
   const showToast = (message: string, extra: Omit<ToastInfo, 'id' | 'message'> = {}) =>
@@ -139,6 +144,12 @@ function Shell() {
               {s.label}
             </button>
           ))}
+          {/* Handy: Notizen als ✎ direkt in der Leiste (am Mac unten rechts). */}
+          {IS_MOBILE && (
+            <button type="button" className="nav-item nav-notes" aria-label={T.notes.open} title={T.notes.open} onClick={openNotePad}>
+              ✎
+            </button>
+          )}
         </nav>
         {screen !== 'today' && <TimerPill timerState={state.timer} onClick={() => setScreen('today')} />}
       </header>
@@ -156,7 +167,10 @@ function Shell() {
       </main>
 
       <NotePad />
-      <MiniWindow />
+      {/* Ein Fenster über allen anderen Fenstern gibt es nur am Mac. */}
+      {!IS_MOBILE && <MiniWindow />}
+      {/* Fokus-Ansicht am Handy: wird im Lauf des Blocks langsam etwas dunkler (mobile.css). */}
+      <div className="focus-dim" aria-hidden="true" />
       <QuickPark onParked={() => showToast(T.park.done, { duration: PARKED_TOAST_MS })} />
 
       {endDayDialog !== 'closed' && (

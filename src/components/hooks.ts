@@ -8,6 +8,7 @@ import { ULTRA_REPEAT_MS } from '../config/defaults'
 import { checkTimer, isUltraRinging, type TimerEvent } from '../store/actions'
 import { getState, subscribeToStore } from '../store/store'
 import { appIsInBackground, phoneAlreadySignaled, showNotification } from '../signals/notifications'
+import { buzz } from '../platform/focusMode'
 import { playBlockEnd, playBlockWarning, playBreakEnd, playUltraAlarm, setNoise } from '../signals/sounds'
 
 /**
@@ -69,6 +70,7 @@ function signal(event: TimerEvent, onWake?: (e: WakeEvent) => void): void {
     playBlockWarning() // nur ein leiser Ton, keine Benachrichtigung
   } else if (event.type === 'blockEnd') {
     playBlockEnd()
+    buzz()
     if (appIsInBackground()) {
       showNotification(
         T.notification.blockEndTitle,
@@ -77,6 +79,7 @@ function signal(event: TimerEvent, onWake?: (e: WakeEvent) => void): void {
     }
   } else {
     playBreakEnd()
+    buzz()
     if (appIsInBackground()) {
       showNotification(T.notification.breakEndTitle, T.notification.breakEndBody(event.taskTitle))
     }

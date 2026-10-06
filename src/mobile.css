@@ -1,0 +1,466 @@
+/*
+ * HANDY-AUSSEHEN (iPhone-App und Browser auf iPhone, iPad, Android)
+ * =================================================================
+ * Gilt nur, wenn main.tsx am <html> data-device="mobile" setzt – am Mac ändert sich nichts.
+ *  1. Jeder Bildschirm passt genau aufs Display: Die Seite selbst scrollt nicht. Nur wo es
+ *     wirklich viel wird (sehr viele Aufgaben), scrollt die Liste in sich.
+ *  2. Aufgeräumt: kein Mini-Fenster, keine Vorschläge, kein Startsatz, keine Karten für
+ *     erledigte Aufgaben (die Pillen zeigen das schon); Notizen als ✎ in der Kopfleiste.
+ *  3. Fokus-Ansicht im laufenden Block (data-focus, siehe platform/focusMode.ts).
+ */
+
+/* Ein verstecktes Element bleibt versteckt – auch wenn seine Klasse display setzt. */
+[hidden] {
+  display: none !important;
+}
+
+/* Abdunkeln in der Fokus-Ansicht – sonst unsichtbar (auch am Mac). */
+.focus-dim {
+  display: none;
+}
+
+/* ---------- 1. Rahmen: genau ein Bildschirm hoch ---------- */
+
+[data-device='mobile'] body {
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+[data-device='mobile'] #root {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+}
+
+[data-device='mobile'] .topbar {
+  position: relative;
+  flex: none;
+  padding: calc(0.6rem + var(--safe-top)) 1rem 0.35rem;
+  transition:
+    opacity 0.6s,
+    visibility 0.6s;
+}
+
+[data-device='mobile'] .nav-item {
+  padding: 0.45em 0.95em;
+}
+
+/* Der Inhalt füllt den Rest. Passt einmal etwas nicht (sehr kleines Handy), scrollt nur er. */
+[data-device='mobile'] .main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.6rem calc(1rem + var(--safe-right)) calc(0.75rem + var(--safe-bottom)) calc(1rem + var(--safe-left));
+}
+
+[data-device='mobile'] .main > * {
+  flex: 1 0 auto;
+  width: 100%;
+  min-height: 0;
+}
+
+[data-device='mobile'] .notes-panel {
+  top: calc(var(--safe-top) + 0.6rem);
+  right: calc(0.75rem + var(--safe-right));
+  bottom: calc(0.75rem + var(--safe-bottom));
+  width: calc(100vw - 1.5rem - var(--safe-left) - var(--safe-right));
+}
+
+/* ---------- 2. Heute ---------- */
+
+[data-device='mobile'] .today {
+  justify-content: center;
+  gap: 1rem;
+  max-width: 540px;
+  padding-top: 0;
+}
+
+/* Erledigte Aufgaben zeigen die Pillen unten schon (grün mit ✓). */
+[data-device='mobile'] .done-cards,
+[data-device='mobile'] .start-nudge {
+  display: none;
+}
+
+[data-device='mobile'] .focus-card {
+  gap: 1rem;
+  padding: 1.6rem 1.1rem 1.3rem;
+}
+
+[data-device='mobile'] .focus-phase {
+  gap: 0.85rem;
+}
+
+/* Der Ring wächst mit dem Display, bleibt aber so klein, dass alles daneben Platz hat. */
+[data-device='mobile'] .timer-ring {
+  width: min(70vw, 32dvh, 280px);
+  container-type: inline-size;
+}
+
+[data-device='mobile'] .timer-ring-time {
+  font-size: 25cqi;
+}
+
+[data-device='mobile'] .timer-ring-time.is-long {
+  font-size: 18.8cqi;
+}
+
+/* Aufgaben des Tages: eine Zeile. Mehr als passt? Dann seitlich wischen. */
+[data-device='mobile'] .day-bar ol {
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  max-width: 100%;
+  padding: 3px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+[data-device='mobile'] .day-bar ol::-webkit-scrollbar {
+  display: none;
+}
+
+/* Passt alles, steht die Zeile in der Mitte. */
+[data-device='mobile'] .day-bar li {
+  flex: none;
+  max-width: 62vw;
+}
+
+[data-device='mobile'] .day-bar li:first-child {
+  margin-left: auto;
+}
+
+[data-device='mobile'] .day-bar li:last-child {
+  margin-right: auto;
+}
+
+/* Übersicht einer Aufgabe: als Blatt unten über allem, statt die Seite zu verlängern. */
+[data-device='mobile'] .day-peek {
+  position: fixed;
+  right: calc(1rem + var(--safe-right));
+  bottom: calc(1rem + var(--safe-bottom));
+  left: calc(1rem + var(--safe-left));
+  z-index: 25;
+  width: auto;
+  max-width: none;
+  max-height: 60dvh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lift);
+}
+
+[data-device='mobile'] .end-day .btn {
+  padding-block: 0.35em;
+}
+
+/* ---------- 3. Fokus-Ansicht im laufenden Block ---------- */
+
+/* Kopfleiste tritt zurück (der Platz bleibt, nichts springt). */
+[data-focus] .topbar {
+  visibility: hidden;
+  opacity: 0;
+}
+
+/* Die Karte löst sich auf: nur Titel, Ring und der nächste Schritt stehen frei auf dem Hintergrund. */
+[data-focus] .focus-card {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transition:
+    background 0.8s,
+    box-shadow 0.8s;
+}
+
+/* Knöpfe erst nach einem Tippen (ein paar Sekunden lang) – „+2 Min.“ bleibt immer da. */
+[data-focus] .block-dots,
+[data-focus] .noise-toggle,
+[data-focus] .quiet-actions,
+[data-focus] .focus-card .gentle-line {
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity 0.6s,
+    visibility 0.6s;
+}
+
+[data-focus][data-focus-controls] .block-dots,
+[data-focus][data-focus-controls] .noise-toggle,
+[data-focus][data-focus-controls] .quiet-actions,
+[data-focus][data-focus-controls] .focus-card .gentle-line,
+[data-focus][data-focus-controls] .topbar {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Der Ring „atmet“: ein weiches Leuchten dahinter wird ganz langsam heller und wieder ruhiger
+   (etwa sechs Atemzüge pro Minute). Nur die Deckkraft ändert sich – das schont den Akku. */
+[data-focus] .timer-ring::before {
+  content: '';
+  position: absolute;
+  inset: 9%;
+  border-radius: 50%;
+  box-shadow:
+    0 0 2.5rem 0.6rem color-mix(in srgb, var(--ring-block-b) 32%, transparent),
+    inset 0 0 2rem 0.2rem color-mix(in srgb, var(--ring-block-a) 22%, transparent);
+  opacity: 0.25;
+  pointer-events: none;
+  animation: focus-breathe 10s ease-in-out infinite;
+}
+
+@keyframes focus-breathe {
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-focus] .timer-ring::before {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* Im Lauf des Blocks wird der Bildschirm langsam etwas dunkler (--focus-dim, 0 bis 0,35).
+   Ein Tippen macht ihn kurz wieder hell. Liegt über allem, fängt aber keine Berührung ab. */
+[data-focus] .focus-dim {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: #000;
+  opacity: var(--focus-dim, 0);
+  pointer-events: none;
+  transition: opacity 20s linear;
+}
+
+[data-focus][data-focus-controls] .focus-dim {
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+/* ---------- 4. Planer ---------- */
+
+[data-device='mobile'] .plan {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  max-width: none;
+}
+
+/* Oben: „Heute | Morgen“ und daneben rund der Tausch-Knopf. */
+[data-device='mobile'] .plan-day-switch {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+[data-device='mobile'] .plan-day-tabs {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 1fr 1fr;
+}
+
+[data-device='mobile'] .plan-day-tabs .segmented-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45em;
+}
+
+/* Wie viele offene Aufgaben der Tag hat – klein, rund, gleich breit. */
+.plan-day-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+[data-device='mobile'] .plan-swap-button.is-compact {
+  flex: none;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  padding: 0;
+}
+
+/* Der gezeigte Tag füllt den Platz; sehr viele Aufgaben scrollen in der Liste. */
+[data-device='mobile'] .plan-columns {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+[data-device='mobile'] .plan-column {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+[data-device='mobile'] .plan-column-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+[data-device='mobile'] .task-list {
+  flex: 0 1 auto;
+  min-height: 0;
+  margin: -6px;
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+[data-device='mobile'] .new-task {
+  flex: none;
+}
+
+/* Bearbeiten: die Aufgabe öffnet sich als eigenes Blatt über dem ganzen Bildschirm. */
+[data-device='mobile'] .task-card.is-expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  margin: 0;
+  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 0;
+  background: var(--surface);
+  animation: sheet-in 0.25s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+[data-device='mobile'] .task-card.is-expanded .task-card-head {
+  padding-top: 0.5rem;
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+/* „Zuletzt verwendet“: eine ruhige Zeile ganz unten (legt auf dem oben gewählten Tag an). */
+[data-device='mobile'] .recent {
+  flex: none;
+  gap: 0.5rem;
+  margin-top: 0;
+  padding-top: 0.75rem;
+}
+
+[data-device='mobile'] .recent .recent-target,
+[data-device='mobile'] .recent .reset-box {
+  display: none;
+}
+
+[data-device='mobile'] .recent-list {
+  flex-wrap: nowrap;
+  margin: -3px;
+  padding: 3px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+[data-device='mobile'] .recent-list::-webkit-scrollbar {
+  display: none;
+}
+
+[data-device='mobile'] .recent-item {
+  flex: none;
+}
+
+/* ---------- 5. Einstellungen ---------- */
+
+[data-device='mobile'] .settings {
+  gap: 0.85rem;
+  max-width: none;
+}
+
+[data-device='mobile'] .settings-tabs {
+  display: grid;
+  flex: none;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+[data-device='mobile'] .settings-tabs .segmented-item {
+  padding-inline: 0.2em;
+}
+
+/* Ein Blatt (Aufgabe bearbeiten) ist offen: Kopfleiste und Timer-Anzeige treten zurück. */
+[data-sheet] .topbar {
+  visibility: hidden;
+}
+
+/* Die Überschrift steht schon im Reiter darüber. */
+[data-device='mobile'] .settings-section > h2 {
+  display: none;
+}
+
+[data-device='mobile'] .settings-buttons .btn {
+  padding-block: 0.45em;
+}
+
+/* Notizen als ✎ am Ende der Reiter: gleich hoch, nur das Symbol. */
+[data-device='mobile'] .nav-notes {
+  padding-inline: 0.85em;
+  color: var(--accent);
+}
+
+[data-device='mobile'].notes-open .nav-notes {
+  background: var(--accent-soft);
+}
+
+/* Pillen und „Zuletzt verwendet“: am Rand weich ausblenden, wenn es seitlich weitergeht. */
+[data-device='mobile'] .day-bar ol,
+[data-device='mobile'] .recent-list {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 0.9rem, #000 calc(100% - 0.9rem), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 0.9rem, #000 calc(100% - 0.9rem), transparent);
+  padding-inline: 0.9rem;
+}
+
+/* Kleine Handys (z. B. iPhone SE): Einstellungen etwas dichter, damit auch „Töne“ passt. */
+@media (max-height: 720px) {
+  [data-device='mobile'] .settings {
+    gap: 0.6rem;
+  }
+
+  [data-device='mobile'] .topbar {
+    row-gap: 0.25rem;
+  }
+
+  [data-device='mobile'] .settings-section {
+    gap: 0.7rem;
+    padding: 1rem 1.1rem;
+  }
+
+  [data-device='mobile'] .settings-section .setting-hint,
+  [data-device='mobile'] .settings-note {
+    font-size: var(--fs-xs);
+    line-height: 1.4;
+  }
+
+  [data-device='mobile'] .settings-buttons {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  [data-device='mobile'] .settings-buttons .btn {
+    padding-inline: 0.4em;
+    font-size: var(--fs-sm);
+  }
+}

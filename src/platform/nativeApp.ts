@@ -4,9 +4,11 @@
  * Alles, was nur in der iPhone-App (Capacitor) gebraucht wird. Wird in main.tsx nur dann
  * geladen – die Web-App am Mac enthält diesen Code gar nicht.
  */
+import { KeepAwake } from '@capacitor-community/keep-awake'
+import { Haptics, NotificationType } from '@capacitor/haptics'
 import { Keyboard } from '@capacitor/keyboard'
 import { SplashScreen } from '@capacitor/splash-screen'
-import { StatusBar, Style } from '@capacitor/status-bar'
+import { Animation, StatusBar, Style } from '@capacitor/status-bar'
 import { startNativeNotifications } from '../signals/nativeNotifications'
 
 export function initNativeApp(): void {
@@ -37,4 +39,23 @@ export function updateStatusBar(background: string): void {
   const [r, g, b] = (background.match(/\d+(\.\d+)?/g) ?? ['255', '255', '255']).map(Number)
   const isDark = 0.299 * r + 0.587 * g + 0.114 * b < 128
   void StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light }).catch(() => undefined)
+}
+
+/**
+ * Fokus-Ansicht im Block: Statusleiste (Uhrzeit, Akku) ausblenden und den Bildschirm wach halten –
+ * danach wieder wie gewohnt. Braucht keine Erlaubnis.
+ */
+export function setFocusChrome(on: boolean): void {
+  if (on) {
+    void StatusBar.hide({ animation: Animation.Fade }).catch(() => undefined)
+    void KeepAwake.keepAwake().catch(() => undefined)
+  } else {
+    void StatusBar.show({ animation: Animation.Fade }).catch(() => undefined)
+    void KeepAwake.allowSleep().catch(() => undefined)
+  }
+}
+
+/** Kurzes, deutliches Vibrieren (Block- oder Pausenende). */
+export function buzz(): void {
+  void Haptics.notification({ type: NotificationType.Success }).catch(() => undefined)
 }

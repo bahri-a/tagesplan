@@ -3,6 +3,7 @@
  * Ein kleiner Knopf unten rechts öffnet ein einfaches Schmierblatt –
  * auch während der Timer läuft, ohne die Ansicht zu verlassen.
  * Kein Abhaken, keine Erinnerungen. Der Text bleibt, bis du ihn löschst.
+ * Am Handy sitzt der Knopf stattdessen als ✎ in der Kopfleiste (App.tsx, notePadEvents.ts).
  */
 
 import { useEffect, useRef, useState } from 'react'
@@ -10,6 +11,8 @@ import { NOTE_SAVE_DELAY_MS } from '../config/defaults'
 import { T } from '../config/texts'
 import { updateNote } from '../store/actions'
 import { getState } from '../store/store'
+import { IS_MOBILE } from '../platform/device'
+import { NOTEPAD_OPEN_EVENT } from './notePadEvents'
 
 export function NotePad() {
   const [open, setOpen] = useState(false)
@@ -19,9 +22,15 @@ export function NotePad() {
     document.documentElement.classList.toggle('notes-open', open)
   }, [open])
 
-  return open ? (
-    <NotePanel onClose={() => setOpen(false)} />
-  ) : (
+  useEffect(() => {
+    const show = () => setOpen(true)
+    window.addEventListener(NOTEPAD_OPEN_EVENT, show)
+    return () => window.removeEventListener(NOTEPAD_OPEN_EVENT, show)
+  }, [])
+
+  if (open) return <NotePanel onClose={() => setOpen(false)} />
+  if (IS_MOBILE) return null
+  return (
     <button type="button" className="notes-button" title={T.park.hint} aria-label={T.notes.open} onClick={() => setOpen(true)}>
       <span className="corner-icon" aria-hidden="true">
         ✎
