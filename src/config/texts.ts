@@ -205,6 +205,8 @@ export const T = {
     // „Zuletzt verwendet“ unten in „Planen“
     recentTitle: 'Zuletzt verwendet',
     recentTarget: 'Hinzufügen zu',
+    // Handy: Umschalter oben im Planer
+    dayTabs: 'Welcher Tag?',
     recentAdd: (title: string, day: string) => `„${title}“ zu ${day} hinzufügen`,
     recentHide: (title: string) => `„${title}“ aus „Zuletzt verwendet“ entfernen`,
     recentNone: (day: string) => `Steht alles schon bei ${day}.`,
@@ -320,6 +322,12 @@ export const T = {
   settings: {
     title: 'Einstellungen',
     blocksSection: 'Arbeitszeit',
+    // Handy: die Einstellungen als Reiter (je einer passt auf den Bildschirm)
+    tabs: 'Bereich',
+    tabBlocks: 'Blöcke',
+    tabAppearance: 'Aussehen',
+    tabSounds: 'Töne',
+    tabData: 'Daten',
     blockMinutes: 'Blocklänge',
     blockMinutesHint: 'So lange arbeitest du am Stück.',
     shortBreak: 'Kurze Pause',

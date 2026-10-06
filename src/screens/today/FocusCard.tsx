@@ -18,6 +18,7 @@ import { cleanStartCue, pick } from '../../logic/variety'
 import { SHOWS_START_CUE } from '../../platform/device'
 import type { ID, Task } from '../../model/types'
 import { requestNotificationPermission } from '../../signals/notifications'
+import { requestFocusFullscreen } from '../../platform/focusMode'
 import {
   abortCurrentBlock,
   addExtraBlock,
@@ -71,9 +72,12 @@ export function FocusCard({ task }: { task: Task }) {
   // Leertaste: Start / Pausieren / Weiter – je nachdem, was gerade dran ist.
   useSpaceKey(() => {
     if (view.ring === 'running') pauseCurrentBlock()
-    else if (view.ring === 'paused') resumeCurrentBlock()
-    else if (view.action === 'start' || view.action === 'askResume') {
+    else if (view.ring === 'paused') {
+      requestFocusFullscreen()
+      resumeCurrentBlock()
+    } else if (view.action === 'start' || view.action === 'askResume') {
       void requestNotificationPermission()
+      requestFocusFullscreen()
       startBlock(task.id)
     }
   })
@@ -139,7 +143,10 @@ export function FocusCard({ task }: { task: Task }) {
                 type="button"
                 className="btn btn-big"
                 onClick={() => {
-                  if (view.extraStartsNow) void requestNotificationPermission()
+                  if (view.extraStartsNow) {
+                    void requestNotificationPermission()
+                    requestFocusFullscreen()
+                  }
                   addExtraBlock(task.id)
                 }}
               >
@@ -328,6 +335,8 @@ function StartButton({ task, label: ownLabel }: { task: Task; label?: string }) 
       onClick={() => {
         // Beim ersten Mal fragt Chrome, ob Benachrichtigungen erlaubt sind.
         void requestNotificationPermission()
+        // Handy: Vollbild für die Fokus-Ansicht (geht nur direkt im Tippen).
+        requestFocusFullscreen()
         startBlock(task.id)
       }}
     >
@@ -369,7 +378,14 @@ function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: 
       {paused && (
         <>
           <p className="phase-note">{T.today.paused}</p>
-          <button type="button" className="btn btn-primary btn-big" onClick={resumeCurrentBlock}>
+          <button
+            type="button"
+            className="btn btn-primary btn-big"
+            onClick={() => {
+              requestFocusFullscreen()
+              resumeCurrentBlock()
+            }}
+          >
             {T.today.resume}
           </button>
         </>

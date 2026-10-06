@@ -14,7 +14,7 @@ import { SETTINGS_LIMITS } from '../config/defaults'
 import { T } from '../config/texts'
 import type { Task } from '../model/types'
 import { stripStartCuePrefix } from '../logic/variety'
-import { SHOWS_START_CUE } from '../platform/device'
+import { IS_MOBILE, SHOWS_START_CUE } from '../platform/device'
 import { rememberStartCue, setTaskCompleted, updateTask } from '../store/actions'
 import { blockMinutesFor, shortBreakMinutesFor, stepsOfTask } from '../store/selectors'
 import { useAppState } from '../store/store'
@@ -44,6 +44,16 @@ export function TaskCard({ task, number, expanded, focusStepInput, onToggle, onD
 
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
     useSortable({ id: task.id })
+
+  // Handy: aufgeklappt ist die Karte ein Blatt über dem ganzen Bildschirm – Kopfleiste tritt zurück.
+  useEffect(() => {
+    if (!IS_MOBILE || !expanded) return
+    const root = document.documentElement
+    root.dataset.sheet = 'open'
+    return () => {
+      delete root.dataset.sheet
+    }
+  }, [expanded])
 
   const style = {
     transform: CSS.Translate.toString(transform),

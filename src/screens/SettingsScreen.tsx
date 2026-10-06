@@ -1,6 +1,8 @@
 /**
  * BILDSCHIRM „EINSTELLUNGEN“
  * Blocklänge, Pausen, Grenzen, Aussehen, Töne und Datensicherung.
+ * Am Handy oben vier Reiter (Arbeitszeit, Aussehen, Töne, Daten) – so passt jeder Bereich ohne
+ * Scrollen auf den Bildschirm.
  */
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
@@ -20,6 +22,7 @@ import { playBlockEnd, playBreakEnd, playUltraAlarm, previewNoise } from '../sig
 import { markBackupMade, updateSettings } from '../store/actions'
 import { backupAgeDays } from '../store/selectors'
 import { useAppState } from '../store/store'
+import { IS_MOBILE } from '../platform/device'
 import './settings.css'
 
 const THEMES: { value: ThemeSetting; label: string }[] = [
@@ -165,15 +168,44 @@ function NoisePicker({ value, onChange }: { value: NoiseColor; onChange: (value:
   )
 }
 
+type SettingsTab = 'blocks' | 'appearance' | 'sounds' | 'data'
+
+const TABS: { value: SettingsTab; label: string }[] = [
+  { value: 'blocks', label: T.settings.tabBlocks },
+  { value: 'appearance', label: T.settings.tabAppearance },
+  { value: 'sounds', label: T.settings.tabSounds },
+  { value: 'data', label: T.settings.tabData },
+]
+
 export function SettingsScreen() {
   const { settings } = useAppState()
   const [permission, setPermission] = useState<PermissionState>(notificationPermission)
+  // Handy: nur ein Bereich auf einmal. Am Mac stehen alle untereinander.
+  const [tab, setTab] = useState<SettingsTab>('blocks')
+  const hiddenUnless = (value: SettingsTab) => IS_MOBILE && tab !== value
 
   return (
     <div className="settings">
       <h1 className="visually-hidden">{T.settings.title}</h1>
 
-      <section className="card settings-section">
+      {IS_MOBILE && (
+        <div className="segmented settings-tabs" role="tablist" aria-label={T.settings.tabs}>
+          {TABS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="tab"
+              aria-selected={tab === option.value}
+              className="segmented-item"
+              onClick={() => setTab(option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <section className="card settings-section" hidden={hiddenUnless('blocks')}>
         <h2>{T.settings.blocksSection}</h2>
         <SettingRow label={T.settings.defaultBlocks} hint={T.settings.defaultBlocksHint}>
           <NumberStepper
@@ -204,7 +236,7 @@ export function SettingsScreen() {
         </SettingRow>
       </section>
 
-      <section className="card settings-section">
+      <section className="card settings-section" hidden={hiddenUnless('appearance')}>
         <h2>{T.settings.appearance}</h2>
         <div className="segmented" role="radiogroup" aria-label={T.settings.appearance}>
           {THEMES.map((theme) => (
@@ -240,7 +272,7 @@ export function SettingsScreen() {
         </SettingRow>
       </section>
 
-      <section className="card settings-section">
+      <section className="card settings-section" hidden={hiddenUnless('sounds')}>
         <h2>{T.settings.sounds}</h2>
         <SettingRow label={T.settings.soundsLabel} hint={T.settings.soundsHint}>
           <Segmented
@@ -298,9 +330,9 @@ export function SettingsScreen() {
         )}
       </section>
 
-      <DataSection />
+      <DataSection hidden={hiddenUnless('data')} />
 
-      <p className="muted small settings-version">
+      <p className="muted small settings-version" hidden={hiddenUnless('data')}>
         {T.settings.version(new Date(__BUILD_TIME__).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }))}
       </p>
     </div>
@@ -308,7 +340,7 @@ export function SettingsScreen() {
 }
 
 /** Sichern (Datei herunterladen) und Wiederherstellen (Datei einlesen). */
-function DataSection() {
+function DataSection({ hidden = false }: { hidden?: boolean }) {
   const state = useAppState()
   const now = useNow(true, 60_000)
   const fileInput = useRef<HTMLInputElement>(null)
@@ -339,7 +371,7 @@ function DataSection() {
   }
 
   return (
-    <section className="card settings-section">
+    <section className="card settings-section" hidden={hidden}>
       <h2>{T.settings.data}</h2>
 
       <div className="setting-row">

@@ -9,6 +9,10 @@
  * Ganz unten, leise: „Zuletzt verwendet“ – ein Klick legt eine frühere Aufgabe wieder an.
  * Darunter „Vorschläge“: offene Aufgaben aus der App „Projekte“, kurz als Hauptaufgabe formuliert,
  * und „Aufgeschoben“ für Vorschläge, die man für später beiseitegelegt hat.
+ *
+ * Am Handy passt alles auf einen Bildschirm: oben „Heute | Morgen“ zum Umschalten (statt zwei
+ * Spalten), daneben der Tausch-Knopf; eine Aufgabe bearbeitest du auf einem eigenen Blatt; ganz
+ * unten „Zuletzt verwendet“ als eine Zeile. Vorschläge und Aufgeschoben gibt es nur am Mac.
  */
 
 import { useState } from 'react'
@@ -40,6 +44,7 @@ import type { ID, Task } from '../../model/types'
 import { addTask, copyTask, deleteTask, moveTask, reorderTasks, swapDays } from '../../store/actions'
 import { activeDay, hasRecentTasks, plannedDay, tasksOfDay } from '../../store/selectors'
 import { getState, useAppState } from '../../store/store'
+import { IS_MOBILE } from '../../platform/device'
 import { RecentTasks } from './RecentTasks'
 import { ProjectSuggestions } from './Suggestions'
 import { type PlanDays } from './shared'
@@ -76,6 +81,8 @@ export function PlanScreen({ onTaskDeleted, onNotice }: Props) {
   const [dropDayId, setDropDayId] = useState<ID | null>(null)
   // „Hinzufügen zu“ gilt für „Zuletzt verwendet“ und „Vorschläge“ gemeinsam. 1 = Morgen.
   const [targetIndex, setTargetIndex] = useState(1)
+  // Handy: welcher Tag gerade zu sehen ist (0 = Heute, 1 = Morgen).
+  const [shownIndex, setShownIndex] = useState(0)
 
   const days = [
     { day: activeDay(state), label: T.plan.today },
@@ -170,36 +177,53 @@ export function PlanScreen({ onTaskDeleted, onNotice }: Props) {
         onDragCancel={() => setDropDayId(null)}
         accessibility={{ announcements, screenReaderInstructions: { draggable: T.plan.dragInstructions } }}
       >
+        {IS_MOBILE && (
+          <div className="plan-day-switch">
+            <DaySwitch days={days} shownIndex={shownIndex} onChange={setShownIndex} />
+            <SwapDays days={days} onNotice={onNotice} compact />
+          </div>
+        )}
         <div className="plan-columns">
-          {days.map(({ day, label }, index) => (
-            <DayColumn
-              key={day.id}
-              dayId={day.id}
-              label={label}
-              isDropTarget={dropDayId === day.id}
-              expandedId={expandedId}
-              justCreatedId={justCreatedId}
-              onToggle={toggle}
-              onCreated={created}
-              onDelete={(task) => remove(task.id)}
-              // Kopieren gibt es auf den Karten von heute (→ morgen).
-              onCopy={index === 0 ? copyToTomorrow : undefined}
-            />
-          ))}
+          {days.map(({ day, label }, index) =>
+            // Handy: nur der oben gewählte Tag.
+            IS_MOBILE && index !== shownIndex ? null : (
+              <DayColumn
+                key={day.id}
+                dayId={day.id}
+                label={label}
+                isDropTarget={dropDayId === day.id}
+                expandedId={expandedId}
+                justCreatedId={justCreatedId}
+                onToggle={toggle}
+                onCreated={created}
+                onDelete={(task) => remove(task.id)}
+                // Kopieren gibt es auf den Karten von heute (→ morgen).
+                onCopy={index === 0 ? copyToTomorrow : undefined}
+              />
+            ),
+          )}
         </div>
       </DndContext>
 
-      <SwapDays days={days} onNotice={onNotice} />
+      {!IS_MOBILE && <SwapDays days={days} onNotice={onNotice} />}
 
-      <RecentTasks days={days} targetIndex={targetIndex} onTargetChange={setTargetIndex} onNotice={onNotice} />
-      <ProjectSuggestions
+      {/* Handy: „Zuletzt verwendet“ legt immer auf dem gerade gezeigten Tag an. */}
+      <RecentTasks
         days={days}
-        targetIndex={targetIndex}
-        onTargetChange={setTargetIndex}
-        // Ohne „Zuletzt verwendet“ zeigen die Vorschläge den Umschalter selbst.
-        showTarget={!hasRecentTasks(state, days.map((d) => d.day.id))}
+        targetIndex={IS_MOBILE ? shownIndex : targetIndex}
+        onTargetChange={IS_MOBILE ? setShownIndex : setTargetIndex}
         onNotice={onNotice}
       />
+      {!IS_MOBILE && (
+        <ProjectSuggestions
+          days={days}
+          targetIndex={targetIndex}
+          onTargetChange={setTargetIndex}
+          // Ohne „Zuletzt verwendet“ zeigen die Vorschläge den Umschalter selbst.
+          showTarget={!hasRecentTasks(state, days.map((d) => d.day.id))}
+          onNotice={onNotice}
+        />
+      )}
 
     </div>
   )
@@ -289,7 +313,7 @@ function DayColumn(props: DayColumnProps) {
  * Leiser Knopf mittig unter beiden Spalten: „Heute ⇄ Morgen“ tauscht die Aufgaben der beiden Tage.
  * Hat nur ein Tag Aufgaben, wandern sie auf den anderen. Nur sichtbar, wenn es etwas zu tauschen gibt.
  */
-function SwapDays({ days, onNotice }: { days: PlanDays; onNotice: (message: string) => void }) {
+function SwapDays({ days, onNotice, compact = false }: { days: PlanDays; onNotice: (message: string) => void; compact?: boolean }) {
   const state = useAppState()
   const [today, tomorrow] = days
   const todayCount = tasksOfDay(state, today.day.id).length
@@ -306,15 +330,51 @@ function SwapDays({ days, onNotice }: { days: PlanDays; onNotice: (message: stri
     else onNotice(T.plan.swappedTo(todayCount === 0 ? today.label : tomorrow.label))
   }
 
+  const icon = (
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M2.5 5.5h11M10.5 2.5l3 3-3 3M13.5 10.5h-11M5.5 7.5l-3 3 3 3" />
+    </svg>
+  )
+  // Handy: nur das Symbol, rund, direkt neben „Heute | Morgen“.
+  if (compact) {
+    return (
+      <button type="button" className="plan-swap-button is-compact" onClick={swap} title={hint} aria-label={hint}>
+        {icon}
+      </button>
+    )
+  }
   return (
     <div className="plan-swap">
       <button type="button" className="plan-swap-button" onClick={swap} title={hint} aria-label={hint}>
         <span>{today.label}</span>
-        <svg viewBox="0 0 16 16" aria-hidden="true">
-          <path d="M2.5 5.5h11M10.5 2.5l3 3-3 3M13.5 10.5h-11M5.5 7.5l-3 3 3 3" />
-        </svg>
+        {icon}
         <span>{tomorrow.label}</span>
       </button>
+    </div>
+  )
+}
+
+/** Handy: „Heute | Morgen“ oben im Planer – zeigt einen der beiden Tage (mit Anzahl der Aufgaben). */
+function DaySwitch({ days, shownIndex, onChange }: { days: PlanDays; shownIndex: number; onChange: (index: number) => void }) {
+  const state = useAppState()
+  return (
+    <div className="segmented plan-day-tabs" role="tablist" aria-label={T.plan.dayTabs}>
+      {days.map(({ day, label }, index) => {
+        const count = tasksOfDay(state, day.id).filter((t) => t.completedAt === null).length
+        return (
+          <button
+            key={day.id}
+            type="button"
+            role="tab"
+            aria-selected={index === shownIndex}
+            className="segmented-item"
+            onClick={() => onChange(index)}
+          >
+            {label}
+            {count > 0 && <span className="plan-day-count">{count}</span>}
+          </button>
+        )
+      })}
     </div>
   )
 }

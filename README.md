@@ -266,6 +266,24 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   Zeile und **Enter**. Der Gedanke steht dann unten im Notizzettel, und du arbeitest einfach
   weiter. **Escape** schließt die Zeile, ohne etwas zu speichern.
 
+### Auf dem Handy (iPhone-App, Browser auf iPhone, iPad, Android)
+- **Nie scrollen:** Jeder Bildschirm passt genau aufs Display. Nur bei sehr vielen Aufgaben
+  scrollt die Liste in sich (und auf sehr kleinen iPhones wie dem SE ein kleines Stück).
+- **Planer:** oben **Heute | Morgen** zum Umschalten (mit Anzahl der offenen Aufgaben), daneben
+  der runde Tausch-Knopf. Eine Aufgabe bearbeitest du auf einem eigenen Blatt. **Zuletzt verwendet**
+  steht unten als eine Zeile und legt auf dem gerade gezeigten Tag an.
+- **Einstellungen:** vier Reiter – Blöcke, Aussehen, Töne, Daten.
+- **Nicht auf dem Handy:** Mini-Fenster, Vorschläge und Aufgeschoben, Startsignal, der Startsatz
+  unter dem Knopf und die Karten für erledigte Aufgaben (die Pillen zeigen das schon).
+  Notizen sind das **✎** in der Kopfleiste, **Tag beenden** bleibt unten in „Heute“.
+- **Fokus-Ansicht im Block:** Sobald ein Block läuft, stehen nur noch Titel, Ring und dein
+  nächster Schritt da. Ein Tippen zeigt die Knöpfe für 5 Sekunden. Der Ring leuchtet ganz langsam
+  wie ein Atemzug, der Bildschirm wird im Lauf des Blocks etwas dunkler und bleibt an. In der
+  iPhone-App verschwindet oben die Statusleiste, auf Android läuft die Seite im Vollbild.
+  Am Block- und Pausenende vibriert das Handy kurz.
+- Neue iPhone-App bauen (für Fokus-Ansicht, Vibration, Bildschirm-an): auf dem Mac `npm install`,
+  dann `npm run ios` und in Xcode auf ▶.
+
 ---
 
 ## 5. Daten sichern und wiederherstellen

@@ -2,7 +2,8 @@
  * Der „weiche Ring“: große, feine Restzeit in der Mitte, darum ein dicker Ring
  * mit sanftem Farbverlauf, der sich langsam füllt. Am Ende des Fortschritts
  * sitzt ein leuchtender Punkt. Grün im Block, blau in der Pause.
- * Bewusst ohne Pulsieren – auch in der Pause „atmet“ der Ring nicht.
+ * Bewusst ohne Pulsieren – auch in der Pause „atmet“ der Ring nicht. Einzige Ausnahme: die
+ * Fokus-Ansicht am Handy (mobile.css), dort leuchtet es im Block ganz langsam dahinter.
  */
 
 import { useId, type ReactNode } from 'react'
