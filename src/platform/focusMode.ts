@@ -50,6 +50,18 @@ export function buzz(): void {
   if (IS_MOBILE) navigator.vibrate?.([160, 110, 160])
 }
 
+/**
+ * Ganz kurze Rückmeldung in der Hand (iPhone-App und Android): ein leichtes Antippen bei „Starten“
+ * und beim Abhaken eines Schritts, ein kleines Erfolgs-Vibrieren bei „Erledigt“.
+ */
+export function haptic(kind: 'tap' | 'success'): void {
+  if (__NATIVE_APP__) {
+    void import('./nativeApp').then((m) => m.haptic(kind))
+    return
+  }
+  if (IS_MOBILE) navigator.vibrate?.(kind === 'tap' ? 12 : [18, 80, 28])
+}
+
 /** Schaltet die Fokus-Ansicht passend zum Timer an und aus (einmal in App.tsx). */
 export function useFocusMode(t: TimerState, onToday: boolean): void {
   const active = isFocusActive(t, onToday)

@@ -94,10 +94,15 @@
   gap: 0.85rem;
 }
 
-/* Der Ring wächst mit dem Display, bleibt aber so klein, dass alles daneben Platz hat. */
+/* Der Ring wächst mit dem Display, bleibt aber so klein, dass alles daneben Platz hat.
+   Sein Rahmen (mit „+2 Min.“) ist genau so breit – so steht der Ring genau in der Mitte. */
 [data-device='mobile'] .timer-ring {
   width: min(70vw, 32dvh, 280px);
   container-type: inline-size;
+}
+
+[data-device='mobile'] .ring-with-side {
+  width: min(70vw, 32dvh, 280px);
 }
 
 [data-device='mobile'] .timer-ring-time {
@@ -148,6 +153,16 @@
   max-height: 60dvh;
   overflow-y: auto;
   box-shadow: var(--shadow-lift);
+}
+
+/* Leeres „Heute“: die drei Pillen aus „Zuletzt verwendet“ dürfen umbrechen (statt seitlich zu wischen). */
+[data-device='mobile'] .empty-today-recent .recent-list {
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 0;
+  overflow: visible;
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 [data-device='mobile'] .end-day .btn {

@@ -11,10 +11,11 @@ import type { ID, Task } from '../../model/types'
 import { blockMinutesFor, stepsOfTask, taskWork } from '../../store/selectors'
 import { useAppState } from '../../store/store'
 import { CheckIcon } from '../../components/icons'
+import { wasJustFinished } from './celebrate'
 
 /**
  * Schlanke Leiste unter der Karte: alle Aufgaben des Tages als kleine Pillen.
- *  - erledigt: grün mit Haken
+ *  - erledigt: grün mit Haken (gerade erst erledigt: der Haken zeichnet sich kurz)
  *  - jetzt dran: mildes Honig-Orange (in Arbeit)
  *  - kommt noch: durchscheinendes Glas (noch nicht aktiv)
  * Ein Klick auf eine Pille zeigt darunter eine kurze Übersicht der Aufgabe, ein zweiter Klick
@@ -33,7 +34,7 @@ export function DayBar({ tasks, currentId }: { tasks: Task[]; currentId: ID | un
             <li key={item.id} aria-current={mark === 'current' ? 'step' : undefined}>
               <button
                 type="button"
-                className={`day-pill is-${mark}${isOpen ? ' is-expanded' : ''}`}
+                className={`day-pill is-${mark}${isOpen ? ' is-expanded' : ''}${mark === 'done' && wasJustFinished(item.id) ? ' is-fresh' : ''}`}
                 aria-expanded={isOpen}
                 title={T.today.peekHint(item.title)}
                 onClick={() => setOpenId(isOpen ? null : item.id)}

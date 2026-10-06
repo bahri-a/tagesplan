@@ -84,6 +84,8 @@ export default function App() {
 function Shell() {
   const state = useAppState()
   const [screen, setScreen] = useState<Screen>('today')
+  // „Morgen planen“ (nach „Alles erledigt“): Der Planer zeigt am Handy gleich „Morgen“.
+  const [planTomorrow, setPlanTomorrow] = useState(false)
   const [endDayDialog, setEndDayDialog] = useState<'closed' | 'confirm' | 'conflicts'>('closed')
   const [toast, setToast] = useState<ToastInfo | null>(null)
   const [wakeEvent, setWakeEvent] = useState<WakeEvent | null>(null)
@@ -137,6 +139,7 @@ function Shell() {
               aria-current={screen === s.id ? 'page' : undefined}
               onClick={() => {
                 setScreen(s.id)
+                setPlanTomorrow(false)
                 // iPhone-App: Jeder Reiter beginnt oben (sonst bleibt die Scrollposition des vorigen stehen).
                 if (__NATIVE_APP__) window.scrollTo(0, 0)
               }}
@@ -157,12 +160,21 @@ function Shell() {
       <main className="main">
         {screen === 'today' && (
           <TodayScreen
-            onPlan={() => setScreen('plan')}
+            onPlan={(tomorrow = false) => {
+              setPlanTomorrow(tomorrow)
+              setScreen('plan')
+            }}
             onEndDay={() => setEndDayDialog('confirm')}
             onStartNewDay={startNewDay}
           />
         )}
-        {screen === 'plan' && <PlanScreen onTaskDeleted={taskDeleted} onNotice={(message) => showToast(message)} />}
+        {screen === 'plan' && (
+          <PlanScreen
+            startOnTomorrow={planTomorrow}
+            onTaskDeleted={taskDeleted}
+            onNotice={(message) => showToast(message)}
+          />
+        )}
         {screen === 'settings' && <SettingsScreen />}
       </main>
 

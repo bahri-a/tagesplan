@@ -27,7 +27,7 @@ export const T = {
     minutes: (m: number) => (m === 1 ? '1 Minute' : `${m} Minuten`),
     // Die ersten Schritte unter dem Timer – nur zum Loslegen, sie beenden keinen Block.
     firstStep: 'Zum Einstieg',
-    // Vor dem Start (und in der Pause): die ersten Schritte nur ansehen, noch nicht abhaken.
+    // Vor dem ersten Block: die ersten Schritte nur ansehen, noch nicht abhaken.
     firstStepsPreview: 'Erste Schritte zum Einstieg',
     stepDone: 'erledigt',
     startDone: 'Einstieg geschafft!',
@@ -109,14 +109,17 @@ export const T = {
     backToAskHint: 'Zurück zur Frage „Erledigt oder noch ein Block?“',
     allDoneTitle: 'Alles erledigt für heute.',
     allDoneText: 'Stark gemacht! Du kannst jetzt morgen planen oder den Tag beenden.',
+    // Unter den Tageszahlen in „Alles erledigt“ – die Knöpfe „Morgen planen“ und „Tag beenden“ stehen darunter.
     allDoneTexts: [
-      'Stark gemacht! Du kannst jetzt morgen planen oder den Tag beenden.',
-      'Alles geschafft – gönn dir was. Morgen planen oder Tag beenden?',
-      'Das war’s für heute. Richtig gut! Plane morgen oder beende den Tag.',
+      'Stark gemacht!\nJetzt noch kurz morgen vorbereiten.',
+      'Alles geschafft – gönn dir was.\nMorgen ist schnell geplant.',
+      'Richtig gut!\nKurz morgen planen, dann Feierabend.',
     ],
-    emptyTitle: 'Noch keine Aufgabe für heute.',
-    emptyText: 'Plane eine Hauptaufgabe – die schwerste zuerst.',
-    goPlan: 'Jetzt planen',
+    planTomorrow: 'Morgen planen',
+    // Leeres „Heute“: direkt hier eintippen (Enter legt die Aufgabe für heute an).
+    emptyTitle: 'Womit fängst du heute an?',
+    emptyText: 'Die schwerste Aufgabe zuerst.',
+    goPlan: 'Lieber ausführlich planen',
     dayList: 'Heute',
     // Klick auf eine Aufgabe in der Leiste unter der Karte: kurze Übersicht
     peekHint: (title: string) => `Übersicht: ${title}`,

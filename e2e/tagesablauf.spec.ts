@@ -1,6 +1,7 @@
 /**
  * Ein ganzer Ablauf, wie man die App benutzt: planen → Block → kurze Pause →
- * „Habe ich bereits erledigt …“ → „Erledigt“. Die Uhr wird vorgespult.
+ * „Habe ich bereits erledigt …“ → „Erledigt“ → „Morgen planen“. Dazu der schnelle Weg aus dem
+ * leeren „Heute“. Die Uhr wird vorgespult.
  */
 import { expect, test } from '@playwright/test'
 
@@ -36,10 +37,33 @@ test('Aufgabe planen, Block und Pause durchlaufen, Aufgabe erledigen', async ({ 
   await alreadyDone.click()
   await alreadyDone.click()
 
-  // Nach dem letzten Block: Frage → Erledigt
+  // Nach dem letzten Block: Frage → Erledigt → Feierabend-Moment mit den Tageszahlen
   await expect(page.getByText('Hauptaufgabe erledigt oder noch ein Block?')).toBeVisible()
   await page.getByRole('button', { name: 'Erledigt', exact: true }).click()
-  await expect(page.locator('.day-pill.is-done')).toHaveCount(1)
+  await expect(page.locator('.done-card')).toHaveCount(1)
+  await expect(page.locator('.all-done-numbers')).toContainText('3 Blöcke · 1 Std. 15 Min.')
+
+  // „Morgen planen“ führt in den Planer
+  await page.getByRole('button', { name: 'Morgen planen' }).click()
+  await expect(page.getByRole('button', { name: 'Planer', exact: true })).toHaveAttribute('aria-current', 'page')
+
+  expect(errors).toEqual([])
+})
+
+test('Leeres „Heute“: Aufgabe direkt eintippen und gleich starten', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+
+  await page.clock.install({ time: new Date('2026-10-06T09:00:00') })
+  await page.goto('/')
+
+  // Ohne Umweg über den Planer: eintippen, Enter → „Starten“ steht da
+  const input = page.locator('.empty-today input')
+  await input.fill('Bericht schreiben')
+  await input.press('Enter')
+  await expect(page.locator('.focus-title')).toHaveText('Bericht schreiben')
+  await page.getByRole('button', { name: 'Starten', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Früher fertig' })).toBeVisible()
 
   expect(errors).toEqual([])
 })

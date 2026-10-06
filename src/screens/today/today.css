@@ -627,6 +627,121 @@
   color: var(--text-muted);
 }
 
+/* ---------- Leeres „Heute“: gleich hier eintippen ---------- */
+
+.empty-today .message-text {
+  margin-bottom: 0.35rem;
+}
+
+/* Eingabe wie im Planer (.new-task), hier etwas größer – sie ist das Wichtigste in der Karte. */
+.empty-today-new {
+  width: 100%;
+  max-width: 400px;
+}
+
+.empty-today-new .input {
+  min-height: 46px;
+  font-size: var(--fs-md);
+}
+
+.empty-today-new .new-task-add {
+  width: 46px;
+  min-height: 46px;
+}
+
+/* Bis zu drei aus „Zuletzt verwendet“ – gleiche Pillen wie im Planer, nur ohne × */
+.empty-today-recent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  max-width: 420px;
+  margin-top: 0.2rem;
+}
+
+.empty-today-recent-title {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.empty-today-recent .recent-list {
+  justify-content: center;
+  max-width: 100%;
+}
+
+.empty-today-recent .recent-item {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.empty-today-recent .recent-chip {
+  min-width: 0;
+  padding-right: 0.85em;
+}
+
+.empty-today-plan {
+  margin-top: 0.3rem;
+}
+
+/* ---------- Alles erledigt: Feierabend-Moment ---------- */
+
+.all-done-numbers {
+  margin-top: -0.1rem;
+  font-size: 1.35rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.all-done .message-text {
+  margin-bottom: 0.4rem;
+  white-space: pre-line;
+}
+
+.all-done-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+/* ---------- Kleine Belohnung direkt nach „Erledigt“ (celebrate.ts) – alles unter 0,6 s ---------- */
+/* Der Haken zeichnet sich in einem Zug, sein Kreis „ploppt“ ganz leicht. Mit „Bewegung reduzieren“
+   steht er gleich fertig da (pathLength = 1: ein Strich so lang wie der ganze Haken). */
+.all-done.is-fresh .message-mark,
+.done-card.is-fresh .done-card-mark,
+.day-pill.is-fresh .day-mark {
+  animation: mark-pop 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.all-done.is-fresh .message-mark-check,
+.done-card.is-fresh .done-card-mark path,
+.day-pill.is-fresh .day-mark path {
+  stroke-dasharray: 1;
+  animation: check-draw 0.45s cubic-bezier(0.3, 0.7, 0.2, 1) 0.1s both;
+}
+
+@keyframes mark-pop {
+  from {
+    transform: scale(0.8);
+  }
+
+  60% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes check-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 /* ---------- Schlanke Leiste mit den Aufgaben des Tages ---------- */
 /* Pillen: erledigt = grün, jetzt dran = mildes Honig-Orange, kommt noch = durchscheinendes Glas.
    Ein Klick öffnet darunter eine kurze Übersicht. */
@@ -885,12 +1000,16 @@
     padding: 2rem 1.25rem 1.75rem;
   }
 
-  /* Schmal ist neben dem Ring kein Platz: „+2 Min.“ sitzt dann mittig im Ring unter der Zeit. */
+  /* Schmal ist neben dem Ring kein Platz: „+2 Min.“ sitzt dann mittig im Ring unter der Zeit –
+     genau dort, wo sonst „noch“ steht (das Wort tritt so lange zurück, nichts überlappt). */
   .ring-side-action {
-    top: auto;
-    bottom: 20%;
+    top: 64%;
     left: 50%;
     transform: translateX(-50%);
+  }
+
+  .ring-with-side:has(> .ring-side-action) .timer-ring-caption {
+    visibility: hidden;
   }
 
   .focus-title {
@@ -899,6 +1018,60 @@
 
   .ask-done-actions {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Niedrige Laptop-Fenster (z. B. 1440 × 800): Block und kurze Pause passen ganz auf den Bildschirm –
+   etwas weniger Luft in der Karte, der Ring etwas kleiner. Handy und Mini-Fenster haben eigene Regeln. */
+@media (max-height: 880px) {
+  :root:not([data-device='mobile']) .today:not(.mini-today):has(.timer-ring) {
+    gap: 1.1rem;
+    padding-top: 0;
+  }
+
+  :root:not([data-device='mobile']) .today:not(.mini-today) .focus-card:has(.timer-ring) {
+    gap: 1rem;
+    padding: 1.9rem 2rem 1.5rem;
+  }
+
+  :root:not([data-device='mobile']) .today:not(.mini-today) .focus-card:has(.timer-ring) .focus-phase {
+    gap: 0.8rem;
+  }
+
+  :root:not([data-device='mobile']) .today:not(.mini-today) :is(.ring-with-side, .timer-ring) {
+    width: 240px;
+  }
+
+  :root:not([data-device='mobile']) .today:not(.mini-today) .timer-ring-time {
+    font-size: 3.8rem;
+  }
+
+  :root:not([data-device='mobile']) .today:not(.mini-today) .timer-ring-time.is-long {
+    font-size: 2.85rem;
+  }
+
+  :root:not([data-device='mobile']) .today:not(.mini-today) .current-step-row {
+    padding: 0.7rem 1rem;
+  }
+
+  :root:not([data-device='mobile']) .today:not(.mini-today) .focus-card:has(.timer-ring) .gentle-line.link-quiet {
+    margin-top: 0.6rem;
+    padding-top: 0.8rem;
+  }
+}
+
+/* Noch niedriger (z. B. 1280 × 720): der Ring noch etwas kleiner. */
+@media (max-height: 760px) {
+  :root:not([data-device='mobile']) .today:not(.mini-today) :is(.ring-with-side, .timer-ring) {
+    width: 200px;
+  }
+
+  :root:not([data-device='mobile']) .today:not(.mini-today) .timer-ring-time {
+    font-size: 3.2rem;
+  }
+
+  :root:not([data-device='mobile']) .today:not(.mini-today) .timer-ring-time.is-long {
+    font-size: 2.4rem;
   }
 }
 

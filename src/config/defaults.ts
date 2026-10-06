@@ -145,3 +145,15 @@ export const UNDO_DELETE_MS = 8000
 export const FOCUS_CONTROLS_MS = 5_000
 /** Fokus-Ansicht am Handy: so dunkel wird der Bildschirm bis zum Blockende (0 = gar nicht, 1 = schwarz). */
 export const FOCUS_DIM_MAX = 0.35
+
+/** Leeres „Heute“: so viele aus „Zuletzt verwendet“ stehen direkt unter dem Eingabefeld. */
+export const EMPTY_TODAY_RECENT_COUNT = 3
+
+/**
+ * Kleine Belohnung nach „Erledigt“: So lange (ms) gilt eine Hauptaufgabe als „gerade erledigt“ –
+ * nur dann zeichnet sich ihr Haken und die Tageszahlen zählen hoch (nicht beim Öffnen der App).
+ */
+export const JUST_FINISHED_MS = 5_000
+
+/** So lange (ms) zählen die Tageszahlen in „Alles erledigt“ hoch. */
+export const COUNT_UP_MS = 550

@@ -81,7 +81,8 @@ export function BackIcon() {
 export function CheckIcon() {
   return (
     <svg viewBox="0 0 16 16">
-      <path d="M4.2 8.4l2.4 2.4 5.2-5.4" />
+      {/* pathLength: Damit sich der Haken nach „Erledigt“ in einem Zug zeichnen kann (today.css). */}
+      <path d="M4.2 8.4l2.4 2.4 5.2-5.4" pathLength={1} />
     </svg>
   )
 }

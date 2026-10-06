@@ -50,6 +50,11 @@ export interface FocusView {
   action: ActionView
   /** Vor dem allerersten Block der Aufgabe (dann stehen Startsignal und Startsatz dabei). */
   firstBlock: boolean
+  /**
+   * Die ersten Schritte zum Ansehen zeigen? Nur, solange an der Aufgabe noch kein Block geschafft ist –
+   * danach sind sie kein Einstieg mehr (in der Pause und bei „Erledigt oder noch ein Block?“ fehlen sie).
+   */
+  showStepsPreview: boolean
   /** Nur bei 'askDone': Startet „Noch ein Block“ sofort (sonst erst der Rest der Pause)? */
   extraStartsNow: boolean
   /** Leises „Zurück“ zur Frage „Erledigt oder noch ein Block?“ anbieten? */
@@ -87,6 +92,8 @@ export function focusView(s: AppState, task: Task, now: number): FocusView {
     ring,
     action,
     firstBlock: t.phase === 'idle' && blocksDone(s, task.id) === 0,
+    // Auch während der Pause nach der vorigen Aufgabe, wenn diese schon als nächste dasteht.
+    showStepsPreview: t.phase !== 'block' && blocksDone(s, task.id) === 0,
     extraStartsNow: asking && extraBlockStartsNow(s, task, now),
     canUndoExtra: canUndoExtraBlock(s, task, now),
     canSkipBreak: t.phase === 'break' && !breakOver,

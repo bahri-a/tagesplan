@@ -47,14 +47,14 @@ function viewAfter(setup: (taskId: string) => number): FocusView {
 type Row = [name: string, setup: (id: string) => number, expected: Partial<FocusView>]
 
 const rows: Row[] = [
-  ['vor dem ersten Block', () => at(0), { ring: 'none', action: 'start', firstBlock: true, highlightBlock: true }],
+  ['vor dem ersten Block', () => at(0), { ring: 'none', action: 'start', firstBlock: true, highlightBlock: true, showStepsPreview: true }],
   [
     'Block läuft',
     (id) => {
       actions.startBlock(id)
       return at(5 * MIN)
     },
-    { ring: 'running', action: 'none', firstBlock: false, canSkipBreak: false },
+    { ring: 'running', action: 'none', firstBlock: false, canSkipBreak: false, showStepsPreview: false },
   ],
   [
     'Block pausiert',
@@ -73,7 +73,7 @@ const rows: Row[] = [
       actions.checkTimer(at(BLOCK))
       return at(BLOCK + MIN)
     },
-    { ring: 'break', action: 'none', canSkipBreak: true, highlightBlock: false },
+    { ring: 'break', action: 'none', canSkipBreak: true, highlightBlock: false, showStepsPreview: false },
   ],
   [
     'Ultra-Modus: Pause wartet auf „Pause machen“',
@@ -93,7 +93,7 @@ const rows: Row[] = [
       actions.checkTimer(at(BLOCK + BREAK))
       return at(BLOCK + BREAK + MIN)
     },
-    { ring: 'breakOver', action: 'start', canSkipBreak: false, highlightBlock: true, firstBlock: false },
+    { ring: 'breakOver', action: 'start', canSkipBreak: false, highlightBlock: true, firstBlock: false, showStepsPreview: false },
   ],
   [
     'nach dem letzten Block, kurz danach: „Noch ein Block“ wartet den Rest der Pause ab',
@@ -105,7 +105,7 @@ const rows: Row[] = [
       actions.checkTimer(at(2 * BLOCK))
       return at(2 * BLOCK + MIN)
     },
-    { ring: 'none', action: 'askDone', extraStartsNow: false, highlightBlock: false },
+    { ring: 'none', action: 'askDone', extraStartsNow: false, highlightBlock: false, showStepsPreview: false },
   ],
   [
     'nach dem letzten Block, lange danach: „Noch einen Block starten“',
@@ -142,13 +142,27 @@ const rows: Row[] = [
       actions.endDay()
       return at(DAY + MIN)
     },
-    { ring: 'none', action: 'askResume', firstBlock: false },
+    { ring: 'none', action: 'askResume', firstBlock: false, showStepsPreview: false },
   ],
 ]
 
 describe('Große Karte in „Heute“: welche Phase?', () => {
   it.each(rows)('%s', (_name, setup, expected) => {
     expect(viewAfter(setup)).toMatchObject(expected)
+  })
+
+  it('die ersten Schritte der nächsten Aufgabe stehen wieder da, bis ihr erster Block geschafft ist', () => {
+    const a = actions.addTask(sel.activeDay(getState()).id, 'A')
+    const b = actions.addTask(sel.activeDay(getState()).id, 'B')
+    actions.updateTask(a.id, { estimatedBlocks: 1 })
+    actions.startBlock(a.id)
+    actions.checkTimer(at(BLOCK))
+    actions.finishTask(a.id)
+    actions.endLongPause(b.id)
+    expect(focusView(getState(), getState().tasks[b.id], at(BLOCK + MIN)).showStepsPreview).toBe(true)
+    actions.startBlock(b.id)
+    actions.checkTimer(at(2 * BLOCK + MIN))
+    expect(focusView(getState(), getState().tasks[b.id], at(2 * BLOCK + 2 * MIN)).showStepsPreview).toBe(false)
   })
 
   it('„Pause machen“ (Ultra) blendet die Karte nicht neu ein, Ende der Pause schon', () => {

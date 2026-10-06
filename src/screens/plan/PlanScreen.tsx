@@ -66,13 +66,15 @@ const collisionDetection: CollisionDetection = (args) => {
 }
 
 interface Props {
+  /** Am Handy gleich „Morgen“ zeigen (nach „Morgen planen“ in „Heute“). */
+  startOnTomorrow?: boolean
   /** Eine Aufgabe wurde gelöscht – die App zeigt dann „Aufgabe gelöscht · Rückgängig“. */
   onTaskDeleted: (taskId: ID) => void
   /** Kurze Meldung unten anzeigen (z. B. „… für morgen kopiert“). */
   onNotice: (message: string) => void
 }
 
-export function PlanScreen({ onTaskDeleted, onNotice }: Props) {
+export function PlanScreen({ startOnTomorrow = false, onTaskDeleted, onNotice }: Props) {
   const state = useAppState()
   // Es ist immer höchstens eine Aufgabe aufgeklappt – das hält es ruhig.
   const [expandedId, setExpandedId] = useState<ID | null>(null)
@@ -82,7 +84,7 @@ export function PlanScreen({ onTaskDeleted, onNotice }: Props) {
   // „Hinzufügen zu“ gilt für „Zuletzt verwendet“ und „Vorschläge“ gemeinsam. 1 = Morgen.
   const [targetIndex, setTargetIndex] = useState(1)
   // Handy: welcher Tag gerade zu sehen ist (0 = Heute, 1 = Morgen).
-  const [shownIndex, setShownIndex] = useState(0)
+  const [shownIndex, setShownIndex] = useState(startOnTomorrow ? 1 : 0)
 
   const days = [
     { day: activeDay(state), label: T.plan.today },
