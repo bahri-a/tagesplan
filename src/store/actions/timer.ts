@@ -8,6 +8,7 @@ import {
   SIGNAL_MAX_DELAY_MS,
   BLOCK_EXTEND_MS,
   BLOCK_EXTEND_OFFER_MS,
+  SETTINGS_LIMITS,
 } from '../../config/defaults'
 import * as timer from '../../logic/timer'
 import type { ID } from '../../model/types'
@@ -20,23 +21,29 @@ import {
   shortBreakMinutesFor,
 } from '../selectors'
 import { commit, getState, type Changes } from '../store'
-import { blockRecord, completeBlockChanges, stopTimerChanges } from './helpers'
+import { blockRecord, clamp, completeBlockChanges, stopTimerChanges } from './helpers'
 import { setTaskCompleted } from './planning'
 
-/** Einen Block für diese Aufgabe starten. */
-export function startBlock(taskId: ID): void {
+/**
+ * Einen Block für diese Aufgabe starten. Mit `endsAt` (Fokus-Einladung per Link) endet er zu
+ * dieser Zeit statt nach der eingestellten Blocklänge – zwischen 1 Minute und der längsten Blocklänge.
+ */
+export function startBlock(taskId: ID, { endsAt }: { endsAt?: number } = {}): void {
   const s = getState()
   const task = s.tasks[taskId]
   if (!task || task.completedAt !== null || s.timer.phase === 'block') return
   const now = Date.now()
   const day = activeDay(s)
+  const { min, max } = SETTINGS_LIMITS.blockMinutes
+  const plannedMs =
+    endsAt === undefined ? blockMinutesFor(s, task) * 60_000 : clamp(endsAt - now, min * 60_000, max * 60_000)
   commit({
     timer: {
       phase: 'block',
       taskId,
       dayId: day.id,
       startedAt: now,
-      plannedMs: blockMinutesFor(s, task) * 60_000,
+      plannedMs,
       pausedAt: null,
       pausedMs: 0,
     },
@@ -70,7 +77,7 @@ export function finishBlockEarly(now = Date.now()): void {
 }
 
 /**
- * „Habe ich bereits erledigt“: Der Block wurde ohne App gemacht. Er zählt als durchgehalten
+ * „Schon ohne App erledigt?“: Der Block wurde ohne App gemacht. Er zählt als durchgehalten
  * mit voller geplanter Zeit. Keine Pause danach – der nächste Block kann gleich starten.
  */
 export function skipBlockAsDone(now = Date.now()): void {
@@ -82,7 +89,7 @@ export function skipBlockAsDone(now = Date.now()): void {
 }
 
 /**
- * „Habe ich bereits erledigt“ schon vor dem Start: Der Block wurde ganz ohne App gemacht.
+ * „Schon ohne App erledigt?“ schon vor dem Start: Der Block wurde ganz ohne App gemacht.
  * Er wird mit voller geplanter Zeit (bis jetzt) als durchgehalten eingetragen, ohne Pause danach.
  * Eine abgelaufene kurze Pause endet dabei.
  */

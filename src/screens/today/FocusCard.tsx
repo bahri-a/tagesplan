@@ -1,25 +1,27 @@
 /**
  * DIE GROSSE KARTE IN „HEUTE“
  * Die aktuelle Hauptaufgabe mit Block-Punkten, Titel und – je nach Phase – Startknopf,
- * laufendem Block (Ring, Rauschen, Pausieren/Früher fertig/Abbrechen), kurzer Pause oder
+ * laufendem Block (Ring, nächster Schritt, Rauschen, Früher fertig/Abbrechen), kurzer Pause oder
  * der Frage „Erledigt oder noch ein Block?“. Auch im Mini-Fenster.
  */
 
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { STEP_DONE_FEEDBACK_MS } from '../../config/defaults'
 import { T } from '../../config/texts'
 import { useNow } from '../../components/hooks'
 import { Dialog } from '../../components/Dialog'
 import { StepList } from '../../components/StepList'
 import { TimerRing } from '../../components/TimerRing'
-import { PauseIcon } from '../../components/icons'
+import { LinkIcon, PauseIcon } from '../../components/icons'
+import { ShareButton } from '../../components/ShareButton'
+import { formatClock, inviteUrl } from '../../logic/invite'
 import { blockMarks, type Mark } from '../../logic/progress'
 import * as timer from '../../logic/timer'
 import { cleanStartCue, pick } from '../../logic/variety'
 import { SHOWS_START_CUE } from '../../platform/device'
 import type { ID, Task } from '../../model/types'
 import { requestNotificationPermission } from '../../signals/notifications'
-import { requestFocusFullscreen } from '../../platform/focusMode'
+import { haptic, requestFocusFullscreen } from '../../platform/focusMode'
 import {
   abortCurrentBlock,
   addExtraBlock,
@@ -50,6 +52,7 @@ import {
 } from '../../store/selectors'
 import { focusNeedsClock, focusView } from '../../store/focusView'
 import { useAppState } from '../../store/store'
+import { noteFinished, prefersReducedMotion } from './celebrate'
 import { useSpaceKey } from './useSpaceKey'
 
 /** Die große Karte mit der aktuellen Hauptaufgabe. */
@@ -79,6 +82,7 @@ export function FocusCard({ task }: { task: Task }) {
     } else if (view.action === 'start' || view.action === 'askResume') {
       void requestNotificationPermission()
       requestFocusFullscreen()
+      haptic('tap')
       startBlock(task.id)
     }
   })
@@ -88,6 +92,7 @@ export function FocusCard({ task }: { task: Task }) {
       {view.canUndoExtra && <BackToAsk />}
       {view.canSkipBreak && <SkipBreak />}
       <BlockDots
+        taskId={task.id}
         marks={blockMarks(done, task.estimatedBlocks, view.highlightBlock)}
         suffix={t.phase === 'idle' && view.action !== 'askDone' ? T.today.perBlock(minutes) : null}
         sentence={`${T.today.taskOf(number, tasks.length)} · ${blockLine}`}
@@ -95,10 +100,10 @@ export function FocusCard({ task }: { task: Task }) {
       <h1 className="focus-title">{task.title}</h1>
 
       <div className="focus-phase" key={view.key}>
-        {/* Erst ansehen, abhaken erst im Block. */}
-        {t.phase !== 'block' && <StepsPreview task={task} />}
+        {/* Erst ansehen, abhaken erst im Block – und nur, bis der erste Block geschafft ist. */}
+        {view.showStepsPreview && <StepsPreview task={task} />}
 
-        {t.phase === 'block' && <RunningBlock timerState={t} now={now} />}
+        {t.phase === 'block' && <RunningBlock timerState={t} now={now} step={<CurrentStep task={task} />} />}
 
         {view.ring === 'breakOver' && t.phase === 'break' && (
           <TimerRing
@@ -124,11 +129,14 @@ export function FocusCard({ task }: { task: Task }) {
           </>
         )}
 
-        {t.phase === 'block' && <CurrentStep task={task} />}
-
         {/* Ganz unten, abgesetzt: Block schon ohne App gemacht → zählt als erledigt. */}
         {t.phase === 'block' && (
-          <button type="button" className="gentle-line link-quiet" onClick={() => skipBlockAsDone()}>
+          <button
+            type="button"
+            className="gentle-line link-quiet"
+            title={T.today.skipAsDoneHint}
+            onClick={() => skipBlockAsDone()}
+          >
             {T.today.skipAsDone}
           </button>
         )}
@@ -137,7 +145,7 @@ export function FocusCard({ task }: { task: Task }) {
           <div className="ask-done">
             <p className="ask-done-question">{T.today.askDone}</p>
             <div className="ask-done-actions">
-              <button type="button" className="btn btn-primary btn-big" onClick={() => finishTask(task.id)}>
+              <button type="button" className="btn btn-primary btn-big" onClick={() => finish(task.id)}>
                 {T.today.done}
               </button>
               <button
@@ -147,6 +155,7 @@ export function FocusCard({ task }: { task: Task }) {
                   if (view.extraStartsNow) {
                     void requestNotificationPermission()
                     requestFocusFullscreen()
+                    haptic('tap')
                   }
                   addExtraBlock(task.id)
                 }}
@@ -160,7 +169,7 @@ export function FocusCard({ task }: { task: Task }) {
             <p className="ask-done-question">{T.today.askResume}</p>
             <div className="ask-done-actions">
               <StartButton task={task} label={T.today.resumeTask} />
-              <button type="button" className="btn btn-big" onClick={() => finishTask(task.id)}>
+              <button type="button" className="btn btn-big" onClick={() => finish(task.id)}>
                 {T.today.finishResume}
               </button>
             </div>
@@ -171,6 +180,13 @@ export function FocusCard({ task }: { task: Task }) {
       </div>
     </section>
   )
+}
+
+/** „Erledigt“: kurz vibrieren (Handy), und der Haken der Aufgabe zeichnet sich gleich (celebrate.ts). */
+function finish(taskId: ID) {
+  noteFinished(taskId)
+  haptic('success')
+  finishTask(taskId)
 }
 
 /** Ultra-Modus: Die fällige Pause bestätigen, damit das Piepen aufhört. */
@@ -245,6 +261,8 @@ function SkipBreak() {
 }
 
 interface BlockDotsProps {
+  /** Zu welcher Aufgabe die Punkte gehören (wechselt sie, „ploppt“ nichts). */
+  taskId: ID
   marks: Mark[]
   /** Kleiner Zusatz hinter den Punkten, z. B. „je 25 Min.“ – oder `null`. */
   suffix: string | null
@@ -256,12 +274,33 @@ interface BlockDotsProps {
  * Voller Punkt = geschafft, breiter Punkt = jetzt dran, nur Umriss = kommt noch.
  * Abgebrochene Blöcke sehen aus wie geschaffte (sie zählen mit, nichts soll nach Fehler aussehen).
  * Der ganze Satz („Aufgabe 1 von 2 · Block 1 von 3 …“) steht im Tooltip und für Screenreader.
+ * Füllt sich ein Punkt (Block geschafft), „ploppt“ er kurz auf – nicht beim ersten Zeichnen.
  */
-function BlockDots({ marks, suffix, sentence }: BlockDotsProps) {
+function BlockDots({ taskId, marks, suffix, sentence }: BlockDotsProps) {
+  const marksRef = useRef<HTMLSpanElement>(null)
+  const before = useRef<{ taskId: ID; marks: Mark[] } | null>(null)
+  const signature = marks.join()
+
+  // Nur wenn sich die Punkte ändern (`signature`) – nicht bei jedem Ticken der Uhr.
+  useEffect(() => {
+    const current = signature.split(',') as Mark[]
+    const previous = before.current
+    before.current = { taskId, marks: current }
+    if (!previous || previous.taskId !== taskId || prefersReducedMotion()) return
+    const dots = marksRef.current?.children
+    current.forEach((mark, index) => {
+      if (mark !== 'done' || previous.marks[index] === 'done') return
+      dots?.[index]?.animate(
+        [{ transform: 'scale(1)' }, { transform: 'scale(1.7)' }, { transform: 'scale(1)' }],
+        { duration: 450, easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)' },
+      )
+    })
+  }, [taskId, signature])
+
   return (
     <div className="block-dots" title={sentence}>
       <span className="visually-hidden">{sentence}</span>
-      <span className="block-dots-marks" aria-hidden="true">
+      <span ref={marksRef} className="block-dots-marks" aria-hidden="true">
         {marks.map((mark, index) => (
           <span key={index} className={`block-mark is-${mark}`} />
         ))}
@@ -275,7 +314,7 @@ function BlockDots({ marks, suffix, sentence }: BlockDotsProps) {
  * Rund um den Startknopf. Vor dem ersten Block einer Aufgabe:
  *  - darüber das Startsignal aus „Planen“ („Wenn der Kaffee auf dem Tisch steht → los.“), falls eingetragen,
  *  - darunter klein ein Startsatz („Du musst nur anfangen.“).
- * Danach nur noch der Knopf. Ganz unten immer leise „Habe ich bereits erledigt …“
+ * Danach nur noch der Knopf. Ganz unten immer leise „Schon ohne App erledigt?“
  * (außer während der kurzen Pause).
  */
 function StartArea({ task, firstBlock, breakOver }: { task: Task; firstBlock: boolean; breakOver: boolean }) {
@@ -300,7 +339,12 @@ function StartArea({ task, firstBlock, breakOver }: { task: Task; firstBlock: bo
       {firstBlock && <p className="start-nudge">{pick(T.today.startNudges, task.createdAt)}</p>}
       {/* Block schon ohne App gemacht → gleich als erledigt eintragen (nicht mitten in der kurzen Pause). */}
       {!inShortBreak && (
-        <button type="button" className="gentle-line link-quiet" onClick={() => logBlockAsDone(task.id)}>
+        <button
+          type="button"
+          className="gentle-line link-quiet"
+          title={T.today.skipAsDoneHint}
+          onClick={() => logBlockAsDone(task.id)}
+        >
           {T.today.skipAsDone}
         </button>
       )}
@@ -336,8 +380,9 @@ function StartButton({ task, label: ownLabel }: { task: Task; label?: string }) 
       onClick={() => {
         // Beim ersten Mal fragt Chrome, ob Benachrichtigungen erlaubt sind.
         void requestNotificationPermission()
-        // Handy: Vollbild für die Fokus-Ansicht (geht nur direkt im Tippen).
+        // Handy: Vollbild für die Fokus-Ansicht (geht nur direkt im Tippen) und ein leichtes Antippen.
         requestFocusFullscreen()
+        haptic('tap')
         startBlock(task.id)
       }}
     >
@@ -346,8 +391,12 @@ function StartButton({ task, label: ownLabel }: { task: Task; label?: string }) 
   )
 }
 
-/** Der laufende (oder pausierte) Block: Ring mit Restzeit, Pausieren, Abbrechen. */
-function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: number }) {
+/**
+ * Der laufende (oder pausierte) Block: Ring mit Restzeit, direkt darunter der nächste Schritt
+ * (`step`) – was als Nächstes zu tun ist, gehört zum Ring. Rauschen, „Früher fertig“ und
+ * „Abbrechen“ stehen weiter unten.
+ */
+function RunningBlock({ timerState, now, step }: { timerState: timer.BlockTimer; now: number; step: ReactNode }) {
   const [confirmAbort, setConfirmAbort] = useState(false)
   const paused = timerState.pausedAt !== null
   const extendable = canExtendBlock(timerState, now)
@@ -401,8 +450,6 @@ function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: 
         )}
       </div>
 
-      <NoiseToggle />
-
       {paused && (
         <>
           <p className="phase-note">{T.today.paused}</p>
@@ -418,6 +465,10 @@ function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: 
           </button>
         </>
       )}
+
+      {step}
+
+      <NoiseToggle />
 
       <div className="quiet-actions">
         {confirmAbort ? (
@@ -450,6 +501,19 @@ function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: 
             <button type="button" className="btn btn-quiet btn-small" onClick={() => setConfirmAbort(true)}>
               {T.today.abort}
             </button>
+            {/* Gemeinsam arbeiten: Link mit der Endzeit dieses Blocks (nicht pausiert, nicht im Mini-Fenster). */}
+            {!paused && (
+              <ShareButton
+                className="btn btn-quiet btn-small invite-button"
+                icon={<LinkIcon />}
+                label={T.invite.action}
+                title={T.invite.hint}
+                link={() => {
+                  const endsAt = Date.now() + timer.blockRemainingMs(timerState, Date.now())
+                  return { text: T.invite.text(formatClock(endsAt)), url: inviteUrl(endsAt) }
+                }}
+              />
+            )}
           </>
         )}
       </div>
@@ -458,8 +522,9 @@ function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: 
 }
 
 /**
- * Vor dem Start und in der Pause: die ersten Schritte nur zum Ansehen – ohne Kästchen.
- * Deutlich als „Erste Schritte zum Einstieg“ gekennzeichnet (kein Thema des Blocks).
+ * Vor dem ersten Block: die ersten Schritte nur zum Ansehen – ohne Kästchen. Danach (Pause,
+ * „Erledigt oder noch ein Block?“) fehlen sie, im Block gibt es „Alle Schritte“.
+ * Deutlich als „Zum Einstieg“ gekennzeichnet (kein Thema des Blocks).
  * Abhaken geht erst, wenn der Block läuft (siehe CurrentStep). Sind alle erledigt, steht hier nichts.
  */
 function StepsPreview({ task }: { task: Task }) {
@@ -468,7 +533,7 @@ function StepsPreview({ task }: { task: Task }) {
   if (!steps.some((s) => s.doneAt === null)) return null
   return (
     <div className="steps-preview">
-      <p className="steps-preview-label">{T.today.firstStepsPreview}</p>
+      <p className="steps-preview-label">{T.today.firstStep}</p>
       <ol className="steps-preview-list">
         {steps.map((step) => (
           <li key={step.id} className={step.doneAt !== null ? 'is-done' : undefined}>
@@ -518,6 +583,7 @@ function CurrentStep({ task }: { task: Task }) {
             checked={justDone !== undefined}
             onChange={() => {
               if (justDone) return // schon abgehakt, gleitet gleich weg
+              haptic('tap')
               toggleStep(shown.id)
               setJustDoneId(shown.id)
             }}

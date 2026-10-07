@@ -145,3 +145,34 @@ export const UNDO_DELETE_MS = 8000
 export const FOCUS_CONTROLS_MS = 5_000
 /** Fokus-Ansicht am Handy: so dunkel wird der Bildschirm bis zum Blockende (0 = gar nicht, 1 = schwarz). */
 export const FOCUS_DIM_MAX = 0.35
+
+/** Leeres „Heute“: so viele aus „Zuletzt verwendet“ stehen direkt unter dem Eingabefeld. */
+export const EMPTY_TODAY_RECENT_COUNT = 3
+
+/**
+ * Kleine Belohnung nach „Erledigt“: So lange (ms) gilt eine Hauptaufgabe als „gerade erledigt“ –
+ * nur dann zeichnet sich ihr Haken und die Tageszahlen zählen hoch (nicht beim Öffnen der App).
+ */
+export const JUST_FINISHED_MS = 5_000
+
+/** So lange (ms) zählen die Tageszahlen in „Alles erledigt“ hoch. */
+export const COUNT_UP_MS = 550
+
+/**
+ * Sammeln statt Serie: Bei diesen Gesamtzahlen durchgehaltener Blöcke kommt genau einmal eine
+ * leise Meldung. Die Gesamtzahl fällt nie zurück – anders als eine Serie kann sie nicht reißen.
+ */
+export const MILESTONES = [10, 25, 50, 100, 250, 500]
+/** Bei diesem Meilenstein (und nur bei diesem) fragt die Meldung einmal nach dem Weiterempfehlen. */
+export const RECOMMEND_MILESTONE = 50
+/** So lange (ms) steht die Meilenstein-Meldung da. */
+export const MILESTONE_TOAST_MS = 9_000
+
+/** So lange (ms) steht „Link kopiert“ auf dem Teilen-Knopf. */
+export const SHARE_COPIED_MS = 2_500
+
+/** Öffentliche Adresse der App – für „Weiterempfehlen“ und die Fokus-Einladung (auch aus der iPhone-App). */
+export const PUBLIC_URL = 'https://bahri-a.github.io/tagesplan/'
+
+/** Beispielaufgabe beim allerersten Start: ein kurzer Block zum Ausprobieren. */
+export const EXAMPLE_TASK = { blocks: 1, blockMinutes: 5 }

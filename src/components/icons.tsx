@@ -77,11 +77,12 @@ export function BackIcon() {
   )
 }
 
-/** Haken – erledigt. */
-export function CheckIcon() {
+/** Haken – erledigt. Mit `className="glyph"` steht er wie ein Buchstabe im Text. */
+export function CheckIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 16 16">
-      <path d="M4.2 8.4l2.4 2.4 5.2-5.4" />
+    <svg className={className} viewBox="0 0 16 16" aria-hidden={className ? true : undefined}>
+      {/* pathLength: Damit sich der Haken nach „Erledigt“ in einem Zug zeichnen kann (today.css). */}
+      <path d="M4.2 8.4l2.4 2.4 5.2-5.4" pathLength={1} />
     </svg>
   )
 }
@@ -102,6 +103,45 @@ export function PauseIcon() {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true">
       <path d="M6 4.5v7M10 4.5v7" />
+    </svg>
+  )
+}
+
+/** Stift – Notizen. */
+export function PencilIcon() {
+  return (
+    <svg className="glyph" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M10.4 3.1l2.5 2.5-7.2 7.2-3.1.6.6-3.1z" />
+      <path d="M9 4.5l2.5 2.5" />
+    </svg>
+  )
+}
+
+/** Dreieck – Probe-Ton abspielen. */
+export function PlayIcon() {
+  return (
+    <svg className="glyph" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M5.25 3.9v8.2l6.6-4.1z" fill="currentColor" />
+    </svg>
+  )
+}
+
+/** Kasten mit Pfeil nach oben – Teilen. */
+export function ShareIcon() {
+  return (
+    <svg className="glyph" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M8 10V2.5M5.25 5.25L8 2.5l2.75 2.75" />
+      <path d="M5.5 7.25H4.75a1.25 1.25 0 0 0-1.25 1.25v4.25a1.25 1.25 0 0 0 1.25 1.25h6.5a1.25 1.25 0 0 0 1.25-1.25V8.5a1.25 1.25 0 0 0-1.25-1.25H10.5" />
+    </svg>
+  )
+}
+
+/** Zwei Kettenglieder – Einladung per Link. */
+export function LinkIcon() {
+  return (
+    <svg className="glyph" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M6.9 9.1a2.6 2.6 0 0 0 3.7 0l2.2-2.2a2.6 2.6 0 0 0-3.7-3.7l-.9.9" />
+      <path d="M9.1 6.9a2.6 2.6 0 0 0-3.7 0L3.2 9.1a2.6 2.6 0 0 0 3.7 3.7l.9-.9" />
     </svg>
   )
 }

@@ -134,6 +134,11 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
 
 ## 4. So benutzt du die App
 
+### Beim allerersten Start
+- In **Heute** steht schon eine kleine **Beispielaufgabe**: „Tagesplan ausprobieren“ mit einem
+  5-Minuten-Block und zwei ersten Schritten. So lernst du die App, indem du sie benutzt.
+  Löschen geht im Planer wie bei jeder Aufgabe; unter „Zuletzt verwendet“ taucht sie nicht auf.
+
 ### Planer
 - Tab **Planer**: links **Heute**, rechts **Morgen**.
 - Titel eintippen, Enter → die Aufgabe klappt auf, und du kannst direkt die **ersten Schritte**
@@ -186,15 +191,15 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   deine **Blöcke** (voller Punkt = geschafft, breiter Punkt = jetzt dran, leerer Punkt =
   kommt noch). Fährst du mit der Maus darüber, steht dort der ganze Stand als Satz.
 - Unter der Karte stehen alle Aufgaben des Tages als kleine Pillen: **grün mit ✓** = erledigt,
-  **mildes Orange** = jetzt dran, **durchscheinend** = kommt noch. Ein Klick auf eine Pille zeigt
+  **salbeigrüner Punkt** = jetzt dran, **durchscheinend** = kommt noch. Ein Klick auf eine Pille zeigt
   darunter eine kurze Übersicht (Blöcke, Startsignal, erste Schritte); nochmal klicken oder ×
   schließt sie. Während eines Blocks ist die Leiste ausgeblendet.
-- Vor dem Start siehst du unter dem Titel deine **ersten Schritte zum Einstieg** – nur zum
+- Vor dem Start siehst du unter dem Titel deine ersten Schritte unter **Zum Einstieg** – nur zum
   Ansehen. Abhaken kannst du sie, sobald der Block läuft.
 - Vor dem ersten Block einer Aufgabe steht über dem Knopf dein **Startsignal** (falls
   eingetragen) und darunter klein ein Startsatz wie „Du musst nur anfangen.“
-- **Starten** → der Ring füllt sich langsam. Dezent darunter: **Pausieren**, **Früher fertig**
-  und **Abbrechen**. „Früher fertig“ ist für Tage, an denen es schneller ging als gedacht: Der Block
+- **Starten** → der Ring füllt sich langsam. Direkt darunter steht dein nächster Schritt, weiter
+  unten dezent **Früher fertig**, **Abbrechen** und **Einladen** (siehe „Gemeinsam arbeiten“). „Früher fertig“ ist für Tage, an denen es schneller ging als gedacht: Der Block
   zählt als geschafft, die kurze Pause beginnt sofort. Nur dieser eine Block wird kürzer – die
   nächsten Blöcke sind wieder so lang wie eingestellt.
   Im Hintergrund schimmert es zart grün (im Block) oder blau (in der Pause).
@@ -203,8 +208,8 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   weiß oder Ultra (Mix)), stellst du unter **Einstellungen** ein.
 - **2 Minuten vor dem Ende** kommt ein ganz leiser Ton, und der Ring wird langsam wärmer –
   Zeit, den Gedanken zu Ende zu bringen.
-- Ganz unten in der Karte steht leise **Habe ich bereits erledigt, aber vergessen die App zu
-  starten.** Im Block: Der Block zählt mit voller Zeit, ohne Pause danach. Vor dem Start (nicht
+- Ganz unten in der Karte steht leise **Schon ohne App erledigt?** (beim Drüberfahren mit der
+  Maus steht die ganze Erklärung). Im Block: Der Block zählt mit voller Zeit, ohne Pause danach. Vor dem Start (nicht
   während der kurzen Pause): Ein ganzer Block wird gleich als geschafft eingetragen.
 - Läuft der Block durch → sanfter Ton, die **kurze Pause** startet von selbst.
 - Pause vorbei → Ton und **Nächsten Block starten**. Wann du klickst, ist deine Sache.
@@ -219,7 +224,7 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
 - Vor jeder weiteren Aufgabe: **Lange Pause gemacht? / Weiter mit „…“** (nicht getimt).
 - An einem früheren Tag angefangen, aber noch nicht fertig? Dann fragt die App:
   **Weitermachen** oder **Abschließen**.
-- Im laufenden Block steht unter dem Timer **Zum Einstieg: …** – dein nächster erster Schritt zum Abhaken.
+- Im laufenden Block steht direkt unter dem Ring **Zum Einstieg: …** – dein nächster erster Schritt zum Abhaken.
   Abhaken beendet keinen Block. Sind alle abgehakt, steht dort „Einstieg geschafft!
   Bleib einfach dran, bis die Zeit um ist.“ **Alle Schritte** klappt die ganze Liste auf.
 - **Tastenkürzel:** **Leertaste** = starten / pausieren / weiter.
@@ -231,9 +236,25 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
 - Bist du auf einem anderen Tab, zeigt oben rechts eine kleine Anzeige die Restzeit.
   Auch im Fenstertitel steht die Restzeit.
 
+### Gemeinsam arbeiten (Fokus-Einladung)
+- Im laufenden Block schickt **Einladen** einen Link (Teilen-Menü; am Mac in Chrome wird er
+  kopiert). Wer ihn öffnet, sieht **Gemeinsam arbeiten** und startet mit **Mitmachen** einen
+  Block, der zur selben Minute endet wie deiner – mit der aktuellen Aufgabe oder einer neuen.
+  Im Link steht nur die Endzeit, kein Titel. Ist der Block schon vorbei, sagt die App das kurz.
+
+### Gesammelt statt Serie
+- Im Feierabend-Moment und beim Tag beenden steht leise **Bisher insgesamt: N Blöcke**. Die Zahl
+  fällt nie zurück – auch nicht nach einer Pause von ein paar Tagen.
+- Bei 10, 25, 50, 100, 250 und 500 Blöcken kommt genau einmal eine leise Meldung, z. B.
+  „100 Blöcke. Das sind 41 Stunden echte Arbeit.“ Nur beim 50. fragt sie einmal, ob du jemanden
+  kennst, dem die App helfen würde (**Teilen**). Danach nie wieder.
+- **Weiterempfehlen** geht sonst jederzeit unter **Einstellungen → Daten** (am Handy) bzw.
+  ganz unten in den Einstellungen (am Mac).
+
 ### Tag beenden
 - Unten im Tab **Heute**: **Tag beenden**. Du siehst kurz, was du heute geschafft hast
-  (Blöcke, Zeit, erledigte Aufgaben). Dann wird „morgen“ zu „heute“.
+  (Blöcke, Zeit, erledigte Aufgaben). Dann wird „morgen“ zu „heute“. Solange der Tag noch leer
+  ist (nichts geplant, nichts gearbeitet), steht der Link nicht da.
 - Offene Aufgaben wandern auf ihren alten Platz. Ist der schon belegt, siehst du beide
   Aufgaben nebeneinander und wählst mit einem Klick.
   Willst du eine davon gar nicht mehr? Das kleine **×** oben rechts auf der Karte streicht sie:
@@ -251,7 +272,7 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
 - Hast du in macOS „Bewegung reduzieren“ eingeschaltet, gibt es keine Animationen.
 
 ### Töne
-- **Einstellungen → Töne:** **An** oder **Aus**. Bei „Aus“ kommen keine Signaltöne mehr
+- **Einstellungen → Töne:** **Aus** oder **An** (wie beim Ultra-Modus: erst Aus, dann An). Bei „Aus“ kommen keine Signaltöne mehr
   (Block- und Pausenende, Vorwarnung, Ultra-Modus). Das Rauschen ist davon getrennt und
   wird nur mit seinem eigenen Knopf in **Heute** ein- und ausgeschaltet.
 - Darunter: welches **Rauschen** (Braun = tief und weich, Rosa, Weiß = hell, **Ultra (Mix)** =
@@ -260,7 +281,7 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   Probehören. Darunter kannst du die Töne „Block vorbei“ und „Pause vorbei“ anhören.
 
 ### Notizzettel
-- Unten rechts **✎ Notizen**: ein Schmierblatt für alles, was dir durch den Kopf geht –
+- Unten rechts **Notizen** (mit Stift): ein Schmierblatt für alles, was dir durch den Kopf geht –
   auch während des Timers. Der Text bleibt, bis du ihn selbst löschst.
 - **Gedanke parken mit N:** Schießt dir im Block etwas durch den Kopf, drück **N**, tipp eine
   Zeile und **Enter**. Der Gedanke steht dann unten im Notizzettel, und du arbeitest einfach
@@ -275,7 +296,7 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
 - **Einstellungen:** vier Reiter – Blöcke, Aussehen, Töne, Daten.
 - **Nicht auf dem Handy:** Mini-Fenster, Vorschläge und Aufgeschoben, Startsignal, der Startsatz
   unter dem Knopf und die Karten für erledigte Aufgaben (die Pillen zeigen das schon).
-  Notizen sind das **✎** in der Kopfleiste, **Tag beenden** bleibt unten in „Heute“.
+  Notizen sind der **Stift** in der Kopfleiste, **Tag beenden** bleibt unten in „Heute“.
 - **Fokus-Ansicht im Block:** Sobald ein Block läuft, stehen nur noch Titel, Ring und dein
   nächster Schritt da. Ein Tippen zeigt die Knöpfe für 5 Sekunden. Der Ring leuchtet ganz langsam
   wie ein Atemzug, der Bildschirm wird im Lauf des Blocks etwas dunkler und bleibt an. In der

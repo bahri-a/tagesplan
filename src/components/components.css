@@ -138,6 +138,15 @@
   margin-top: 1.25rem;
 }
 
+/* Fokus-Einladung: Zeilenumbruch im Text, Aufgabe darunter */
+.invite-text {
+  white-space: pre-line;
+}
+
+.invite-task {
+  overflow-wrap: anywhere;
+}
+
 /* ---------- Zahlenfeld mit – / + ---------- */
 
 .stepper {
@@ -201,6 +210,14 @@
   box-shadow: var(--shadow-lift);
   transform: translateX(-50%);
   animation: toast-in 0.3s ease-out;
+  /* Breite nach dem Text (nicht nur bis zur Bildschirmmitte), aber nie über den Rand. */
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+}
+
+/* Meldungen dürfen Zeilenumbrüche (\n) enthalten. */
+.toast-message {
+  white-space: pre-line;
 }
 
 /* „Rückgängig“ in der Meldung – ruhig, in der Akzentfarbe */
@@ -448,6 +465,13 @@
 .day-yield-numbers {
   font-size: var(--fs-lg);
   font-weight: 600;
+}
+
+/* „Bisher insgesamt: 214 Blöcke“ – leise unter den Tageszahlen (hier und in „Alles erledigt“). */
+.lifetime-line {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
 }
 
 .day-yield-done {

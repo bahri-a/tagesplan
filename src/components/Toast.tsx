@@ -27,7 +27,7 @@ export function Toast({ message, onDone, duration = 3500, action }: Props) {
 
   return (
     <div className="toast" role="status">
-      <span>{message}</span>
+      <span className="toast-message">{message}</span>
       {action && (
         <>
           <span className="toast-separator" aria-hidden="true">

@@ -3,7 +3,8 @@
  * Hauptaufgaben und ihre ersten Schritte anlegen, ändern, verschieben, löschen.
  */
 
-import { SETTINGS_LIMITS } from '../../config/defaults'
+import { EXAMPLE_TASK, SETTINGS_LIMITS } from '../../config/defaults'
+import { T } from '../../config/texts'
 import { baseFields } from '../../logic/records'
 import type { ID, Step, Task } from '../../model/types'
 import {
@@ -34,6 +35,37 @@ export function addTask(dayId: ID, title: string): Task {
     firstEstimatedBlocks: null,
   }
   commit({ tasks: [task] })
+  return task
+}
+
+/**
+ * Beim allerersten Start: eine Beispielaufgabe für heute – ein kurzer Block mit zwei ersten
+ * Schritten. Man lernt die App, indem man sie benutzt. Löschen geht im Planer wie bei jeder Aufgabe.
+ */
+export function addExampleTask(): Task {
+  const s = getState()
+  const now = Date.now()
+  const dayId = activeDay(s).id
+  const task: Task = {
+    ...baseFields(now),
+    dayId,
+    title: T.example.title,
+    position: tasksOfDay(s, dayId).length,
+    estimatedBlocks: EXAMPLE_TASK.blocks,
+    blockMinutesOverride: EXAMPLE_TASK.blockMinutes,
+    shortBreakMinutesOverride: null,
+    completedAt: null,
+    startCue: null,
+    firstEstimatedBlocks: null,
+  }
+  const steps: Step[] = T.example.steps.map((text, position) => ({
+    ...baseFields(now),
+    taskId: task.id,
+    text,
+    position,
+    doneAt: null,
+  }))
+  commit({ tasks: [task], steps })
   return task
 }
 

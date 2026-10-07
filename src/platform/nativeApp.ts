@@ -5,7 +5,7 @@
  * geladen – die Web-App am Mac enthält diesen Code gar nicht.
  */
 import { KeepAwake } from '@capacitor-community/keep-awake'
-import { Haptics, NotificationType } from '@capacitor/haptics'
+import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics'
 import { Keyboard } from '@capacitor/keyboard'
 import { SplashScreen } from '@capacitor/splash-screen'
 import { Animation, StatusBar, Style } from '@capacitor/status-bar'
@@ -58,4 +58,13 @@ export function setFocusChrome(on: boolean): void {
 /** Kurzes, deutliches Vibrieren (Block- oder Pausenende). */
 export function buzz(): void {
   void Haptics.notification({ type: NotificationType.Success }).catch(() => undefined)
+}
+
+/** Leichtes Antippen (Starten, Schritt abhaken) oder kleines Erfolgs-Vibrieren (Erledigt). */
+export function haptic(kind: 'tap' | 'success'): void {
+  const done =
+    kind === 'tap'
+      ? Haptics.impact({ style: ImpactStyle.Light })
+      : Haptics.notification({ type: NotificationType.Success })
+  void done.catch(() => undefined)
 }
