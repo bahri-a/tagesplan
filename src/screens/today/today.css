@@ -380,6 +380,47 @@
   font-size: var(--fs-base);
 }
 
+/* Unter der Zeit im Ring: Pausen-Symbol (schmal auch „+2 Min.“) */
+.ring-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.ring-inner-extend {
+  display: none;
+}
+
+/* Pausieren: dezentes Symbol unter der Zeit, mitten im Ring */
+.ring-pause {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.ring-pause:hover,
+.ring-pause:focus-visible {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.ring-pause svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
 /* „Pause vorbei“ in der Mitte des vollen Rings */
 .timer-ring-label {
   color: var(--break);
@@ -1000,16 +1041,13 @@
     padding: 2rem 1.25rem 1.75rem;
   }
 
-  /* Schmal ist neben dem Ring kein Platz: „+2 Min.“ sitzt dann mittig im Ring unter der Zeit –
-     genau dort, wo sonst „noch“ steht (das Wort tritt so lange zurück, nichts überlappt). */
+  /* Schmal ist neben dem Ring kein Platz: „+2 Min.“ sitzt dann im Ring neben dem Pausen-Symbol. */
   .ring-side-action {
-    top: 64%;
-    left: 50%;
-    transform: translateX(-50%);
+    display: none;
   }
 
-  .ring-with-side:has(> .ring-side-action) .timer-ring-caption {
-    visibility: hidden;
+  .ring-inner-extend {
+    display: inline-flex;
   }
 
   .focus-title {

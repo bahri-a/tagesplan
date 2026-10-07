@@ -22,6 +22,8 @@ interface Props {
   warm?: boolean
   /** Statt der Zeit etwas anderes in der Mitte zeigen (z. B. „Pause vorbei“). */
   center?: ReactNode
+  /** Kleiner Knopf unter der Zeit, mitten im Ring (z. B. Pausieren). */
+  action?: ReactNode
 }
 
 const SIZE = 280
@@ -31,7 +33,7 @@ const RADIUS = SIZE / 2 - 18
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 const C = SIZE / 2
 
-export function TimerRing({ remainingMs, totalMs, caption, variant = 'block', paused = false, warm = false, center }: Props) {
+export function TimerRing({ remainingMs, totalMs, caption, variant = 'block', paused = false, warm = false, center, action }: Props) {
   // Eindeutige ID für Verlauf und Leuchten (nur Buchstaben/Ziffern, damit url(#…) sicher klappt).
   const id = `ring${useId().replace(/[^a-zA-Z0-9]/g, '')}`
   const done = progress(totalMs, remainingMs)
@@ -79,6 +81,7 @@ export function TimerRing({ remainingMs, totalMs, caption, variant = 'block', pa
             {caption && <span className="timer-ring-caption">{caption}</span>}
           </>
         )}
+        {action}
       </div>
     </div>
   )

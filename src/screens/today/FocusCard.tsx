@@ -12,6 +12,7 @@ import { useNow } from '../../components/hooks'
 import { Dialog } from '../../components/Dialog'
 import { StepList } from '../../components/StepList'
 import { TimerRing } from '../../components/TimerRing'
+import { PauseIcon } from '../../components/icons'
 import { blockMarks, type Mark } from '../../logic/progress'
 import * as timer from '../../logic/timer'
 import { cleanStartCue, pick } from '../../logic/variety'
@@ -384,6 +385,7 @@ function StartButton({ task, label: ownLabel }: { task: Task; label?: string }) 
 function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: number }) {
   const [confirmAbort, setConfirmAbort] = useState(false)
   const paused = timerState.pausedAt !== null
+  const extendable = canExtendBlock(timerState, now)
 
   return (
     <>
@@ -395,8 +397,34 @@ function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: 
           caption={paused ? T.nav.timerPaused : T.today.remaining}
           paused={paused}
           warm={isInWarningTime(timerState, now)}
+          action={
+            <div className="ring-actions">
+              {!paused && (
+                <button
+                  type="button"
+                  className="ring-pause"
+                  title={T.today.pause}
+                  aria-label={T.today.pause}
+                  onClick={pauseCurrentBlock}
+                >
+                  <PauseIcon />
+                </button>
+              )}
+              {/* Schmal: „+2 Min.“ sitzt neben dem Pausen-Symbol im Ring (siehe today.css). */}
+              {extendable && (
+                <button
+                  type="button"
+                  className="btn btn-small ring-inner-extend"
+                  title={T.today.extendBlockHint}
+                  onClick={() => extendBlock()}
+                >
+                  {T.today.extendBlock}
+                </button>
+              )}
+            </div>
+          }
         />
-        {canExtendBlock(timerState, now) && (
+        {extendable && (
           <button
             type="button"
             className="btn btn-small ring-side-action"
@@ -446,11 +474,6 @@ function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: 
           </span>
         ) : (
           <>
-            {!paused && (
-              <button type="button" className="btn btn-quiet btn-small" onClick={pauseCurrentBlock}>
-                {T.today.pause}
-              </button>
-            )}
             <button
               type="button"
               className="btn btn-quiet btn-small"

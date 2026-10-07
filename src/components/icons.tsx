@@ -97,3 +97,12 @@ export function SunriseIcon() {
     </svg>
   )
 }
+
+/** Zwei Striche – „Pausieren“. */
+export function PauseIcon() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M6 4.5v7M10 4.5v7" />
+    </svg>
+  )
+}
