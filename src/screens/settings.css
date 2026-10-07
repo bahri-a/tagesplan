@@ -61,6 +61,7 @@
     grid-row: 1;
   }
 
+  .setting-row.is-wide:has(> div > .setting-label) > :last-child,
   .setting-row:has(> div > .setting-label):has(.palette-picker) > :last-child,
   .setting-row:has(> div > .setting-label):has(.noise-picker) > :last-child {
     grid-column: 1 / -1;
@@ -87,6 +88,22 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
   gap: 0.6rem;
+}
+
+/* Abspiel-Dreieck: etwas kleiner und dichter am Text – so passt „Ton „Pause vorbei““ auch schmal in eine Zeile. */
+.settings-buttons .btn {
+  gap: 0.35em;
+}
+
+.settings-buttons .glyph {
+  width: 0.75em;
+  height: 0.75em;
+}
+
+/* Sichern und Wiederherstellen: gleich breit, egal wie lang das Wort ist. */
+.settings-action {
+  flex-shrink: 0;
+  min-width: 11rem;
 }
 
 .settings-note {

@@ -25,10 +25,9 @@ export const T = {
     blockDoneOf: (n: number, total: number) => `Block ${n} von ${total} geschafft`,
     remaining: 'noch',
     minutes: (m: number) => (m === 1 ? '1 Minute' : `${m} Minuten`),
-    // Die ersten Schritte unter dem Timer – nur zum Loslegen, sie beenden keinen Block.
+    // Die ersten Schritte – vor dem Start nur zum Ansehen, im Block unter dem Timer zum Loslegen.
+    // Sie beenden keinen Block. Überall dasselbe Wort.
     firstStep: 'Zum Einstieg',
-    // Vor dem ersten Block: die ersten Schritte nur ansehen, noch nicht abhaken.
-    firstStepsPreview: 'Erste Schritte zum Einstieg',
     stepDone: 'erledigt',
     startDone: 'Einstieg geschafft!',
     keepGoing: 'Bleib einfach dran, bis die Zeit um ist.',
@@ -45,8 +44,9 @@ export const T = {
       'Nur anfangen – der Rest ergibt sich.',
       'Klein anfangen reicht völlig.',
     ],
-    // Ganz unten in der Karte während eines Blocks: anklickbar, zählt den Block als erledigt.
-    skipAsDone: 'Habe ich bereits erledigt,\naber vergessen die App zu starten.',
+    // Ganz unten in der Karte: anklickbar, zählt den Block als erledigt. Kurz – die Erklärung kommt beim Drüberfahren.
+    skipAsDone: 'Schon ohne App erledigt?',
+    skipAsDoneHint: 'Habe ich bereits erledigt, aber vergessen die App zu starten.\nDer Block zählt mit voller Zeit.',
     startBlock: 'Starten',
     spaceHint: 'Leertaste',
     // Startknopf ab der zweiten Aufgabe – zwei Zeilen: oben die Frage, darunter „Weiter mit …“.
@@ -289,6 +289,47 @@ export const T = {
       if (h === 0) return `${m} Min.`
       return m === 0 ? `${h} Std.` : `${h} Std. ${m} Min.`
     },
+    // Sammeln statt Serie: die Gesamtzahl seit Beginn – sie fällt nie zurück.
+    lifetime: (n: number) => `Bisher insgesamt: ${n === 1 ? '1 Block' : `${n} Blöcke`}`,
+  },
+
+  // Einmalige, leise Meldung bei 10, 25, 50, 100, 250 und 500 Blöcken.
+  milestone: {
+    reached: (blocks: number, minutes: number) =>
+      `${blocks} Blöcke.\nDas sind ${minutes < 120 ? `${minutes} Minuten` : `${Math.round(minutes / 60)} Stunden`} echte Arbeit.`,
+    // Nur einmal, beim 50. Block.
+    recommend: 'Kennst du jemanden, dem das helfen würde?',
+  },
+
+  // Weiterempfehlen und Fokus-Einladung: Teilen-Menü – oder, wo es keins gibt, den Link kopieren.
+  share: {
+    title: 'Tagesplan',
+    action: 'Teilen',
+    copied: 'Link kopiert',
+    recommendText: 'Tagesplan hilft mir beim Dranbleiben: Aufgaben in kurze Blöcke teilen und einfach anfangen.',
+  },
+
+  // Fokus-Einladung per Link: gemeinsam arbeiten, beide Blöcke enden zur selben Minute.
+  invite: {
+    action: 'Einladen',
+    hint: 'Link schicken: Wer ihn öffnet, arbeitet mit.\nSein Block endet zur selben Minute wie deiner.',
+    text: (clock: string) =>
+      `Arbeitest du mit? Mein Fokus-Block läuft bis ${clock}. Über den Link startest du einen Block, der zur selben Minute endet.`,
+    title: 'Gemeinsam arbeiten',
+    open: (clock: string) => `Ein Fokus-Block läuft bis ${clock}.\nArbeite mit: Dein Block endet zur selben Minute.`,
+    withTask: 'Mit:',
+    newTask: 'Woran arbeitest du?',
+    join: 'Mitmachen',
+    notNow: 'Nicht jetzt',
+    over: 'Dieser Block ist schon vorbei.\nFrag einfach nach einem neuen Link.',
+    busy: 'Bei dir läuft gerade schon ein Block.\nMitmachen geht, sobald er vorbei ist.',
+    close: 'Schließen',
+  },
+
+  // Beispielaufgabe beim allerersten Start.
+  example: {
+    title: 'Tagesplan ausprobieren',
+    steps: ['Tief durchatmen', 'Diesen Schritt abhaken'],
   },
 
   // Am nächsten Kalendertag, wenn der alte Tag noch offen ist: leiser Link oben in „Heute“.
@@ -339,10 +380,13 @@ export const T = {
     defaultBlocksHint: 'Startwert für neue Hauptaufgaben.',
     minutes: 'Min.',
     appearance: 'Aussehen',
+    theme: 'Hell oder dunkel',
+    themeHint: 'Automatisch folgt dem Gerät.',
     themeSystem: 'Automatisch',
     themeLight: 'Hell',
     themeDark: 'Dunkel',
     surfaces: 'Flächen',
+    surfacesHint: 'Pur: ruhig und fest.\nMilchglas: leicht durchscheinend.',
     surfacesPur: 'Pur',
     surfacesGlass: 'Milchglas',
     palette: 'Farbwelt',
@@ -364,13 +408,13 @@ export const T = {
     // Braun, rosa und weiß im Wechsel (je 12 Sekunden) – damit es nicht monoton wird.
     noiseMix: 'Ultra (Mix)',
     noisePreview: (name: string) => `${name} probehören`,
-    testBlockEnd: '▶ Ton „Block vorbei“',
-    testBreakEnd: '▶ Ton „Pause vorbei“',
+    testBlockEnd: 'Ton „Block vorbei“',
+    testBreakEnd: 'Ton „Pause vorbei“',
     ultraLabel: 'Ultra-Modus',
     ultraHint: 'Endet ein Block, piept es so lange, bis du bestätigst, damit du die Pause wahrnimmst.',
     ultraOn: 'An',
     ultraOff: 'Aus',
-    testUltra: '▶ Ton „Ultra“',
+    testUltra: 'Ton „Ultra“',
     notifyGranted: 'Benachrichtigungen sind erlaubt.',
     notifyDefault: 'Benachrichtigungen sind noch nicht erlaubt.',
     notifyDenied:
@@ -398,6 +442,8 @@ export const T = {
     backupReminder: (days: number | null) =>
       days === null ? 'Deine Daten sind noch nicht gesichert.' : `Letzte Sicherung vor ${days} Tagen.`,
     backupReminderAction: 'Jetzt sichern',
+    recommend: 'Weiterempfehlen',
+    recommendHint: 'Kennst du jemanden, dem Tagesplan helfen würde?\nSchick einfach den Link weiter.',
     restore: 'Wiederherstellen',
     restoreHint: 'Lädt eine Sicherungsdatei – ersetzt die aktuellen Daten.',
     restoreConfirmTitle: 'Sicherung wiederherstellen?',

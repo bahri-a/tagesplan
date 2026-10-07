@@ -6,7 +6,7 @@
  *  - vor dem Start: die ersten Schritte zum Ansehen (noch nicht abhakbar), „Block starten“
  *    (ab der zweiten Aufgabe zweizeilig: „Lange Pause gemacht?“ / „Weiter mit „…““)
  *  - während des Blocks: weicher Ring mit Restzeit, dezent „Pausieren“ und „Abbrechen“,
- *    und „Zum Einstieg: …“ zum Abhaken; ganz unten, abgesetzt, leise „Habe ich bereits erledigt …“
+ *    und „Zum Einstieg: …“ zum Abhaken; ganz unten, abgesetzt, leise „Schon ohne App erledigt?“
  *  - in der kurzen Pause: blauer Ring, danach „Nächsten Block starten“
  *  - nach dem letzten geschätzten Block: KEINE kurze Pause, gleich „Erledigt oder noch ein Block?“
  *  - an einem früheren Tag angefangen, noch nicht fertig: „Weitermachen oder abschließen?“ – nach „Noch ein Block“
@@ -14,7 +14,7 @@
  *  - am nächsten Kalendertag, solange der alte Tag noch offen ist: ganz oben leise „Neuen Tag beginnen →“
  *    (dann ohne das untere „Tag beenden“ – es gibt immer nur einen Weg zum neuen Tag)
  *  - noch nichts für heute: direkt in der Karte eintippen (Enter → „Starten“ steht da), darunter
- *    bis zu drei aus „Zuletzt verwendet“
+ *    bis zu drei aus „Zuletzt verwendet“ – ohne „Tag beenden“, es gibt ja noch nichts zu beenden
  *  - alles erledigt: Feierabend-Moment mit den Tageszahlen, „Morgen planen“ und leise „Tag beenden“
  *  - über der Karte: für jede heute erledigte Hauptaufgabe eine kleine Karte mit ✓ (motiviert)
  *  - unter der Karte: schlanke Leiste mit den Aufgaben des Tages (nicht während eines Blocks;
@@ -36,6 +36,7 @@ import {
   currentTask,
   dayYield,
   isOnLongPause,
+  lifetimeWork,
   recentTasks,
   tasksOfDay,
   taskWork,
@@ -68,6 +69,8 @@ export function TodayScreen({ onPlan, onEndDay, onStartNewDay }: Props) {
   const newDayOpen = canStartNewDay(state, useNow(true, 60_000))
   // Alles erledigt: „Tag beenden“ steht dann in der Karte selbst.
   const allDone = tasks.length > 0 && !task
+  // Leerer Tag (nichts geplant, nichts gearbeitet): Es gibt noch nichts zu beenden.
+  const emptyDay = tasks.length === 0 && activeDay(state).firstWorkAt === null
   // Wer „Heute“ verlässt, hat den Haken schon gesehen – beim Zurückkommen zeichnet er sich nicht noch einmal.
   useEffect(() => forgetFinished, [])
 
@@ -96,7 +99,7 @@ export function TodayScreen({ onPlan, onEndDay, onStartNewDay }: Props) {
         <DayBar tasks={tasks} currentId={task?.id} />
       )}
 
-      {t.phase !== 'block' && !newDayOpen && !allDone && (
+      {t.phase !== 'block' && !newDayOpen && !allDone && !emptyDay && (
         <div className="end-day">
           <button type="button" className="btn btn-quiet" onClick={onEndDay}>
             {T.today.endDay}
@@ -181,7 +184,7 @@ function EmptyToday({ onPlan }: { onPlan: () => void }) {
 
 /**
  * Alles erledigt: ein kleiner Feierabend-Moment. Oben die Tageszahlen („9 Blöcke · 3 Std. 45 Min.“),
- * darunter ein Satz und die zwei Wege weiter: „Morgen planen“ und leise „Tag beenden“
+ * leise die Gesamtzahl seit Beginn („Bisher insgesamt: 214 Blöcke“), darunter ein Satz und die zwei Wege weiter: „Morgen planen“ und leise „Tag beenden“
  * (`onEndDay` = null, wenn oben schon „Neuen Tag beginnen“ steht). Direkt nach dem letzten
  * „Erledigt“ zeichnet sich der Haken, und die Zahlen zählen kurz hoch.
  */
@@ -203,6 +206,8 @@ function AllDoneCard({
   const blocks = useCountUp(result.completedBlocks, fresh)
   const minutes = useCountUp(result.minutes, fresh)
   const hasNumbers = result.completedBlocks > 0 || result.minutes > 0
+  // Sammeln statt Serie: die Gesamtzahl seit Beginn, leise darunter.
+  const lifetime = lifetimeWork(state).blocks
 
   return (
     <section className={`card focus-card is-message all-done${fresh ? ' is-fresh' : ''}`}>
@@ -225,6 +230,7 @@ function AllDoneCard({
           {T.endDay.yieldBlocks(blocks)} · {T.endDay.yieldTime(minutes)}
         </p>
       )}
+      {lifetime > 0 && <p className="lifetime-line">{T.endDay.lifetime(lifetime)}</p>}
       <p className="message-text">{pick(T.today.allDoneTexts, day.createdAt)}</p>
       <div className="all-done-actions">
         <button type="button" className="btn btn-primary btn-big" onClick={onPlanTomorrow}>

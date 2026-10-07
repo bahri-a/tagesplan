@@ -12,7 +12,7 @@ import type { Settings } from '../model/types'
 import * as actions from './actions'
 import * as sel from './selectors'
 import * as timer from '../logic/timer'
-import { flushSaves, getState, initStore, resetStoreForTests } from './store'
+import { flushSaves, getState, initStore, resetStoreForTests, takeFirstStart } from './store'
 
 const MIN = 60_000
 // Die Abläufe rechnen mit den Standardwerten – so passen sie auch, wenn sich diese ändern.
@@ -875,5 +875,77 @@ describe('Bereits erledigt, ohne die App zu starten', () => {
     actions.logBlockAsDone(task.id, at(BLOCK / 2))
     expect(sel.blocksDone(getState(), task.id)).toBe(0)
     expect(getState().timer.phase).toBe('block')
+  })
+})
+
+describe('Sammeln statt Serie', () => {
+  it('zählt alle durchgehaltenen Blöcke seit Beginn – abgebrochene nicht', () => {
+    const task = actions.addTask(today(), 'A')
+    actions.updateTask(task.id, { estimatedBlocks: 5 })
+    actions.logBlockAsDone(task.id, at(BLOCK))
+    actions.startBlock(task.id)
+    at(BLOCK + 10 * MIN)
+    actions.abortCurrentBlock()
+    actions.logBlockAsDone(task.id, at(2 * BLOCK))
+    expect(sel.lifetimeWork(getState())).toEqual({ blocks: 2, minutes: (2 * BLOCK) / MIN })
+  })
+
+  it('kennt die Meilensteine 10, 25, 50, 100, 250 und 500', () => {
+    expect(sel.reachedMilestone(0)).toBe(0)
+    expect(sel.reachedMilestone(9)).toBe(0)
+    expect(sel.reachedMilestone(10)).toBe(10)
+    expect(sel.reachedMilestone(49)).toBe(25)
+    expect(sel.reachedMilestone(50)).toBe(50)
+    expect(sel.reachedMilestone(499)).toBe(250)
+    expect(sel.reachedMilestone(1200)).toBe(500)
+  })
+
+  it('merkt sich den gezeigten Meilenstein auf diesem Gerät', () => {
+    expect(getState().local.milestoneSeen).toBeUndefined()
+    actions.markMilestoneSeen(25)
+    expect(getState().local.milestoneSeen).toBe(25)
+  })
+})
+
+describe('Fokus-Einladung per Link', () => {
+  it('startet einen Block, der zur Endzeit aus dem Link endet', () => {
+    const task = actions.addTask(today(), 'A')
+    actions.startBlock(task.id, { endsAt: START + 17 * MIN })
+    const t = getState().timer
+    expect(t.phase).toBe('block')
+    if (t.phase === 'block') expect(t.plannedMs).toBe(17 * MIN)
+  })
+
+  it('hält die Länge zwischen 1 Minute und der längsten Blocklänge', () => {
+    const task = actions.addTask(today(), 'A')
+    actions.startBlock(task.id, { endsAt: START + 10_000 })
+    const t = getState().timer
+    if (t.phase === 'block') expect(t.plannedMs).toBe(MIN)
+  })
+})
+
+describe('Beispielaufgabe für Neue', () => {
+  it('meldet den allerersten Start genau einmal', async () => {
+    expect(takeFirstStart()).toBe(true)
+    expect(takeFirstStart()).toBe(false)
+    await flushSaves()
+    resetStoreForTests()
+    await initStore()
+    expect(takeFirstStart()).toBe(false)
+  })
+
+  it('legt „Tagesplan ausprobieren“ für heute an: 1 Block à 5 Min., zwei erste Schritte', () => {
+    const task = actions.addExampleTask()
+    const s = getState()
+    expect(sel.tasksOfDay(s, today()).map((t) => t.title)).toEqual(['Tagesplan ausprobieren'])
+    expect(task.estimatedBlocks).toBe(1)
+    expect(sel.blockMinutesFor(s, task)).toBe(5)
+    expect(sel.stepsOfTask(s, task.id).map((st) => st.text)).toEqual(['Tief durchatmen', 'Diesen Schritt abhaken'])
+  })
+
+  it('taucht nach dem Löschen nicht unter „Zuletzt verwendet“ auf', () => {
+    const task = actions.addExampleTask()
+    actions.deleteTask(task.id)
+    expect(sel.recentTasks(getState(), today(), 3)).toEqual([])
   })
 })

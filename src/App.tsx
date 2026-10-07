@@ -7,10 +7,21 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { APP_NAME, BACKUP_REMINDER_MS, PARKED_TOAST_MS, UNDO_DELETE_MS } from './config/defaults'
+import {
+  APP_NAME,
+  BACKUP_REMINDER_MS,
+  MILESTONE_TOAST_MS,
+  PARKED_TOAST_MS,
+  PUBLIC_URL,
+  RECOMMEND_MILESTONE,
+  SHARE_COPIED_MS,
+  UNDO_DELETE_MS,
+} from './config/defaults'
 import { T } from './config/texts'
 import { EndDayDialog } from './components/EndDayDialog'
+import { InviteDialog } from './components/InviteDialog'
 import { useNoise, useNow, useTimerEngine, type WakeEvent } from './components/hooks'
+import { PencilIcon } from './components/icons'
 import { NotePad } from './components/NotePad'
 import { openNotePad } from './components/notePadEvents'
 import { MiniWindow } from './components/MiniWindow'
@@ -19,6 +30,7 @@ import { Toast, type ToastAction } from './components/Toast'
 import { UpdateBanner } from './components/UpdateBanner'
 import { WakeAlert } from './components/WakeAlert'
 import { requestPersistentStorage } from './db/database'
+import { parseInvite, type Invite } from './logic/invite'
 import { formatCountdown } from './logic/time'
 import * as timer from './logic/timer'
 import type { ID, PaletteSetting, SurfaceSetting, ThemeSetting, TimerState } from './model/types'
@@ -29,9 +41,18 @@ import { unlockAudio } from './signals/sounds'
 import { IS_MOBILE } from './platform/device'
 import { useFocusMode } from './platform/focusMode'
 import { downloadBackup } from './db/backup'
-import { endDay, getEndDayConflicts, markBackupMade, markBackupReminded, restoreTask } from './store/actions'
-import { backupAgeDays, shouldRemindBackup } from './store/selectors'
-import { getState, initStore, useAppState } from './store/store'
+import {
+  addExampleTask,
+  endDay,
+  getEndDayConflicts,
+  markBackupMade,
+  markBackupReminded,
+  markMilestoneSeen,
+  restoreTask,
+} from './store/actions'
+import { backupAgeDays, lifetimeWork, reachedMilestone, shouldRemindBackup } from './store/selectors'
+import { shareLink } from './platform/share'
+import { getState, initStore, takeFirstStart, useAppState } from './store/store'
 import './components/components.css'
 
 type Screen = 'today' | 'plan' | 'settings'
@@ -57,6 +78,8 @@ export default function App() {
 
   useEffect(() => {
     void initStore().then(() => {
+      // Allererster Start: eine Beispielaufgabe zum Ausprobieren (genau einmal).
+      if (takeFirstStart()) addExampleTask()
       setReady(true)
       // iPhone-App: Startbildschirm erst jetzt ausblenden (sonst blitzt kurz eine leere Seite auf).
       if (__NATIVE_APP__) void import('./platform/nativeApp').then((m) => m.hideSplash())
@@ -89,9 +112,13 @@ function Shell() {
   const [endDayDialog, setEndDayDialog] = useState<'closed' | 'confirm' | 'conflicts'>('closed')
   const [toast, setToast] = useState<ToastInfo | null>(null)
   const [wakeEvent, setWakeEvent] = useState<WakeEvent | null>(null)
+  const [invite, closeInvite] = useInvite()
 
   useTimerEngine(useCallback((e: WakeEvent) => setWakeEvent(e), []))
   useBackupReminder((message, action) => setToast({ id: nextToastId++, message, duration: BACKUP_REMINDER_MS, action }))
+  useMilestones(lifetimeWork(state).blocks, (message, action, duration = MILESTONE_TOAST_MS) =>
+    setToast({ id: nextToastId++, message, duration, action }),
+  )
   useNoise()
   useTheme(state.settings.theme, state.settings.palette)
   useSurfaces(state.settings.surfaces)
@@ -147,10 +174,10 @@ function Shell() {
               {s.label}
             </button>
           ))}
-          {/* Handy: Notizen als ✎ direkt in der Leiste (am Mac unten rechts). */}
+          {/* Handy: Notizen als Stift direkt in der Leiste (am Mac unten rechts). */}
           {IS_MOBILE && (
             <button type="button" className="nav-item nav-notes" aria-label={T.notes.open} title={T.notes.open} onClick={openNotePad}>
-              ✎
+              <PencilIcon />
             </button>
           )}
         </nav>
@@ -202,6 +229,16 @@ function Shell() {
         />
       )}
       {wakeEvent && <WakeAlert event={wakeEvent} onClose={() => setWakeEvent(null)} />}
+      {invite && (
+        <InviteDialog
+          invite={invite}
+          onClose={closeInvite}
+          onJoined={() => {
+            closeInvite()
+            setScreen('today')
+          }}
+        />
+      )}
       <UpdateBanner />
     </>
   )
@@ -251,6 +288,63 @@ function useBackupReminder(show: (message: string, action: ToastAction) => void)
       },
     })
   }, [])
+}
+
+/**
+ * Fokus-Einladung: Steht ein Link wie …/tagesplan/#fokus=<Endzeit> in der Adresse (beim Öffnen
+ * oder später), kommt der Dialog „Gemeinsam arbeiten“. Danach verschwindet der Teil aus der Adresse.
+ */
+function useInvite(): [Invite | null, () => void] {
+  const [invite, setInvite] = useState(() => parseInvite(window.location.hash, Date.now()))
+  useEffect(() => {
+    const read = () => setInvite(parseInvite(window.location.hash, Date.now()))
+    window.addEventListener('hashchange', read)
+    return () => window.removeEventListener('hashchange', read)
+  }, [])
+  const close = useCallback(() => {
+    setInvite(null)
+    window.history.replaceState(null, '', window.location.pathname + window.location.search)
+  }, [])
+  return [invite, close]
+}
+
+/**
+ * Sammeln statt Serie: Erreicht die Gesamtzahl durchgehaltener Blöcke 10, 25, 50, 100, 250 oder 500,
+ * kommt genau einmal eine leise Meldung („100 Blöcke. Das sind 41 Stunden echte Arbeit.“). Beim 50.
+ * fragt sie einmal „Kennst du jemanden, dem das helfen würde? · Teilen“ – danach nie wieder.
+ * Was beim Öffnen schon erreicht ist (ältere Daten, Wiederherstellen), wird nur still vermerkt.
+ */
+function useMilestones(
+  blocks: number,
+  show: (message: string, action?: ToastAction, duration?: number) => void,
+) {
+  const showRef = useRef(show)
+  const previous = useRef<number | null>(null)
+  useEffect(() => {
+    showRef.current = show
+  })
+  useEffect(() => {
+    const before = previous.current
+    previous.current = blocks
+    const reached = reachedMilestone(blocks)
+    const seen = getState().local.milestoneSeen
+    if (seen !== undefined && reached <= seen) return
+    markMilestoneSeen(reached)
+    // Nur, wenn gerade ein Block dazukam – nicht beim Öffnen und nicht nach dem Wiederherstellen.
+    if (before === null || blocks !== before + 1 || reached === 0) return
+    const message = T.milestone.reached(reached, lifetimeWork(getState()).minutes)
+    if (reached !== RECOMMEND_MILESTONE) {
+      showRef.current(message)
+      return
+    }
+    showRef.current(`${message}\n${T.milestone.recommend}`, {
+      label: T.share.action,
+      onClick: () =>
+        void shareLink(T.share.recommendText, PUBLIC_URL).then((result) => {
+          if (result === 'copied') showRef.current(T.share.copied, undefined, SHARE_COPIED_MS)
+        }),
+    })
+  }, [blocks])
 }
 
 /** Pur oder Milchglas: steuert die Flächen-Variablen in index.css. */

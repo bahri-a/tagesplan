@@ -5,7 +5,7 @@
  *  1. Jeder Bildschirm passt genau aufs Display: Die Seite selbst scrollt nicht. Nur wo es
  *     wirklich viel wird (sehr viele Aufgaben), scrollt die Liste in sich.
  *  2. Aufgeräumt: kein Mini-Fenster, keine Vorschläge, kein Startsatz, keine Karten für
- *     erledigte Aufgaben (die Pillen zeigen das schon); Notizen als ✎ in der Kopfleiste.
+ *     erledigte Aufgaben (die Pillen zeigen das schon); Notizen als Stift in der Kopfleiste.
  *  3. Fokus-Ansicht im laufenden Block (data-focus, siehe platform/focusMode.ts).
  */
 
@@ -430,7 +430,7 @@
   padding-block: 0.45em;
 }
 
-/* Notizen als ✎ am Ende der Reiter: gleich hoch, nur das Symbol. */
+/* Notizen als Stift am Ende der Reiter: gleich hoch, nur das Symbol. */
 [data-device='mobile'] .nav-notes {
   padding-inline: 0.85em;
   color: var(--accent);

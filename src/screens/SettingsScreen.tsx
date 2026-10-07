@@ -1,16 +1,18 @@
 /**
  * BILDSCHIRM „EINSTELLUNGEN“
- * Blocklänge, Pausen, Grenzen, Aussehen, Töne und Datensicherung.
+ * Blocklänge, Pausen, Grenzen, Aussehen, Töne, Datensicherung und Weiterempfehlen.
  * Am Handy oben vier Reiter (Arbeitszeit, Aussehen, Töne, Daten) – so passt jeder Bereich ohne
  * Scrollen auf den Bildschirm.
  */
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { NOISE_PREVIEW_S, SETTINGS_LIMITS } from '../config/defaults'
+import { NOISE_PREVIEW_S, PUBLIC_URL, SETTINGS_LIMITS } from '../config/defaults'
 import { T } from '../config/texts'
 import { Dialog } from '../components/Dialog'
 import { useNow } from '../components/hooks'
+import { PlayIcon, ShareIcon } from '../components/icons'
 import { NumberStepper } from '../components/NumberStepper'
+import { ShareButton } from '../components/ShareButton'
 import { downloadBackup, parseBackup, restoreBackup, type BackupFile } from '../db/backup'
 import type { NoiseColor, PaletteSetting, SurfaceSetting, ThemeSetting } from '../model/types'
 import {
@@ -43,9 +45,10 @@ const PALETTES: { value: PaletteSetting; label: string }[] = [
   { value: 'lavendel', label: T.settings.paletteLavendel },
 ]
 
+// Wie beim Ultra-Modus: erst Aus, dann An – überall dieselbe Reihenfolge.
 const SOUNDS: { value: boolean; label: string }[] = [
-  { value: true, label: T.settings.soundsOn },
   { value: false, label: T.settings.soundsOff },
+  { value: true, label: T.settings.soundsOn },
 ]
 
 const ULTRA: { value: boolean; label: string }[] = [
@@ -238,35 +241,22 @@ export function SettingsScreen() {
 
       <section className="card settings-section" hidden={hiddenUnless('appearance')}>
         <h2>{T.settings.appearance}</h2>
-        <div className="segmented" role="radiogroup" aria-label={T.settings.appearance}>
-          {THEMES.map((theme) => (
-            <button
-              key={theme.value}
-              type="button"
-              role="radio"
-              aria-checked={settings.theme === theme.value}
-              className="segmented-item"
-              onClick={() => updateSettings({ theme: theme.value })}
-            >
-              {theme.label}
-            </button>
-          ))}
-        </div>
-        {/* Pur = massive Flächen, Milchglas = leicht durchscheinend */}
-        <div className="segmented" role="radiogroup" aria-label={T.settings.surfaces}>
-          {SURFACES.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              role="radio"
-              aria-checked={settings.surfaces === option.value}
-              className="segmented-item"
-              onClick={() => updateSettings({ surfaces: option.value })}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+        <SettingRow label={T.settings.theme} hint={T.settings.themeHint} wide>
+          <Segmented
+            label={T.settings.theme}
+            options={THEMES}
+            value={settings.theme}
+            onChange={(theme) => updateSettings({ theme })}
+          />
+        </SettingRow>
+        <SettingRow label={T.settings.surfaces} hint={T.settings.surfacesHint}>
+          <Segmented
+            label={T.settings.surfaces}
+            options={SURFACES}
+            value={settings.surfaces}
+            onChange={(surfaces) => updateSettings({ surfaces })}
+          />
+        </SettingRow>
         <SettingRow label={T.settings.palette} hint={T.settings.paletteHint}>
           <PalettePicker value={settings.palette} onChange={(palette) => updateSettings({ palette })} />
         </SettingRow>
@@ -297,14 +287,14 @@ export function SettingsScreen() {
             </SettingRow>
             <div className="settings-buttons">
               <button type="button" className="btn" onClick={playBlockEnd}>
-                {T.settings.testBlockEnd}
+                <PlayIcon /> {T.settings.testBlockEnd}
               </button>
               <button type="button" className="btn" onClick={playBreakEnd}>
-                {T.settings.testBreakEnd}
+                <PlayIcon /> {T.settings.testBreakEnd}
               </button>
               {settings.ultraMode && (
                 <button type="button" className="btn" onClick={playUltraAlarm}>
-                  {T.settings.testUltra}
+                  <PlayIcon /> {T.settings.testUltra}
                 </button>
               )}
             </div>
@@ -331,6 +321,20 @@ export function SettingsScreen() {
       </section>
 
       <DataSection hidden={hiddenUnless('data')} />
+
+      {/* Weiterempfehlen: ein leiser Eintrag – die App fragt sonst nur ein einziges Mal (beim 50. Block). */}
+      <section className="card settings-section" hidden={hiddenUnless('data')}>
+        <h2>{T.settings.recommend}</h2>
+        <div className="setting-row">
+          <div className="muted small setting-hint">{T.settings.recommendHint}</div>
+          <ShareButton
+            className="btn settings-action"
+            icon={<ShareIcon />}
+            label={T.share.action}
+            link={() => ({ text: T.share.recommendText, url: PUBLIC_URL })}
+          />
+        </div>
+      </section>
 
       <p className="muted small settings-version" hidden={hiddenUnless('data')}>
         {T.settings.version(new Date(__BUILD_TIME__).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }))}
@@ -382,7 +386,7 @@ function DataSection({ hidden = false }: { hidden?: boolean }) {
         </div>
         <button
           type="button"
-          className="btn"
+          className="btn settings-action"
           onClick={() => {
             downloadBackup()
             markBackupMade()
@@ -394,7 +398,7 @@ function DataSection({ hidden = false }: { hidden?: boolean }) {
 
       <div className="setting-row">
         <div className="muted small">{T.settings.restoreHint}</div>
-        <button type="button" className="btn" onClick={() => fileInput.current?.click()}>
+        <button type="button" className="btn settings-action" onClick={() => fileInput.current?.click()}>
           {T.settings.restore}
         </button>
         <input
@@ -436,9 +440,10 @@ function DataSection({ hidden = false }: { hidden?: boolean }) {
   )
 }
 
-function SettingRow({ label, hint, children }: { label: string; hint: string; children: ReactNode }) {
+/** Eine Zeile: Name und kurze Beschreibung links, Regler rechts. `wide`: Regler am iPhone unter dem Text. */
+function SettingRow({ label, hint, wide = false, children }: { label: string; hint: string; wide?: boolean; children: ReactNode }) {
   return (
-    <div className="setting-row">
+    <div className={wide ? 'setting-row is-wide' : 'setting-row'}>
       <div>
         <div className="setting-label">{label}</div>
         <div className="muted small setting-hint">{hint}</div>

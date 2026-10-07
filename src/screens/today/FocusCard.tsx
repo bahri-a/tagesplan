@@ -1,7 +1,7 @@
 /**
  * DIE GROSSE KARTE IN „HEUTE“
  * Die aktuelle Hauptaufgabe mit Block-Punkten, Titel und – je nach Phase – Startknopf,
- * laufendem Block (Ring, Rauschen, Pausieren/Früher fertig/Abbrechen), kurzer Pause oder
+ * laufendem Block (Ring, nächster Schritt, Rauschen, Früher fertig/Abbrechen), kurzer Pause oder
  * der Frage „Erledigt oder noch ein Block?“. Auch im Mini-Fenster.
  */
 
@@ -12,7 +12,9 @@ import { useNow } from '../../components/hooks'
 import { Dialog } from '../../components/Dialog'
 import { StepList } from '../../components/StepList'
 import { TimerRing } from '../../components/TimerRing'
-import { PauseIcon } from '../../components/icons'
+import { LinkIcon, PauseIcon } from '../../components/icons'
+import { ShareButton } from '../../components/ShareButton'
+import { formatClock, inviteUrl } from '../../logic/invite'
 import { blockMarks, type Mark } from '../../logic/progress'
 import * as timer from '../../logic/timer'
 import { cleanStartCue, pick } from '../../logic/variety'
@@ -101,7 +103,7 @@ export function FocusCard({ task }: { task: Task }) {
         {/* Erst ansehen, abhaken erst im Block – und nur, bis der erste Block geschafft ist. */}
         {view.showStepsPreview && <StepsPreview task={task} />}
 
-        {t.phase === 'block' && <RunningBlock timerState={t} now={now} />}
+        {t.phase === 'block' && <RunningBlock timerState={t} now={now} step={<CurrentStep task={task} />} />}
 
         {view.ring === 'breakOver' && t.phase === 'break' && (
           <TimerRing
@@ -127,11 +129,14 @@ export function FocusCard({ task }: { task: Task }) {
           </>
         )}
 
-        {t.phase === 'block' && <CurrentStep task={task} />}
-
         {/* Ganz unten, abgesetzt: Block schon ohne App gemacht → zählt als erledigt. */}
         {t.phase === 'block' && (
-          <button type="button" className="gentle-line link-quiet" onClick={() => skipBlockAsDone()}>
+          <button
+            type="button"
+            className="gentle-line link-quiet"
+            title={T.today.skipAsDoneHint}
+            onClick={() => skipBlockAsDone()}
+          >
             {T.today.skipAsDone}
           </button>
         )}
@@ -309,7 +314,7 @@ function BlockDots({ taskId, marks, suffix, sentence }: BlockDotsProps) {
  * Rund um den Startknopf. Vor dem ersten Block einer Aufgabe:
  *  - darüber das Startsignal aus „Planen“ („Wenn der Kaffee auf dem Tisch steht → los.“), falls eingetragen,
  *  - darunter klein ein Startsatz („Du musst nur anfangen.“).
- * Danach nur noch der Knopf. Ganz unten immer leise „Habe ich bereits erledigt …“
+ * Danach nur noch der Knopf. Ganz unten immer leise „Schon ohne App erledigt?“
  * (außer während der kurzen Pause).
  */
 function StartArea({ task, firstBlock, breakOver }: { task: Task; firstBlock: boolean; breakOver: boolean }) {
@@ -334,7 +339,12 @@ function StartArea({ task, firstBlock, breakOver }: { task: Task; firstBlock: bo
       {firstBlock && <p className="start-nudge">{pick(T.today.startNudges, task.createdAt)}</p>}
       {/* Block schon ohne App gemacht → gleich als erledigt eintragen (nicht mitten in der kurzen Pause). */}
       {!inShortBreak && (
-        <button type="button" className="gentle-line link-quiet" onClick={() => logBlockAsDone(task.id)}>
+        <button
+          type="button"
+          className="gentle-line link-quiet"
+          title={T.today.skipAsDoneHint}
+          onClick={() => logBlockAsDone(task.id)}
+        >
           {T.today.skipAsDone}
         </button>
       )}
@@ -381,8 +391,12 @@ function StartButton({ task, label: ownLabel }: { task: Task; label?: string }) 
   )
 }
 
-/** Der laufende (oder pausierte) Block: Ring mit Restzeit, Pausieren, Abbrechen. */
-function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: number }) {
+/**
+ * Der laufende (oder pausierte) Block: Ring mit Restzeit, direkt darunter der nächste Schritt
+ * (`step`) – was als Nächstes zu tun ist, gehört zum Ring. Rauschen, „Früher fertig“ und
+ * „Abbrechen“ stehen weiter unten.
+ */
+function RunningBlock({ timerState, now, step }: { timerState: timer.BlockTimer; now: number; step: ReactNode }) {
   const [confirmAbort, setConfirmAbort] = useState(false)
   const paused = timerState.pausedAt !== null
   const extendable = canExtendBlock(timerState, now)
@@ -436,8 +450,6 @@ function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: 
         )}
       </div>
 
-      <NoiseToggle />
-
       {paused && (
         <>
           <p className="phase-note">{T.today.paused}</p>
@@ -453,6 +465,10 @@ function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: 
           </button>
         </>
       )}
+
+      {step}
+
+      <NoiseToggle />
 
       <div className="quiet-actions">
         {confirmAbort ? (
@@ -485,6 +501,19 @@ function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: 
             <button type="button" className="btn btn-quiet btn-small" onClick={() => setConfirmAbort(true)}>
               {T.today.abort}
             </button>
+            {/* Gemeinsam arbeiten: Link mit der Endzeit dieses Blocks (nicht pausiert, nicht im Mini-Fenster). */}
+            {!paused && (
+              <ShareButton
+                className="btn btn-quiet btn-small invite-button"
+                icon={<LinkIcon />}
+                label={T.invite.action}
+                title={T.invite.hint}
+                link={() => {
+                  const endsAt = Date.now() + timer.blockRemainingMs(timerState, Date.now())
+                  return { text: T.invite.text(formatClock(endsAt)), url: inviteUrl(endsAt) }
+                }}
+              />
+            )}
           </>
         )}
       </div>
@@ -495,7 +524,7 @@ function RunningBlock({ timerState, now }: { timerState: timer.BlockTimer; now: 
 /**
  * Vor dem ersten Block: die ersten Schritte nur zum Ansehen – ohne Kästchen. Danach (Pause,
  * „Erledigt oder noch ein Block?“) fehlen sie, im Block gibt es „Alle Schritte“.
- * Deutlich als „Erste Schritte zum Einstieg“ gekennzeichnet (kein Thema des Blocks).
+ * Deutlich als „Zum Einstieg“ gekennzeichnet (kein Thema des Blocks).
  * Abhaken geht erst, wenn der Block läuft (siehe CurrentStep). Sind alle erledigt, steht hier nichts.
  */
 function StepsPreview({ task }: { task: Task }) {
@@ -504,7 +533,7 @@ function StepsPreview({ task }: { task: Task }) {
   if (!steps.some((s) => s.doneAt === null)) return null
   return (
     <div className="steps-preview">
-      <p className="steps-preview-label">{T.today.firstStepsPreview}</p>
+      <p className="steps-preview-label">{T.today.firstStep}</p>
       <ol className="steps-preview-list">
         {steps.map((step) => (
           <li key={step.id} className={step.doneAt !== null ? 'is-done' : undefined}>

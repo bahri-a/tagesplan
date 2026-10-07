@@ -16,7 +16,7 @@ import { wasJustFinished } from './celebrate'
 /**
  * Schlanke Leiste unter der Karte: alle Aufgaben des Tages als kleine Pillen.
  *  - erledigt: grün mit Haken (gerade erst erledigt: der Haken zeichnet sich kurz)
- *  - jetzt dran: mildes Honig-Orange (in Arbeit)
+ *  - jetzt dran: salbeigrüner Punkt (in Arbeit)
  *  - kommt noch: durchscheinendes Glas (noch nicht aktiv)
  * Ein Klick auf eine Pille zeigt darunter eine kurze Übersicht der Aufgabe, ein zweiter Klick
  * (oder das ×) schließt sie wieder.
@@ -88,7 +88,7 @@ function DayPeek({ task, mark, onClose }: { task: Task; mark: Mark; onClose: () 
       {cue && <p className="day-peek-cue">{T.today.startCue(cue)}</p>}
       {steps.length > 0 && (
         <>
-          <p className="day-peek-label">{T.today.firstStepsPreview}</p>
+          <p className="day-peek-label">{T.today.firstStep}</p>
           <ul className="day-peek-steps">
             {steps.map((step) => (
               <li key={step.id} className={step.doneAt !== null ? 'is-done' : undefined}>

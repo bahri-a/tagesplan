@@ -18,7 +18,7 @@ import { IS_MOBILE, SHOWS_START_CUE } from '../platform/device'
 import { rememberStartCue, setTaskCompleted, updateTask } from '../store/actions'
 import { blockMinutesFor, shortBreakMinutesFor, stepsOfTask } from '../store/selectors'
 import { useAppState } from '../store/store'
-import { CopyIcon, TrashIcon } from './icons'
+import { CheckIcon, CopyIcon, TrashIcon } from './icons'
 import { NumberStepper } from './NumberStepper'
 import { StepList } from './StepList'
 
@@ -87,7 +87,7 @@ export function TaskCard({ task, number, expanded, focusStepInput, onToggle, onD
         </button>
 
         <button type="button" className="task-card-summary" aria-expanded={expanded} onClick={onToggle}>
-          <span className="task-number">{isDone ? '✓' : `${number}.`}</span>
+          <span className="task-number">{isDone ? <CheckIcon className="glyph" /> : `${number}.`}</span>
           <span className="task-title">{task.title || '…'}</span>
           <span className="task-meta">
             {T.plan.blocksMeta(task.estimatedBlocks)} · {minutes} {T.plan.minutesShort}

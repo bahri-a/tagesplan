@@ -13,9 +13,10 @@ import { T } from '../config/texts'
 import type { ConflictChoices } from '../logic/carryOver'
 import type { ID } from '../model/types'
 import { endDay, getEndDayConflicts } from '../store/actions'
-import { activeDay, dayYield } from '../store/selectors'
+import { activeDay, dayYield, lifetimeWork } from '../store/selectors'
 import { useAppState } from '../store/store'
 import { Dialog } from './Dialog'
+import { CheckIcon } from './icons'
 
 interface Props {
   /**
@@ -137,14 +138,18 @@ function DayYield() {
   const result = dayYield(state, activeDay(state).id, now)
   if (result.minutes === 0 && result.doneTitles.length === 0) return null
   const parts = [T.endDay.yieldBlocks(result.completedBlocks), T.endDay.yieldTime(result.minutes)]
+  const lifetime = lifetimeWork(state).blocks
   return (
     <div className="day-yield">
       <p className="day-yield-title">{T.endDay.yieldTitle}</p>
       <p className="day-yield-numbers">{parts.join(' · ')}</p>
+      {lifetime > 0 && <p className="lifetime-line">{T.endDay.lifetime(lifetime)}</p>}
       {result.doneTitles.length > 0 && (
         <ul className="day-yield-done">
           {result.doneTitles.map((title) => (
-            <li key={title}>✓ {title}</li>
+            <li key={title}>
+              <CheckIcon className="glyph" /> {title}
+            </li>
           ))}
         </ul>
       )}

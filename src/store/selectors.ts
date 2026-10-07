@@ -5,7 +5,8 @@
  * „Welche Aufgabe ist gerade dran?“. Sie ändern nichts.
  */
 
-import { BACKUP_REMINDER_DAYS, UNDO_EXTRA_BLOCK_MS } from '../config/defaults'
+import { BACKUP_REMINDER_DAYS, MILESTONES, UNDO_EXTRA_BLOCK_MS } from '../config/defaults'
+import { T } from '../config/texts'
 import { dayKey } from '../logic/time'
 import { blockWorkedMs, isBreakOver } from '../logic/timer'
 import { alive, sortByPosition } from '../logic/records'
@@ -89,7 +90,8 @@ export function recentTasks(s: AppState, dayId: ID, limit: number): Task[] {
   // Auch gelöschte Aufgaben zählen: Löschen ist „gerade nicht, aber bald wieder“.
   const usedAt = (t: Task) => Math.max(t.createdAt, t.completedAt ?? 0, t.deletedAt ?? 0, lastWork.get(t.id) ?? 0)
   const onDay = new Set(tasksOfDay(s, dayId).map((t) => key(t.title)))
-  const seen = new Set<string>()
+  // Die Beispielaufgabe vom allerersten Start gehört nicht zu „Zuletzt verwendet“.
+  const seen = new Set<string>([key(T.example.title)])
   const result: Task[] = []
   const tasks = Object.values(s.tasks).sort((a, b) => usedAt(b) - usedAt(a))
   for (const task of tasks) {
@@ -258,6 +260,23 @@ export function dayYield(s: AppState, dayId: ID, now: number) {
       .filter((t) => t.completedAt !== null)
       .map((t) => t.title),
   }
+}
+
+/**
+ * Sammeln statt Serie: alle durchgehaltenen Blöcke seit Beginn und die Minuten darin.
+ * Die Zahl fällt nie zurück – auch nicht nach einem Tag ohne Block.
+ */
+export function lifetimeWork(s: AppState) {
+  const blocks = Object.values(s.blocks).filter((b) => b.deletedAt === null && b.status === 'completed')
+  return {
+    blocks: blocks.length,
+    minutes: Math.round(blocks.reduce((sum, b) => sum + b.workedSeconds, 0) / 60),
+  }
+}
+
+/** Der höchste erreichte Meilenstein (10, 25, 50 …) bei so vielen Blöcken – 0, wenn noch keiner. */
+export function reachedMilestone(blocks: number): number {
+  return MILESTONES.filter((m) => m <= blocks).at(-1) ?? 0
 }
 
 /**

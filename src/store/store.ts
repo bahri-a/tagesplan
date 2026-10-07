@@ -141,6 +141,8 @@ export function flushSaves(): Promise<void> {
 }
 
 let initPromise: Promise<void> | null = null
+// Allererster Start auf diesem Gerät (noch gar keine Daten) – für die Beispielaufgabe.
+let firstStart = false
 
 /**
  * Lädt alle Daten aus der Datenbank. Beim allerersten Start werden
@@ -179,13 +181,25 @@ async function loadFromDatabase(): Promise<void> {
     local: data.local ?? {},
   }
 
-  const firstStart: Changes = {}
-  if (data.settings.length === 0) firstStart.settings = state.settings
-  if (data.notes.length === 0) firstStart.note = state.note
+  firstStart = data.settings.length === 0 && data.tasks.length === 0
+
+  const created: Changes = {}
+  if (data.settings.length === 0) created.settings = state.settings
+  if (data.notes.length === 0) created.note = state.note
   const missingDays = ensureActiveAndPlannedDay(Object.values(state.days), now)
-  if (missingDays.length > 0) firstStart.days = missingDays
-  if (Object.keys(firstStart).length > 0) commit(firstStart)
+  if (missingDays.length > 0) created.days = missingDays
+  if (Object.keys(created).length > 0) commit(created)
   else listeners.forEach((l) => l())
+}
+
+/**
+ * War das gerade der allererste Start (noch gar keine Daten)? Antwortet nur einmal mit `true` –
+ * so kommt die Beispielaufgabe genau einmal, auch wenn danach neu geladen wird.
+ */
+export function takeFirstStart(): boolean {
+  const result = firstStart
+  firstStart = false
+  return result
 }
 
 /**
@@ -208,6 +222,7 @@ function ensureActiveAndPlannedDay(days: Day[], now: number): Day[] {
 export function resetStoreForTests(): void {
   state = null
   initPromise = null
+  firstStart = false
   listeners.clear()
   pendingSaves = Promise.resolve()
 }

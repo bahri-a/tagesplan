@@ -62,6 +62,12 @@ export function markBackupReminded(now = Date.now()): void {
   commit({ local: { ...s.local, backupReminderOn: dayKey(now) } })
 }
 
+/** Meilenstein-Meldung ist gezeigt (oder war beim ersten Öffnen schon erreicht) – kommt nicht wieder. */
+export function markMilestoneSeen(milestone: number): void {
+  const s = getState()
+  commit({ local: { ...s.local, milestoneSeen: milestone } })
+}
+
 export function updateNote(text: string): void {
   commit({ note: { ...getState().note, text } })
 }

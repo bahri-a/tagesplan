@@ -223,6 +223,11 @@ export interface LocalState {
   lastBackupAt?: number | null
   /** An welchem Tag (dayKey) die Erinnerung ans Sichern zuletzt kam – höchstens einmal am Tag. */
   backupReminderOn?: string | null
+  /**
+   * Höchster Meilenstein (10, 25, 50 …), zu dem die leise Meldung schon kam (oder der beim ersten
+   * Öffnen dieser Version schon erreicht war). Fehlt in älteren Daten.
+   */
+  milestoneSeen?: number
 }
 
 /** Merkzettel für „Zurück“ nach „Noch ein Block“ (siehe `canUndoExtraBlock`). */

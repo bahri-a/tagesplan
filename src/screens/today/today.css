@@ -455,12 +455,11 @@
   margin-bottom: 0.35rem;
 }
 
+/* Wie „Zum Einstieg:“ im Block: normale Schreibweise, salbeigrün. */
 .steps-preview-label {
   color: var(--accent);
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
 .steps-preview-list {
@@ -734,6 +733,10 @@
   font-variant-numeric: tabular-nums;
 }
 
+.all-done .lifetime-line {
+  margin-top: -0.35rem;
+}
+
 .all-done .message-text {
   margin-bottom: 0.4rem;
   white-space: pre-line;
@@ -784,7 +787,7 @@
 }
 
 /* ---------- Schlanke Leiste mit den Aufgaben des Tages ---------- */
-/* Pillen: erledigt = grün, jetzt dran = mildes Honig-Orange, kommt noch = durchscheinendes Glas.
+/* Pillen: erledigt = grün gefüllt, jetzt dran = salbeigrüner Punkt, kommt noch = durchscheinendes Glas.
    Ein Klick öffnet darunter eine kurze Übersicht. */
 
 .day-bar {
@@ -882,17 +885,17 @@
   color: var(--on-accent);
 }
 
-/* Jetzt dran: mildes Honig-Orange – dieselben warmen Töne wie die Vorwarnung am Ring */
+/* Jetzt dran: salbeigrün wie der Block-Ring. Honig bleibt allein für „Block endet gleich“. */
 .day-pill.is-current {
-  border-color: color-mix(in srgb, var(--ring-warm-b) 40%, transparent);
-  background: color-mix(in srgb, var(--ring-warm-b) 14%, var(--surface));
+  border-color: var(--accent-line);
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
   color: var(--text);
   font-weight: 500;
 }
 
 .day-pill.is-current .day-mark {
-  background: var(--ring-warm-b);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--ring-warm-b) 25%, transparent);
+  background: linear-gradient(135deg, var(--ring-block-a), var(--ring-block-b));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent);
   transform: scale(0.62);
 }
 
@@ -973,7 +976,7 @@
 }
 
 .day-peek.is-current .day-peek-status {
-  color: var(--ring-warm-b);
+  color: var(--accent);
 }
 
 .day-peek-title {
@@ -1056,6 +1059,15 @@
 
   .ask-done-actions {
     grid-template-columns: 1fr;
+  }
+
+  /* „Früher fertig · Abbrechen · Einladen“ bleiben in einer Zeile. */
+  .quiet-actions {
+    gap: 0.25rem;
+  }
+
+  .quiet-actions .btn {
+    padding-inline: 0.5em;
   }
 }
 
