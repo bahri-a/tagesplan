@@ -3,7 +3,8 @@
  * Optional mit einem Knopf daneben, z. B. „Aufgabe gelöscht · Rückgängig“.
  */
 
-import { useEffect } from 'react'
+import { useContext, useEffect } from 'react'
+import { WindowContext } from './hooks'
 
 export interface ToastAction {
   label: string
@@ -20,10 +21,12 @@ interface Props {
 }
 
 export function Toast({ message, onDone, duration = 3500, action }: Props) {
+  // Im Mini-Fenster mit dessen Uhr – das große Fenster liegt dann oft im Dock und wird gebremst.
+  const win = useContext(WindowContext)
   useEffect(() => {
-    const id = setTimeout(onDone, duration)
-    return () => clearTimeout(id)
-  }, [message, onDone, duration])
+    const id = win.setTimeout(onDone, duration)
+    return () => win.clearTimeout(id)
+  }, [message, onDone, duration, win])
 
   return (
     <div className="toast" role="status">

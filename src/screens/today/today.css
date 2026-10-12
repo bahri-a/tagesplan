@@ -189,7 +189,8 @@
   position: absolute;
   right: 1.25rem;
   bottom: 0.95rem;
-  opacity: 0.55;
+  /* Leise, aber auch bei Sonne oder müden Augen noch gut lesbar */
+  opacity: 0.85;
   animation: skip-break-in 1.2s ease 0.6s backwards;
 }
 
@@ -380,44 +381,51 @@
   font-size: var(--fs-base);
 }
 
-/* Unter der Zeit im Ring: Pausen-Symbol (schmal auch „+2 Min.“) */
+/* Unten im Ring, deutlich unter der Zeit: das Pausen-Symbol.
+   Absolut gesetzt, damit die Zeit genau in der Mitte bleibt. */
 .ring-actions {
+  position: absolute;
+  bottom: 12%;
+  left: 50%;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 0.5rem;
+  transform: translateX(-50%);
 }
 
 .ring-inner-extend {
   display: none;
+  position: absolute;
+  top: 13%;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
-/* Pausieren: dezentes Symbol unter der Zeit, mitten im Ring */
+/* Pausieren: gut sichtbares, ruhiges Symbol in der Akzentfarbe */
 .ring-pause {
   display: grid;
   place-items: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border: 1px solid var(--border);
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1.5px solid var(--accent-line);
   border-radius: 50%;
-  background: transparent;
-  color: var(--text-muted);
+  background: var(--accent-soft);
+  color: var(--accent);
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
 
 .ring-pause:hover,
 .ring-pause:focus-visible {
-  color: var(--text);
-  border-color: var(--text-muted);
+  border-color: var(--accent);
 }
 
 .ring-pause svg {
-  width: 1rem;
-  height: 1rem;
+  width: 1.15rem;
+  height: 1.15rem;
   fill: none;
   stroke: currentColor;
-  stroke-width: 2;
+  stroke-width: 2.2;
   stroke-linecap: round;
 }
 
@@ -945,7 +953,7 @@
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 .day-peek-close:hover,
@@ -1044,7 +1052,7 @@
     padding: 2rem 1.25rem 1.75rem;
   }
 
-  /* Schmal ist neben dem Ring kein Platz: „+2 Min.“ sitzt dann im Ring neben dem Pausen-Symbol. */
+  /* Schmal ist neben dem Ring kein Platz: „+2 Min.“ sitzt dann oben im Ring, gespiegelt zum Pausen-Symbol unten. */
   .ring-side-action {
     display: none;
   }
@@ -1234,7 +1242,7 @@
 }
 
 /* ---------- Lange Pause nach einer erledigten Hauptaufgabe ---------- */
-/* Ruhig und bläulich wie die kurze Pause; die nächste Aufgabe steht nur leise darunter. */
+/* Ruhig und bläulich wie die kurze Pause; darunter „Als Nächstes: …“ und der Startknopf. */
 .long-pause-ring {
   fill: none;
   stroke: var(--ring-break-a);
@@ -1245,19 +1253,6 @@
 .long-pause-moon {
   fill: var(--break);
   opacity: 0.85;
-}
-
-.long-pause-next {
-  margin-top: 0.5rem;
-  padding: 0.35rem 0.9rem;
-  border: 1px solid var(--panel-edge);
-  border-radius: 999px;
-  color: var(--text-muted);
-  font-size: var(--fs-base);
-}
-
-.long-pause-next-label {
-  opacity: 0.75;
 }
 
 /* ---------- „Neuen Tag beginnen →“: leise, aber gut zu sehen ---------- */

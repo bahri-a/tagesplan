@@ -27,21 +27,26 @@ import { EMPTY_TODAY_RECENT_COUNT } from '../../config/defaults'
 import { T } from '../../config/texts'
 import { useNow } from '../../components/hooks'
 import { formatDayName } from '../../logic/time'
-import { pick } from '../../logic/variety'
-import { IS_MOBILE } from '../../platform/device'
+import { cleanStartCue, pick } from '../../logic/variety'
+import { IS_MOBILE, SHOWS_START_CUE } from '../../platform/device'
+import { haptic, requestFocusFullscreen } from '../../platform/focusMode'
+import { requestNotificationPermission } from '../../signals/notifications'
 import type { Task, TimerState } from '../../model/types'
 import {
   activeDay,
+  blocksDone,
   canStartNewDay,
   currentTask,
   dayYield,
+  isAskingDone,
   isOnLongPause,
   lifetimeWork,
   recentTasks,
   tasksOfDay,
   taskWork,
+  undoableFinish,
 } from '../../store/selectors'
-import { addTask, copyTask, endLongPause } from '../../store/actions'
+import { addTask, copyTask, startAfterLongPause, undoFinishTask } from '../../store/actions'
 import { useAppState } from '../../store/store'
 import { FocusCard } from './FocusCard'
 import { DayBar } from './DayBar'
@@ -63,7 +68,7 @@ export function TodayScreen({ onPlan, onEndDay, onStartNewDay }: Props) {
   const tasks = tasksOfDay(state, activeDay(state).id)
   // Während eines Blocks: dessen Aufgabe. Sonst: die oberste offene Aufgabe.
   const task = t.phase === 'block' ? state.tasks[t.taskId] : currentTask(state)
-  // Nach einer erledigten Hauptaufgabe: erst die lange Pause, die nächste Aufgabe nur leise als „Danach: …“.
+  // Nach einer erledigten Hauptaufgabe: erst die lange Pause – ihr Knopf startet gleich die nächste Aufgabe.
   const onLongPause = !!task && isOnLongPause(state, task)
   // Am nächsten Kalendertag steht oben „Neuen Tag beginnen“ – dann gibt es unten kein zweites „Tag beenden“.
   const newDayOpen = canStartNewDay(state, useNow(true, 60_000))
@@ -86,7 +91,7 @@ export function TodayScreen({ onPlan, onEndDay, onStartNewDay }: Props) {
       {tasks.length === 0 ? (
         <EmptyToday onPlan={() => onPlan()} />
       ) : task && onLongPause ? (
-        <LongPauseCard task={task} onEnd={() => endLongPause(task.id)} />
+        <LongPauseCard task={task} />
       ) : task ? (
         <FocusCard task={task} />
       ) : (
@@ -211,6 +216,7 @@ function AllDoneCard({
 
   return (
     <section className={`card focus-card is-message all-done${fresh ? ' is-fresh' : ''}`}>
+      <UndoFinish />
       <div className="message-mark" aria-hidden="true">
         <svg viewBox="0 0 76 76">
           <defs>
@@ -302,13 +308,27 @@ function DoneCards({ tasks }: { tasks: Task[] }) {
 
 /**
  * Lange Pause nach einer erledigten Hauptaufgabe: ruhige Karte statt der nächsten Aufgabe.
- * Erst „Pause beenden“ (oder Leertaste) zeigt die nächste Aufgabe – die steht vorher nur leise
- * als „Danach: …“ darunter, damit sie nicht überrascht.
+ * Darunter steht schon, was als Nächstes kommt – und ein einziger Knopf beendet die Pause und
+ * startet gleich den ersten Block (oder Leertaste). Kein zweiter Klick auf „Starten“ nötig.
+ * Steht bei der nächsten Aufgabe noch „Erledigt oder noch ein Block?“ an, heißt der Knopf „Weiter“.
  */
-function LongPauseCard({ task, onEnd }: { task: Task; onEnd: () => void }) {
-  useSpaceKey(onEnd)
+function LongPauseCard({ task }: { task: Task }) {
+  const state = useAppState()
+  const asking = isAskingDone(state, task)
+  // Startsignal nur auf dem Mac (auf dem Handy gibt es kein Feld dafür).
+  const cue = SHOWS_START_CUE && task.startCue && blocksDone(state, task.id) === 0 ? cleanStartCue(task.startCue) : ''
+  const start = () => {
+    if (!asking) {
+      void requestNotificationPermission()
+      requestFocusFullscreen()
+      haptic('tap')
+    }
+    startAfterLongPause(task.id)
+  }
+  useSpaceKey(start)
   return (
     <section className="card focus-card is-message long-pause-card">
+      <UndoFinish />
       <div className="message-mark" aria-hidden="true">
         <svg viewBox="0 0 76 76">
           <circle className="long-pause-ring" cx="38" cy="38" r="33" />
@@ -317,13 +337,52 @@ function LongPauseCard({ task, onEnd }: { task: Task; onEnd: () => void }) {
       </div>
       <h1 className="message-title">{T.today.longPauseTitle}</h1>
       <p className="message-text">{T.today.longPauseText}</p>
-      <button type="button" className="btn btn-primary btn-big" title={T.today.spaceHint} onClick={onEnd}>
-        {T.today.longPauseEnd}
-      </button>
-      <p className="long-pause-next">
-        <span className="long-pause-next-label">{T.today.longPauseNext}</span> {task.title}
+      <p className="up-next">
+        <span className="up-next-label">{T.today.upNext}</span>
+        <span>
+          <strong>„{task.title}“</strong> · {T.plan.blocksMeta(task.estimatedBlocks)}
+        </span>
       </p>
+      {cue && <p className="start-cue">{T.today.startCue(cue)}</p>}
+      <button type="button" className="btn btn-primary btn-big" title={T.today.spaceHint} onClick={start}>
+        {asking ? T.today.longPauseEnd : T.today.nextTask}
+      </button>
     </section>
+  )
+}
+
+/**
+ * Leises „← Doch nicht erledigt“ oben links in der Karte, nur kurz nach „Erledigt“ (verklickt):
+ * Die Aufgabe ist wieder offen und steht wieder mit ihrer Frage da. Verschwindet von selbst.
+ */
+function UndoFinish() {
+  const state = useAppState()
+  const [now, setNow] = useState(Date.now)
+  const undo = undoableFinish(state, now)
+  const until = undo?.until
+  // Nach Ablauf einmal neu zeichnen – dann ist der Link weg.
+  useEffect(() => {
+    if (until === undefined) return
+    const id = setTimeout(() => setNow(Date.now()), Math.max(0, until - Date.now()) + 50)
+    return () => clearTimeout(id)
+  }, [until])
+  if (!undo) return null
+  return (
+    <button
+      type="button"
+      className="btn btn-quiet btn-small back-to-ask"
+      title={T.today.undoFinishHint}
+      aria-label={T.today.undoFinishHint}
+      onClick={() => {
+        forgetFinished()
+        undoFinishTask(undo.task.id)
+      }}
+    >
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M10 3.5L5.5 8l4.5 4.5" />
+      </svg>
+      {T.today.undoFinish}
+    </button>
   )
 }
 

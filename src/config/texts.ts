@@ -56,7 +56,9 @@ export const T = {
     longPauseTitle: 'Lange Pause',
     longPauseText: 'Gut gemacht. Lass dir Zeit – die nächste Aufgabe wartet.',
     longPauseEnd: 'Weiter',
-    longPauseNext: 'Danach:',
+    // Kurz nach „Erledigt“ oben links in der Karte – falls verklickt.
+    undoFinish: 'Doch nicht erledigt',
+    undoFinishHint: 'Verklickt? Die Aufgabe ist wieder offen.',
     pause: 'Pausieren',
     resume: 'Weiter',
     paused: 'Pausiert – die Zeit steht.',
@@ -347,6 +349,23 @@ export const T = {
     hint: 'N = Gedanke parken',
   },
 
+  // Mac hat mitten im Block geschlafen (Deckel zu).
+  sleep: {
+    title: 'Warst du die ganze Zeit dran?',
+    text: (minutes: number) =>
+      `Der Mac war ${minutes} Min. im Ruhezustand.\nJa: Die Zeit zählt als Arbeit.\nNein: Der Block wird abgebrochen und kommt noch einmal.`,
+    yes: 'Ja, zählt',
+    no: 'Nein, abbrechen',
+  },
+
+  // Auffangnetz bei einem unerwarteten Fehler (statt weißer Seite).
+  error: {
+    title: 'Da ist etwas schiefgegangen.',
+    text: 'Deine gespeicherten Daten sind unberührt.\nLade die App einfach neu.',
+    reload: 'Neu laden',
+    backup: 'Sicherung herunterladen',
+  },
+
   // Mini-Fenster: kleiner Timer, der immer über allen Fenstern liegt.
   mini: {
     open: 'Mini-Fenster',
@@ -411,7 +430,7 @@ export const T = {
     testBlockEnd: 'Ton „Block vorbei“',
     testBreakEnd: 'Ton „Pause vorbei“',
     ultraLabel: 'Ultra-Modus',
-    ultraHint: 'Endet ein Block, piept es so lange, bis du bestätigst, damit du die Pause wahrnimmst.',
+    ultraHint: 'Endet ein Block, piept es, bis du die Pause bestätigst –\nhöchstens 20 Sekunden lang.',
     ultraOn: 'An',
     ultraOff: 'Aus',
     testUltra: 'Ton „Ultra“',
@@ -442,13 +461,15 @@ export const T = {
     backupReminder: (days: number | null) =>
       days === null ? 'Deine Daten sind noch nicht gesichert.' : `Letzte Sicherung vor ${days} Tagen.`,
     backupReminderAction: 'Jetzt sichern',
+    // Speichern hat (auch nach einem zweiten Versuch) nicht geklappt.
+    saveFailed: 'Konnte gerade nicht speichern.\nSichere deine Daten zur Sicherheit als Datei.',
     recommend: 'Weiterempfehlen',
     recommendHint: 'Kennst du jemanden, dem Tagesplan helfen würde?\nSchick einfach den Link weiter.',
     restore: 'Wiederherstellen',
     restoreHint: 'Lädt eine Sicherungsdatei – ersetzt die aktuellen Daten.',
     restoreConfirmTitle: 'Sicherung wiederherstellen?',
     restoreConfirm: (date: string) =>
-      `Die Sicherung vom ${date} ersetzt alle Daten, die gerade in der App sind.`,
+      `Die Sicherung vom ${date} ersetzt alle Daten, die gerade in der App sind.\nDein jetziger Stand wird vorher als Datei gesichert.`,
     restoreYes: 'Ja, wiederherstellen',
     restoreNo: 'Abbrechen',
     restoreDone: 'Fertig – deine Sicherung ist wiederhergestellt.',

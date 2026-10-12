@@ -5,7 +5,7 @@
  * „Welche Aufgabe ist gerade dran?“. Sie ändern nichts.
  */
 
-import { BACKUP_REMINDER_DAYS, MILESTONES, UNDO_EXTRA_BLOCK_MS } from '../config/defaults'
+import { BACKUP_REMINDER_DAYS, MILESTONES, UNDO_EXTRA_BLOCK_MS, UNDO_FINISH_MS } from '../config/defaults'
 import { T } from '../config/texts'
 import { dayKey } from '../logic/time'
 import { blockWorkedMs, isBreakOver } from '../logic/timer'
@@ -13,33 +13,75 @@ import { alive, sortByPosition } from '../logic/records'
 import type { Block, Day, ID, Step, Task } from '../model/types'
 import type { AppState } from './store'
 
+/*
+ * ZWISCHENSPEICHER
+ * Die Karte in „Heute“ fragt mehrmals pro Sekunde nach Blöcken und Aufgaben. Statt jedes Mal über
+ * alle je gespeicherten Einträge zu laufen, wird je Tabelle einmal gruppiert – neu erst, wenn sich
+ * die Tabelle ändert (`commit` legt dann ein neues Objekt an). Nach außen gehen nur Kopien.
+ */
+const groupCache = new WeakMap<object, Map<string, Map<ID, unknown[]>>>()
+
+/** Lebende Einträge einer Tabelle, gruppiert nach `field` (einmal je Stand der Tabelle). */
+function groupBy<T extends Block | Task | Step>(table: Record<ID, T>, field: 'taskId' | 'dayId'): Map<ID, T[]> {
+  let byField = groupCache.get(table)
+  if (!byField) {
+    byField = new Map()
+    groupCache.set(table, byField)
+  }
+  let groups = byField.get(field) as Map<ID, T[]> | undefined
+  if (!groups) {
+    groups = new Map()
+    for (const record of Object.values(table)) {
+      if (record.deletedAt !== null) continue
+      const key = (record as unknown as Record<string, ID>)[field]
+      const list = groups.get(key)
+      if (list) list.push(record)
+      else groups.set(key, [record])
+    }
+    byField.set(field, groups as Map<ID, unknown[]>)
+  }
+  return groups
+}
+
+const dayCache = new WeakMap<object, { active?: Day; planned?: Day }>()
+
+function dayWithStatus(s: AppState, status: 'active' | 'planned'): Day | undefined {
+  let found = dayCache.get(s.days)
+  if (!found) {
+    const days = alive(Object.values(s.days))
+    found = { active: days.find((d) => d.status === 'active'), planned: days.find((d) => d.status === 'planned') }
+    dayCache.set(s.days, found)
+  }
+  return found[status]
+}
+
 /** Der aktive Tag („heute“). */
 export function activeDay(s: AppState): Day {
-  const day = alive(Object.values(s.days)).find((d) => d.status === 'active')
+  const day = dayWithStatus(s, 'active')
   if (!day) throw new Error('Kein aktiver Tag vorhanden.')
   return day
 }
 
 /** Der geplante Tag („morgen“). */
 export function plannedDay(s: AppState): Day {
-  const day = alive(Object.values(s.days)).find((d) => d.status === 'planned')
+  const day = dayWithStatus(s, 'planned')
   if (!day) throw new Error('Kein geplanter Tag vorhanden.')
   return day
 }
 
 /** Alle Hauptaufgaben eines Tages in ihrer Reihenfolge (erledigte eingeschlossen). */
 export function tasksOfDay(s: AppState, dayId: ID): Task[] {
-  return sortByPosition(alive(Object.values(s.tasks)).filter((t) => t.dayId === dayId))
+  return sortByPosition(groupBy(s.tasks, 'dayId').get(dayId) ?? [])
 }
 
 /** Alle Schritte einer Hauptaufgabe in ihrer Reihenfolge. */
 export function stepsOfTask(s: AppState, taskId: ID): Step[] {
-  return sortByPosition(alive(Object.values(s.steps)).filter((st) => st.taskId === taskId))
+  return sortByPosition(groupBy(s.steps, 'taskId').get(taskId) ?? [])
 }
 
 /** Alle Blöcke einer Hauptaufgabe (über alle Tage). */
 export function blocksOfTask(s: AppState, taskId: ID): Block[] {
-  return alive(Object.values(s.blocks)).filter((b) => b.taskId === taskId)
+  return [...(groupBy(s.blocks, 'taskId').get(taskId) ?? [])]
 }
 
 /**
@@ -169,7 +211,7 @@ export function runningTimerOfTask(s: AppState, taskId: ID, now: number): 'block
  */
 export function needsLongPause(s: AppState, task: Task): boolean {
   const dayId = activeDay(s).id
-  const blocksToday = alive(Object.values(s.blocks)).filter((b) => b.dayId === dayId)
+  const blocksToday = groupBy(s.blocks, 'dayId').get(dayId) ?? []
   return blocksToday.length > 0 && !blocksToday.some((b) => b.taskId === task.id)
 }
 
@@ -231,6 +273,23 @@ export function canUndoExtraBlock(s: AppState, task: Task, now: number): boolean
 }
 
 /**
+ * Lässt sich „Erledigt“ gerade noch zurücknehmen (Verklickt)? Ja für die zuletzt erledigte
+ * Hauptaufgabe von heute, höchstens UNDO_FINISH_MS lang und nur, solange seitdem kein Block
+ * gestartet wurde. Gibt die Aufgabe und das Ende des Zeitfensters zurück – sonst `null`.
+ */
+export function undoableFinish(s: AppState, now: number): { task: Task; until: number } | null {
+  if (s.timer.phase === 'block') return null
+  const done = tasksOfDay(s, activeDay(s).id).filter((t) => t.completedAt !== null)
+  const last = done.sort((a, b) => b.completedAt! - a.completedAt!)[0]
+  if (!last) return null
+  const finishedAt = last.completedAt!
+  const until = finishedAt + UNDO_FINISH_MS
+  if (now >= until) return null
+  if (alive(Object.values(s.blocks)).some((b) => b.startedAt > finishedAt)) return null
+  return { task: last, until }
+}
+
+/**
  * Soll in „Heute“ der leise Link „Neuen Tag beginnen“ erscheinen?
  * Ja, wenn am aktiven Tag schon gearbeitet wurde und seitdem ein neuer Kalendertag
  * begonnen hat (Wechsel um 4 Uhr). Gefragt wird nicht mehr – die App geht davon aus,
@@ -248,7 +307,7 @@ export function canStartNewDay(s: AppState, now: number): boolean {
  * (auch aus abgebrochenen und dem gerade laufenden Block, ohne Pausen) und erledigte Aufgaben.
  */
 export function dayYield(s: AppState, dayId: ID, now: number) {
-  const blocks = Object.values(s.blocks).filter((b) => b.deletedAt === null && b.dayId === dayId)
+  const blocks = groupBy(s.blocks, 'dayId').get(dayId) ?? []
   let workedSeconds = blocks.reduce((sum, b) => sum + b.workedSeconds, 0)
   if (s.timer.phase === 'block' && s.timer.dayId === dayId) {
     workedSeconds += blockWorkedMs(s.timer, now) / 1000
@@ -262,16 +321,23 @@ export function dayYield(s: AppState, dayId: ID, now: number) {
   }
 }
 
+const lifetimeCache = new WeakMap<object, { blocks: number; minutes: number }>()
+
 /**
  * Sammeln statt Serie: alle durchgehaltenen Blöcke seit Beginn und die Minuten darin.
  * Die Zahl fällt nie zurück – auch nicht nach einem Tag ohne Block.
  */
 export function lifetimeWork(s: AppState) {
-  const blocks = Object.values(s.blocks).filter((b) => b.deletedAt === null && b.status === 'completed')
-  return {
-    blocks: blocks.length,
-    minutes: Math.round(blocks.reduce((sum, b) => sum + b.workedSeconds, 0) / 60),
+  let result = lifetimeCache.get(s.blocks)
+  if (!result) {
+    const blocks = Object.values(s.blocks).filter((b) => b.deletedAt === null && b.status === 'completed')
+    result = {
+      blocks: blocks.length,
+      minutes: Math.round(blocks.reduce((sum, b) => sum + b.workedSeconds, 0) / 60),
+    }
+    lifetimeCache.set(s.blocks, result)
   }
+  return { ...result }
 }
 
 /** Der höchste erreichte Meilenstein (10, 25, 50 …) bei so vielen Blöcken – 0, wenn noch keiner. */

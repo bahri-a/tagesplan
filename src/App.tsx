@@ -10,6 +10,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   APP_NAME,
   BACKUP_REMINDER_MS,
+  SAVE_FAILED_TOAST_MS,
   MILESTONE_TOAST_MS,
   PARKED_TOAST_MS,
   PUBLIC_URL,
@@ -26,6 +27,7 @@ import { NotePad } from './components/NotePad'
 import { openNotePad } from './components/notePadEvents'
 import { MiniWindow } from './components/MiniWindow'
 import { QuickPark } from './components/QuickPark'
+import { SleepDialog } from './components/SleepDialog'
 import { Toast, type ToastAction } from './components/Toast'
 import { UpdateBanner } from './components/UpdateBanner'
 import { WakeAlert } from './components/WakeAlert'
@@ -52,7 +54,7 @@ import {
 } from './store/actions'
 import { backupAgeDays, lifetimeWork, reachedMilestone, shouldRemindBackup } from './store/selectors'
 import { shareLink } from './platform/share'
-import { getState, initStore, takeFirstStart, useAppState } from './store/store'
+import { getState, initStore, takeFirstStart, useAppState, useSaveFailedAt } from './store/store'
 import './components/components.css'
 
 type Screen = 'today' | 'plan' | 'settings'
@@ -116,6 +118,7 @@ function Shell() {
 
   useTimerEngine(useCallback((e: WakeEvent) => setWakeEvent(e), []))
   useBackupReminder((message, action) => setToast({ id: nextToastId++, message, duration: BACKUP_REMINDER_MS, action }))
+  useSaveFailedNotice((message, action) => setToast({ id: nextToastId++, message, duration: SAVE_FAILED_TOAST_MS, action }))
   useMilestones(lifetimeWork(state).blocks, (message, action, duration = MILESTONE_TOAST_MS) =>
     setToast({ id: nextToastId++, message, duration, action }),
   )
@@ -228,6 +231,9 @@ function Shell() {
           onDone={clearToast}
         />
       )}
+      {state.timer.phase === 'block' && state.timer.sleptAt !== undefined && (
+        <SleepDialog key={state.timer.sleptAt} sleptAt={state.timer.sleptAt} />
+      )}
       {wakeEvent && <WakeAlert event={wakeEvent} onClose={() => setWakeEvent(null)} />}
       {invite && (
         <InviteDialog
@@ -288,6 +294,28 @@ function useBackupReminder(show: (message: string, action: ToastAction) => void)
       },
     })
   }, [])
+}
+
+/**
+ * Hat das Speichern (auch nach einem zweiten Versuch) nicht geklappt, steht unten ein leiser
+ * Hinweis mit „Jetzt sichern“ – die Daten im Arbeitsspeicher sind noch da und landen in der Datei.
+ */
+function useSaveFailedNotice(show: (message: string, action: ToastAction) => void) {
+  const failedAt = useSaveFailedAt()
+  const showRef = useRef(show)
+  useEffect(() => {
+    showRef.current = show
+  })
+  useEffect(() => {
+    if (failedAt === null) return
+    showRef.current(T.settings.saveFailed, {
+      label: T.settings.backupReminderAction,
+      onClick: () => {
+        downloadBackup()
+        markBackupMade()
+      },
+    })
+  }, [failedAt])
 }
 
 /**

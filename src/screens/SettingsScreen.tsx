@@ -369,6 +369,8 @@ function DataSection({ hidden = false }: { hidden?: boolean }) {
 
   const confirmRestore = async () => {
     if (!pending) return
+    // Sicherheitsnetz: Erst den jetzigen Stand als Datei sichern – falls es die falsche Sicherung war.
+    downloadBackup('vor-wiederherstellen')
     await restoreBackup(pending)
     setPending(null)
     setMessage(T.settings.restoreDone)
@@ -423,7 +425,7 @@ function DataSection({ hidden = false }: { hidden?: boolean }) {
 
       {pending && (
         <Dialog title={T.settings.restoreConfirmTitle} onClose={() => setPending(null)}>
-          <p className="dialog-text">
+          <p className="dialog-text restore-text">
             {T.settings.restoreConfirm(new Date(pending.exportedAt).toLocaleString('de-DE'))}
           </p>
           <div className="dialog-actions">

@@ -9,6 +9,7 @@ import {
   BLOCK_EXTEND_MS,
   BLOCK_EXTEND_OFFER_MS,
   SETTINGS_LIMITS,
+  ULTRA_MAX_RING_MS,
 } from '../../config/defaults'
 import * as timer from '../../logic/timer'
 import type { ID } from '../../model/types'
@@ -17,8 +18,10 @@ import {
   blockMinutesFor,
   canUndoExtraBlock,
   extraBlockStartsNow,
+  isAskingDone,
   lastBlockEndedAt,
   shortBreakMinutesFor,
+  undoableFinish,
 } from '../selectors'
 import { commit, getState, type Changes } from '../store'
 import { blockRecord, clamp, completeBlockChanges, stopTimerChanges } from './helpers'
@@ -60,7 +63,36 @@ export function pauseCurrentBlock(): void {
 
 export function resumeCurrentBlock(): void {
   const t = getState().timer
-  if (t.phase === 'block') commit({ timer: timer.resumeBlock(t, Date.now()) })
+  if (t.phase !== 'block') return
+  // „Weiter“ während der Schlaf-Frage offen ist = die Schlafzeit war Pause.
+  const { sleptAt: _slept, ...rest } = timer.resumeBlock(t, Date.now())
+  commit({ timer: rest })
+}
+
+/**
+ * Mac: Der Mac hat mitten im Block geschlafen (seit `sleptAt`). Der Block wird auf diesen Zeitpunkt
+ * zurück pausiert, und die App fragt „Warst du die ganze Zeit dran?“ (siehe `answerSleep`).
+ */
+export function pauseForSleep(sleptAt: number): void {
+  const t = getState().timer
+  if (t.phase !== 'block' || t.pausedAt !== null || sleptAt >= timer.blockEndsAt(t)) return
+  commit({ timer: { ...t, pausedAt: sleptAt, sleptAt } })
+}
+
+/**
+ * Antwort auf „Warst du die ganze Zeit dran?“: Ja = die Schlafzeit zählt als Arbeit, der Block
+ * läuft weiter (oder ist gleich zu Ende). Nein = wie „Abbrechen“ – die Zeit bis zum Einschlafen
+ * wird gespeichert, der Block zählt nicht.
+ */
+export function answerSleep(worked: boolean): void {
+  const t = getState().timer
+  if (t.phase !== 'block' || t.sleptAt === undefined) return
+  if (!worked) {
+    abortCurrentBlock()
+    return
+  }
+  const { sleptAt: _slept, ...rest } = t
+  commit({ timer: { ...rest, pausedAt: null } })
 }
 
 /**
@@ -189,7 +221,9 @@ export function checkTimer(now = Date.now()): TimerEvent[] {
 
 /**
  * Ultra-Modus: Soll gerade gepiept werden? Ja, solange die fällige Pause nicht bestätigt ist,
- * noch läuft – und der Modus an ist. Nach dem letzten Block piept es nicht.
+ * noch läuft – und der Modus an ist. Höchstens ULTRA_MAX_RING_MS (20 Sekunden) nach dem
+ * Blockende, damit es nicht minutenlang klingelt, wenn du kurz weg bist. Nach dem letzten Block
+ * piept es nicht.
  */
 export function isUltraRinging(now = Date.now()): boolean {
   const s = getState()
@@ -201,7 +235,7 @@ export function isUltraRinging(now = Date.now()): boolean {
     s.settings.ultraMode &&
     s.settings.sounds &&
     now >= t.startedAt &&
-    now < t.startedAt + t.durationMs
+    now < t.startedAt + Math.min(t.durationMs, ULTRA_MAX_RING_MS)
   )
 }
 
@@ -255,6 +289,26 @@ export function endLongPause(taskId: ID): void {
 /** „Hauptaufgabe erledigt“ – beendet auch die kurze Pause. */
 export function finishTask(taskId: ID): void {
   setTaskCompleted(taskId, true)
+}
+
+/**
+ * „Doch nicht erledigt“ (verklickt): Die zuletzt erledigte Hauptaufgabe ist wieder offen und
+ * steht wieder in der Karte – mit derselben Frage wie vorher. Nur kurz danach (siehe `undoableFinish`).
+ */
+export function undoFinishTask(taskId: ID, now = Date.now()): void {
+  if (undoableFinish(getState(), now)?.task.id !== taskId) return
+  setTaskCompleted(taskId, false)
+}
+
+/**
+ * Lange Pause beenden und gleich die nächste Hauptaufgabe starten – ein Klick statt zwei.
+ * Steht bei ihr noch eine Frage an („Erledigt oder noch ein Block?“), endet nur die Pause.
+ */
+export function startAfterLongPause(taskId: ID): void {
+  endLongPause(taskId)
+  const s = getState()
+  const task = s.tasks[taskId]
+  if (task && !isAskingDone(s, task)) startBlock(taskId)
 }
 
 /**

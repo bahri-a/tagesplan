@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { IS_MOBILE } from './platform/device'
 // Handy-Aussehen (ohne Scrollen, Fokus-Ansicht) – nach allen anderen Stilen, damit es gewinnt.
 import './mobile.css'
@@ -14,6 +15,8 @@ if (__NATIVE_APP__) void import('./platform/nativeApp').then((m) => m.initNative
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </StrictMode>,
 )

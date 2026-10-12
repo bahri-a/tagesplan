@@ -490,7 +490,8 @@ select {
   padding: 0.25em 0.1em;
   border: 0;
   background: none;
-  color: var(--text-muted);
+  /* Etwas kräftiger als --text-muted, damit leise Links gut lesbar bleiben */
+  color: color-mix(in srgb, var(--text-muted) 80%, var(--text));
   font: inherit;
   font-size: var(--fs-sm);
   letter-spacing: 0.01em;

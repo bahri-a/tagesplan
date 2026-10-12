@@ -130,6 +130,11 @@
   color: var(--text-muted);
 }
 
+.restore-text,
+.sleep-text {
+  white-space: pre-line;
+}
+
 .dialog-actions {
   display: flex;
   flex-wrap: wrap;
@@ -507,4 +512,27 @@
   .notes-button .corner-icon {
     font-size: var(--fs-lg);
   }
+}
+
+/* Auffangnetz bei einem Fehler (ErrorBoundary.tsx) */
+.error-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 30rem;
+  margin: 4rem auto 0;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.error-card .message-text {
+  white-space: pre-line;
+}
+
+.error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
 }

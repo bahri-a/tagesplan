@@ -10,12 +10,15 @@
  * Gibt es die Funktion im Browser nicht, erscheint der Knopf nicht.
  */
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { MINI_WINDOW_SIZE } from '../config/defaults'
+import { MINI_WINDOW_SIZE, PARKED_TOAST_MS } from '../config/defaults'
 import { T } from '../config/texts'
 import { MiniToday } from '../screens/today/TodayScreen'
+import { useAppState } from '../store/store'
 import { WindowContext } from './hooks'
+import { QuickPark } from './QuickPark'
+import { Toast } from './Toast'
 import './mini.css'
 
 interface DocumentPictureInPicture {
@@ -25,6 +28,34 @@ interface DocumentPictureInPicture {
 
 function pipApi(): DocumentPictureInPicture | null {
   return (window as unknown as { documentPictureInPicture?: DocumentPictureInPicture }).documentPictureInPicture ?? null
+}
+
+/**
+ * Chrome-Fensterknöpfe für installierte Web-Apps („Additional Windowing Controls“): Damit lässt
+ * sich das große App-Fenster ins Dock legen und wieder holen. Gibt es sie nicht (oder sagt Chrome
+ * Nein), bleibt das große Fenster einfach offen.
+ */
+type WindowControls = { minimize?: () => Promise<void>; restore?: () => Promise<void> }
+
+function windowControls(): WindowControls {
+  return window as unknown as WindowControls
+}
+
+/** Das große Fenster ins Dock legen. Gibt zurück, ob es geklappt hat. */
+async function minimizeMainWindow(): Promise<boolean> {
+  try {
+    const { minimize } = windowControls()
+    if (typeof minimize !== 'function') return false
+    await minimize.call(window)
+    return true
+  } catch {
+    return false
+  }
+}
+
+function restoreMainWindow(): void {
+  const { restore } = windowControls()
+  if (typeof restore === 'function') restore.call(window).catch(() => {})
 }
 
 /** Alle Stile der App ins kleine Fenster übernehmen, damit es genauso aussieht. */
@@ -67,11 +98,31 @@ function mirrorRootAttributes(target: Document): () => void {
 export function MiniWindow() {
   const api = pipApi()
   const [pip, setPip] = useState<Window | null>(null)
+  // Wurde das große Fenster beim Öffnen ins Dock gelegt? Dann kommt es beim Schließen zurück.
+  const minimized = useRef(false)
+  // „Geparkt“ (Taste N) – als kurze Meldung im Mini-Fenster selbst.
+  const [parkedToast, setParkedToast] = useState(0)
+  const clearParked = useCallback(() => setParkedToast(0), [])
+  // Hat der Mac im Block geschlafen, steht die Frage im großen Fenster – also holen wir es zurück.
+  const timer = useAppState().timer
+  const sleptAt = timer.phase === 'block' ? timer.sleptAt : undefined
+
+  useEffect(() => {
+    if (sleptAt === undefined || !minimized.current) return
+    minimized.current = false
+    restoreMainWindow()
+  }, [sleptAt])
 
   useEffect(() => {
     if (!pip) return
     const stopMirror = mirrorRootAttributes(pip.document)
-    const closed = () => setPip(null)
+    const closed = () => {
+      setPip(null)
+      if (minimized.current) {
+        minimized.current = false
+        restoreMainWindow()
+      }
+    }
     pip.addEventListener('pagehide', closed)
     return () => {
       stopMirror()
@@ -83,6 +134,7 @@ export function MiniWindow() {
 
   const toggle = async () => {
     if (pip) {
+      minimized.current = false
       pip.close()
       setPip(null)
       return
@@ -93,6 +145,8 @@ export function MiniWindow() {
       copyStyles(win.document)
       win.document.body.classList.add('mini-body')
       setPip(win)
+      // Ein Klick genügt: Das große Fenster geht dabei gleich ins Dock.
+      minimized.current = await minimizeMainWindow()
     } catch {
       // Abgelehnt oder nicht möglich – dann bleibt einfach alles, wie es ist.
     }
@@ -118,6 +172,10 @@ export function MiniWindow() {
         createPortal(
           <WindowContext.Provider value={pip}>
             <MiniToday />
+            <QuickPark onParked={() => setParkedToast((n) => n + 1)} />
+            {parkedToast > 0 && (
+              <Toast key={parkedToast} message={T.park.done} duration={PARKED_TOAST_MS} onDone={clearParked} />
+            )}
           </WindowContext.Provider>,
           pip.document.body,
         )}

@@ -412,19 +412,8 @@ function RunningBlock({ timerState, now, step }: { timerState: timer.BlockTimer;
           paused={paused}
           warm={isInWarningTime(timerState, now)}
           action={
-            <div className="ring-actions">
-              {!paused && (
-                <button
-                  type="button"
-                  className="ring-pause"
-                  title={T.today.pause}
-                  aria-label={T.today.pause}
-                  onClick={pauseCurrentBlock}
-                >
-                  <PauseIcon />
-                </button>
-              )}
-              {/* Schmal: „+2 Min.“ sitzt neben dem Pausen-Symbol im Ring (siehe today.css). */}
+            <>
+              {/* Schmal: „+2 Min.“ oben im Ring – gespiegelt zum Pausen-Symbol unten (siehe today.css). */}
               {extendable && (
                 <button
                   type="button"
@@ -435,7 +424,20 @@ function RunningBlock({ timerState, now, step }: { timerState: timer.BlockTimer;
                   {T.today.extendBlock}
                 </button>
               )}
-            </div>
+              {!paused && (
+                <div className="ring-actions">
+                  <button
+                    type="button"
+                    className="ring-pause"
+                    title={T.today.pause}
+                    aria-label={T.today.pause}
+                    onClick={pauseCurrentBlock}
+                  >
+                    <PauseIcon />
+                  </button>
+                </div>
+              )}
+            </>
           }
         />
         {extendable && (

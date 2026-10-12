@@ -58,8 +58,21 @@ interface TagesplanDB extends DBSchema {
 
 let dbPromise: Promise<IDBPDatabase<TagesplanDB>> | null = null
 
+/** Verbindung vergessen – beim nächsten Zugriff wird sie neu geöffnet. */
+function forgetConnection() {
+  dbPromise = null
+}
+
 function db(): Promise<IDBPDatabase<TagesplanDB>> {
   dbPromise ??= openDB<TagesplanDB>(DB_NAME, DB_VERSION, {
+    // Eine neuere Version der App (z. B. in einem anderen Fenster) braucht die Datenbank:
+    // Verbindung freigeben, beim nächsten Speichern wird neu geöffnet.
+    blocking(_current, _blocked, event) {
+      ;(event.target as IDBDatabase).close()
+      forgetConnection()
+    },
+    // Safari/iPhone kappt die Verbindung manchmal im Hintergrund – dann neu öffnen.
+    terminated: forgetConnection,
     async upgrade(database, oldVersion, _newVersion, transaction) {
       // Version 1: alle Tabellen anlegen.
       if (oldVersion < 1) {
@@ -80,7 +93,22 @@ function db(): Promise<IDBPDatabase<TagesplanDB>> {
       // Spätere Versionen: hier `if (oldVersion < 3) { … }` ergänzen.
     },
   })
+  // Klappt schon das Öffnen nicht, beim nächsten Mal neu versuchen (statt für immer zu scheitern).
+  dbPromise.catch(forgetConnection)
   return dbPromise
+}
+
+/**
+ * Speichern mit einem zweiten Versuch: Scheitert der erste (Verbindung gekappt, Fenster lag lange
+ * im Hintergrund …), wird die Verbindung neu geöffnet und noch einmal gespeichert.
+ */
+async function withRetry(write: (database: IDBPDatabase<TagesplanDB>) => Promise<unknown>): Promise<void> {
+  try {
+    await write(await db())
+  } catch {
+    forgetConnection()
+    await write(await db())
+  }
 }
 
 /** Lädt alle Daten auf einmal (sie sind klein genug für den Arbeitsspeicher). */
@@ -102,20 +130,21 @@ export async function loadAll(): Promise<StoredData> {
 /** Speichert (neue oder geänderte) Einträge in einer Tabelle. */
 export async function putRecords<N extends TableName>(name: N, records: Tables[N]): Promise<void> {
   if (records.length === 0) return
-  const database = await db()
-  const tx = database.transaction(name, 'readwrite')
-  // `as never`: TypeScript kann die Zuordnung Tabelle ↔ Typ hier nicht selbst herleiten.
-  await Promise.all([...records.map((r) => tx.store.put(r as never)), tx.done])
+  await withRetry((database) => {
+    const tx = database.transaction(name, 'readwrite')
+    // `as never`: TypeScript kann die Zuordnung Tabelle ↔ Typ hier nicht selbst herleiten.
+    return Promise.all([...records.map((r) => tx.store.put(r as never)), tx.done])
+  })
 }
 
 /** Speichert den Timer-Zustand. */
 export async function putTimer(timer: TimerState): Promise<void> {
-  await (await db()).put('local', timer, 'timer')
+  await withRetry((database) => database.put('local', timer, 'timer'))
 }
 
 /** Speichert die gerätebezogenen Werte. */
 export async function putLocal(local: LocalState): Promise<void> {
-  await (await db()).put('local', local, 'local')
+  await withRetry((database) => database.put('local', local, 'local'))
 }
 
 /** Ersetzt ALLE Daten (für „Wiederherstellen“). */
