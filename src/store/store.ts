@@ -87,9 +87,28 @@ function mergeRecords<T extends { id: ID }>(current: Record<ID, T>, changed?: T[
   return next
 }
 
-/** Merkt sich fehlgeschlagene Speichervorgänge (sollte praktisch nie passieren). */
+/**
+ * Ist zuletzt etwas nicht gespeichert worden (auch nach dem zweiten Versuch)? Dann zeigt die App
+ * einen leisen Hinweis mit „Jetzt sichern“ (App.tsx) – damit nichts unbemerkt verloren geht.
+ */
+let saveFailedAt: number | null = null
+const saveErrorListeners = new Set<() => void>()
+
 function reportSaveError(error: unknown) {
   console.error('Speichern fehlgeschlagen:', error)
+  saveFailedAt = Date.now()
+  saveErrorListeners.forEach((l) => l())
+}
+
+/** React-Hook: Zeitpunkt des letzten fehlgeschlagenen Speicherns – oder `null`. */
+export function useSaveFailedAt(): number | null {
+  return useSyncExternalStore(
+    (listener) => {
+      saveErrorListeners.add(listener)
+      return () => saveErrorListeners.delete(listener)
+    },
+    () => saveFailedAt,
+  )
 }
 
 /**
@@ -225,4 +244,5 @@ export function resetStoreForTests(): void {
   firstStart = false
   listeners.clear()
   pendingSaves = Promise.resolve()
+  saveFailedAt = null
 }

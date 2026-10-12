@@ -85,6 +85,12 @@ export const BLOCK_WARNING_MS = 2 * 60_000
 /** Lautstärke der Vorwarnung (deutlich leiser als die anderen Töne). */
 export const WARNING_VOLUME = 0.08
 
+/**
+ * Mac: Lag zwischen zwei Takten eines laufenden Blocks mehr als so viel Zeit (Millisekunden),
+ * hat der Mac geschlafen (Deckel zu). Dann fragt die App, ob die Zeit als Arbeit zählt.
+ */
+export const SLEEP_GAP_MS = 3 * 60_000
+
 /** Ultra-Modus: so oft (Millisekunden) piept es, bis die Pause bestätigt ist. */
 export const ULTRA_REPEAT_MS = 2000
 
@@ -149,6 +155,9 @@ export const BACKUP_REMINDER_MS = 10_000
  * verklickt hast. Startet vorher ein neuer Block, ist der Weg zurück vorbei.
  */
 export const UNDO_FINISH_MS = 60_000
+
+/** So lange (ms) steht der Hinweis „Konnte gerade nicht speichern · Jetzt sichern“ unten. */
+export const SAVE_FAILED_TOAST_MS = 15_000
 
 /** Wie lange nach dem Löschen einer Aufgabe „Rückgängig“ angeboten wird (Millisekunden). */
 export const UNDO_DELETE_MS = 8000

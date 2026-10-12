@@ -373,6 +373,48 @@ describe('Lange Pause: ein Klick startet die nächste Aufgabe, „Doch nicht erl
   })
 })
 
+describe('Mac hat im Block geschlafen', () => {
+  it('pausiert ab dem Einschlafen; „Ja“ zählt die Zeit als Arbeit', () => {
+    const task = actions.addTask(today(), 'A')
+    actions.startBlock(task.id)
+    at(30 * MIN)
+    actions.pauseForSleep(START + 5 * MIN)
+    let t = getState().timer
+    expect(t.phase === 'block' && t.sleptAt).toBe(START + 5 * MIN)
+    // Solange die Frage offen ist, läuft nichts ab.
+    expect(actions.checkTimer(at(31 * MIN))).toEqual([])
+    actions.answerSleep(true)
+    t = getState().timer
+    expect(t.phase === 'block' && t.sleptAt).toBeUndefined()
+    // Die Schlafzeit zählt mit → der Block ist schon um.
+    expect(actions.checkTimer(at(31 * MIN))[0]?.type).toBe('blockEnd')
+    expect(sel.blocksDone(getState(), task.id)).toBe(1)
+  })
+
+  it('„Nein“ bricht ab: gespeichert wird nur die Zeit bis zum Einschlafen', () => {
+    const task = actions.addTask(today(), 'A')
+    actions.startBlock(task.id)
+    at(40 * MIN)
+    actions.pauseForSleep(START + 5 * MIN)
+    actions.answerSleep(false)
+    const s = getState()
+    expect(s.timer.phase).toBe('idle')
+    expect(sel.blocksDone(s, task.id)).toBe(0)
+    expect(sel.taskWork(s, task.id).minutes).toBe(5)
+  })
+
+  it('„Weiter“ statt Antwort: Die Schlafzeit war Pause, die Frage ist weg', () => {
+    const task = actions.addTask(today(), 'A')
+    actions.startBlock(task.id)
+    at(30 * MIN)
+    actions.pauseForSleep(START + 5 * MIN)
+    actions.resumeCurrentBlock()
+    const t = getState().timer
+    expect(t.phase === 'block' && t.sleptAt).toBeUndefined()
+    expect(t.phase === 'block' && timer.blockRemainingMs(t, at(30 * MIN))).toBe(BLOCK - 5 * MIN)
+  })
+})
+
 describe('Tag beenden', () => {
   it('„morgen“ wird „heute“, offene Aufgaben behalten ihren Platz', () => {
     // A und C erledigt, B (Platz 2) bleibt offen; für morgen ist X geplant.

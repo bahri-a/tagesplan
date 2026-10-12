@@ -106,6 +106,12 @@
   container-type: inline-size;
 }
 
+/* Pausen-Symbol wächst mit dem Ring – auf kleinen iPhones bleibt Abstand zur Zeit. */
+[data-device='mobile'] .ring-pause {
+  width: clamp(2.1rem, 15cqi, 2.75rem);
+  height: clamp(2.1rem, 15cqi, 2.75rem);
+}
+
 [data-device='mobile'] .ring-with-side {
   width: min(70vw, 32dvh, 280px);
 }
@@ -488,7 +494,24 @@
 /* „Doch nicht erledigt“ (kurz nach „Erledigt“): Am Handy ist oben links neben dem Symbol kein
    Platz – deshalb als eigene kleine Zeile über dem Symbol. */
 [data-device='mobile'] .is-message > .back-to-ask {
-  position: static;
+  position: relative;
   align-self: flex-start;
   margin: -0.6rem 0 -0.3rem -0.4rem;
+}
+
+/* Tippflächen: Kleine Knöpfe und leise Links bekommen am Handy unsichtbar mindestens 44 Punkt
+   Höhe (wie Apple empfiehlt) – das Aussehen bleibt gleich. :where() = ohne Gewicht, damit
+   Knöpfe mit eigener Position (z. B. „‹ Zurück“ oben links) ihre Position behalten. */
+:where([data-device='mobile']) :where(.btn-small, .link-quiet, .noise-toggle) {
+  position: relative;
+}
+
+[data-device='mobile'] :is(.btn-small, .link-quiet, .noise-toggle)::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -4px;
+  left: -4px;
+  height: max(100%, 44px);
+  transform: translateY(-50%);
 }

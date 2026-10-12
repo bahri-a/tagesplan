@@ -224,6 +224,8 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
 - Nach „Erledigt“ kommt die **Lange Pause** (nicht getimt). Darunter steht schon, was als Nächstes
   kommt – **Nächste Hauptaufgabe starten** beendet die Pause und startet gleich den ersten Block.
   Verklickt? Eine Minute lang steht oben links **‹ Doch nicht erledigt**.
+- Mac im Block zugeklappt und später wieder aufgeklappt (mehr als 3 Minuten weg)? Der Block steht
+  pausiert, und die App fragt: **Warst du die ganze Zeit dran?** Ja = die Zeit zählt, Nein = Abbrechen.
 - An einem früheren Tag angefangen, aber noch nicht fertig? Dann fragt die App:
   **Weitermachen** oder **Abschließen**.
 - Im laufenden Block steht direkt unter dem Ring **Zum Einstieg: …** – dein nächster erster Schritt zum Abhaken.
@@ -320,7 +322,10 @@ Website-Daten, sind sie weg. Sichere deshalb ab und zu:
   `tagesplan-sicherung-2026-09-28.json` landet in deinem Ordner **Downloads**.
   Tipp: Lege sie zusätzlich in iCloud Drive ab.
 - **Wiederherstellen:** Einstellungen → **Wiederherstellen** → Datei wählen → bestätigen.
-  Das ersetzt alle aktuellen Daten durch die Sicherung.
+  Das ersetzt alle aktuellen Daten durch die Sicherung. Vorher lädt die App deinen jetzigen
+  Stand als `tagesplan-vor-wiederherstellen-….json` herunter – falls du die falsche Datei erwischst.
+- Klappt das Speichern einmal nicht, versucht die App es sofort noch einmal. Geht es weiter
+  nicht, erscheint ein Hinweis mit **Jetzt sichern**.
 - In der Sicherung stecken auch deine Einstellungen zu den **Vorschlägen** (gekürzte Titel,
   ausgeblendete, aufgeschobene, „max. N“). Die Daten der App Projekte bleiben unberührt.
 - Unter den Knöpfen steht **Zuletzt gesichert: vor N Tagen**. Hast du eine Woche nicht gesichert,

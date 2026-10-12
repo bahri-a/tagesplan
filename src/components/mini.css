@@ -93,6 +93,17 @@
   transform: none;
 }
 
+/* „+2 Min.“ steht hier statt „noch“ unter der Zeit – alles mittig untereinander. */
+.mini-today .ring-inner-extend {
+  position: static;
+  transform: none;
+  margin-top: 0.3rem;
+}
+
+.mini-today .timer-ring-center:has(.ring-inner-extend) .timer-ring-caption {
+  display: none;
+}
+
 .mini-today .ring-pause {
   width: 2.25rem;
   height: 2.25rem;

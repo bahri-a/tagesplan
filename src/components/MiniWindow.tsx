@@ -15,6 +15,7 @@ import { createPortal } from 'react-dom'
 import { MINI_WINDOW_SIZE, PARKED_TOAST_MS } from '../config/defaults'
 import { T } from '../config/texts'
 import { MiniToday } from '../screens/today/TodayScreen'
+import { useAppState } from '../store/store'
 import { WindowContext } from './hooks'
 import { QuickPark } from './QuickPark'
 import { Toast } from './Toast'
@@ -102,6 +103,15 @@ export function MiniWindow() {
   // „Geparkt“ (Taste N) – als kurze Meldung im Mini-Fenster selbst.
   const [parkedToast, setParkedToast] = useState(0)
   const clearParked = useCallback(() => setParkedToast(0), [])
+  // Hat der Mac im Block geschlafen, steht die Frage im großen Fenster – also holen wir es zurück.
+  const timer = useAppState().timer
+  const sleptAt = timer.phase === 'block' ? timer.sleptAt : undefined
+
+  useEffect(() => {
+    if (sleptAt === undefined || !minimized.current) return
+    minimized.current = false
+    restoreMainWindow()
+  }, [sleptAt])
 
   useEffect(() => {
     if (!pip) return

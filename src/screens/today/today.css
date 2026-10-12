@@ -189,7 +189,8 @@
   position: absolute;
   right: 1.25rem;
   bottom: 0.95rem;
-  opacity: 0.55;
+  /* Leise, aber auch bei Sonne oder müden Augen noch gut lesbar */
+  opacity: 0.85;
   animation: skip-break-in 1.2s ease 0.6s backwards;
 }
 
@@ -380,7 +381,7 @@
   font-size: var(--fs-base);
 }
 
-/* Unten im Ring, deutlich unter der Zeit: Pausen-Symbol (schmal auch „+2 Min.“).
+/* Unten im Ring, deutlich unter der Zeit: das Pausen-Symbol.
    Absolut gesetzt, damit die Zeit genau in der Mitte bleibt. */
 .ring-actions {
   position: absolute;
@@ -394,6 +395,10 @@
 
 .ring-inner-extend {
   display: none;
+  position: absolute;
+  top: 13%;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 /* Pausieren: gut sichtbares, ruhiges Symbol in der Akzentfarbe */
@@ -948,7 +953,7 @@
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 .day-peek-close:hover,
@@ -1047,7 +1052,7 @@
     padding: 2rem 1.25rem 1.75rem;
   }
 
-  /* Schmal ist neben dem Ring kein Platz: „+2 Min.“ sitzt dann im Ring neben dem Pausen-Symbol. */
+  /* Schmal ist neben dem Ring kein Platz: „+2 Min.“ sitzt dann oben im Ring, gespiegelt zum Pausen-Symbol unten. */
   .ring-side-action {
     display: none;
   }

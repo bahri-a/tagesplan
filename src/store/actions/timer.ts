@@ -63,7 +63,36 @@ export function pauseCurrentBlock(): void {
 
 export function resumeCurrentBlock(): void {
   const t = getState().timer
-  if (t.phase === 'block') commit({ timer: timer.resumeBlock(t, Date.now()) })
+  if (t.phase !== 'block') return
+  // „Weiter“ während der Schlaf-Frage offen ist = die Schlafzeit war Pause.
+  const { sleptAt: _slept, ...rest } = timer.resumeBlock(t, Date.now())
+  commit({ timer: rest })
+}
+
+/**
+ * Mac: Der Mac hat mitten im Block geschlafen (seit `sleptAt`). Der Block wird auf diesen Zeitpunkt
+ * zurück pausiert, und die App fragt „Warst du die ganze Zeit dran?“ (siehe `answerSleep`).
+ */
+export function pauseForSleep(sleptAt: number): void {
+  const t = getState().timer
+  if (t.phase !== 'block' || t.pausedAt !== null || sleptAt >= timer.blockEndsAt(t)) return
+  commit({ timer: { ...t, pausedAt: sleptAt, sleptAt } })
+}
+
+/**
+ * Antwort auf „Warst du die ganze Zeit dran?“: Ja = die Schlafzeit zählt als Arbeit, der Block
+ * läuft weiter (oder ist gleich zu Ende). Nein = wie „Abbrechen“ – die Zeit bis zum Einschlafen
+ * wird gespeichert, der Block zählt nicht.
+ */
+export function answerSleep(worked: boolean): void {
+  const t = getState().timer
+  if (t.phase !== 'block' || t.sleptAt === undefined) return
+  if (!worked) {
+    abortCurrentBlock()
+    return
+  }
+  const { sleptAt: _slept, ...rest } = t
+  commit({ timer: { ...rest, pausedAt: null } })
 }
 
 /**

@@ -185,6 +185,11 @@ export type TimerState =
       pausedMs: number
       /** Kam die sanfte Vorwarnung kurz vor dem Ende schon? (Fehlt in älteren Daten = nein.) */
       warned?: boolean
+      /**
+       * Der Mac hat mitten im Block geschlafen (Deckel zu): seit wann. Der Block steht so lange
+       * pausiert, bis die Frage „Warst du die ganze Zeit dran?“ beantwortet ist. Sonst fehlt das Feld.
+       */
+      sleptAt?: number
     }
   | {
       phase: 'break'

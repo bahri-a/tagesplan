@@ -58,9 +58,9 @@ export function createBackup(state: AppState = getState(), storage: Storage = de
  * Lädt die Sicherung als Datei herunter (landet im Ordner „Downloads“).
  * In der iPhone-App öffnet sich stattdessen das Teilen-Menü („In Dateien sichern“, AirDrop …).
  */
-export function downloadBackup(): void {
+export function downloadBackup(label = 'sicherung'): void {
   const json = JSON.stringify(createBackup(), null, 2)
-  const fileName = `${APP_NAME.toLowerCase()}-sicherung-${fileDate(Date.now())}.json`
+  const fileName = `${APP_NAME.toLowerCase()}-${label}-${fileDate(Date.now())}.json`
   if (__NATIVE_APP__) {
     void import('../platform/nativeShare').then((m) => m.shareTextFile(fileName, json))
     return
