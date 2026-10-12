@@ -40,6 +40,20 @@ export function notificationPermission(): PermissionState {
   return 'Notification' in window ? Notification.permission : 'unsupported'
 }
 
+export const NOTIFY_PRIMER_EVENT = 'tagesplan:mitteilungen'
+
+/**
+ * Beim Start eines Blocks: Ist noch nicht entschieden, ob Mitteilungen erlaubt sind, erklärt erst
+ * eine kleine Karte, wozu sie gut sind (components/NotifyPrimer.tsx). Erst ihr „Weiter“ löst die
+ * Frage von Chrome bzw. iOS aus – die kommt nur ein einziges Mal, ein „Nein“ wäre endgültig.
+ * Gibt zurück, ob die Karte kommt (dann wartet das Vollbild am Handy bis „Weiter“).
+ */
+export function primeNotifications(): boolean {
+  if (notificationPermission() !== 'default') return false
+  window.dispatchEvent(new Event(NOTIFY_PRIMER_EVENT))
+  return true
+}
+
 /** Fragt Chrome (bzw. das iPhone) einmalig um Erlaubnis (nur, solange noch nicht entschieden). */
 export async function requestNotificationPermission(): Promise<PermissionState> {
   if (__NATIVE_APP__) {

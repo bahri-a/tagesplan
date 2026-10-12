@@ -145,3 +145,34 @@ export function LinkIcon() {
     </svg>
   )
 }
+
+/** Ring mit Punkt (wie das App-Symbol) – Reiter „Heute“ am Handy. */
+export function TodayIcon() {
+  return (
+    <svg className="glyph" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M8 2.5a5.5 5.5 0 1 1-4.76 2.75" />
+      <circle cx="8" cy="8" r="1.1" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+/** Liste – Reiter „Planer“ am Handy. */
+export function PlanIcon() {
+  return (
+    <svg className="glyph" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M5.75 4.5h7M5.75 8h7M5.75 11.5h7" />
+      <path d="M3 4.5h.01M3 8h.01M3 11.5h.01" strokeWidth="2" />
+    </svg>
+  )
+}
+
+/** Zwei Schieberegler – Reiter „Einstellungen“ am Handy. */
+export function SettingsIcon() {
+  return (
+    <svg className="glyph" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M2.5 5h11M2.5 11h11" />
+      <circle cx="6" cy="5" r="1.6" fill="var(--nav-icon-fill, var(--bg))" />
+      <circle cx="10.5" cy="11" r="1.6" fill="var(--nav-icon-fill, var(--bg))" />
+    </svg>
+  )
+}

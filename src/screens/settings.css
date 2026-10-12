@@ -134,7 +134,9 @@
   font-weight: 500;
 }
 
-.segmented-item[aria-checked='true'] {
+/* Gewählt: Auswahl (aria-checked) und Reiter (aria-selected, z. B. Heute | Morgen am Handy) gleich. */
+.segmented-item[aria-checked='true'],
+.segmented-item[aria-selected='true'] {
   background: var(--surface);
   color: var(--text);
   box-shadow: var(--shadow);
@@ -292,4 +294,16 @@
 /* Gleich breiter Platz für „Min.“ (auch leer), damit alle Zahlenfelder bündig stehen */
 .settings .stepper-unit {
   min-width: 2.1em;
+}
+
+/* Mac: leiser Hinweis auf die Tastenkürzel, mittig über der Versionszeile */
+.settings-shortcuts {
+  align-self: center;
+}
+
+/* iPhone-App: Hinweis auf die tägliche Sicherung, eigene Zeile unter „Zuletzt gesichert“ */
+.settings-auto-backup {
+  display: block;
+  margin-top: 0.35rem;
+  white-space: pre-line;
 }

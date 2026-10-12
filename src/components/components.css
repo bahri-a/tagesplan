@@ -49,6 +49,11 @@
     color 0.2s;
 }
 
+/* Symbole nur am Handy (Reiter unten, mobile.css) */
+.nav-icon {
+  display: none;
+}
+
 .nav-item:hover {
   color: var(--text);
 }
@@ -535,4 +540,45 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.5rem;
+}
+
+/* Tastenkürzel-Tafel: links die Tasten (gleich breite Spalte), rechts was sie tun. */
+.shortcuts {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+}
+
+.shortcut-row {
+  display: grid;
+  grid-template-columns: 8.5rem 1fr;
+  gap: 0.9rem;
+  align-items: center;
+}
+
+.shortcut-row dt {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.shortcut-row dd {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.shortcut-row kbd {
+  min-width: 1.9rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-xs);
+  background: var(--surface-2);
+  color: var(--text);
+  font: 600 var(--fs-sm) / 1.4 var(--font);
+  text-align: center;
+}
+
+/* „Eine Sache vorab“: Zeilenumbrüche aus dem Text übernehmen */
+.notify-primer-text {
+  white-space: pre-line;
 }

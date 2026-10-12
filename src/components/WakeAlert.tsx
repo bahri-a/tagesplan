@@ -9,7 +9,7 @@ import { useEffect } from 'react'
 import { T } from '../config/texts'
 import { playBlockEnd, playBreakEnd } from '../signals/sounds'
 import { Dialog } from './Dialog'
-import type { WakeEvent } from './hooks'
+import type { WakeEvent } from '../signals/timerEngine'
 
 export function WakeAlert({ event, onClose }: { event: WakeEvent; onClose: () => void }) {
   useEffect(() => {

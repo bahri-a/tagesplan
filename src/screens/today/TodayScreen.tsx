@@ -30,7 +30,7 @@ import { formatDayName } from '../../logic/time'
 import { cleanStartCue, pick } from '../../logic/variety'
 import { IS_MOBILE, SHOWS_START_CUE } from '../../platform/device'
 import { haptic, requestFocusFullscreen } from '../../platform/focusMode'
-import { requestNotificationPermission } from '../../signals/notifications'
+import { primeNotifications } from '../../signals/notifications'
 import type { Task, TimerState } from '../../model/types'
 import {
   activeDay,
@@ -53,7 +53,6 @@ import { DayBar } from './DayBar'
 import { CheckIcon, SunriseIcon } from '../../components/icons'
 import { forgetFinished, useCountUp, wasJustFinished } from './celebrate'
 import { useSpaceKey } from './useSpaceKey'
-import './today.css'
 
 interface Props {
   /** Zum Planer – mit `tomorrow` gleich auf „Morgen“ (am Handy). */
@@ -319,8 +318,8 @@ function LongPauseCard({ task }: { task: Task }) {
   const cue = SHOWS_START_CUE && task.startCue && blocksDone(state, task.id) === 0 ? cleanStartCue(task.startCue) : ''
   const start = () => {
     if (!asking) {
-      void requestNotificationPermission()
-      requestFocusFullscreen()
+      // Erst die Erklärung zu Mitteilungen – dann kein Vollbild, es läge sonst darüber.
+      if (!primeNotifications()) requestFocusFullscreen()
       haptic('tap')
     }
     startAfterLongPause(task.id)

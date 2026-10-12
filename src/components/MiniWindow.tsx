@@ -19,7 +19,6 @@ import { useAppState } from '../store/store'
 import { WindowContext } from './hooks'
 import { QuickPark } from './QuickPark'
 import { Toast } from './Toast'
-import './mini.css'
 
 interface DocumentPictureInPicture {
   requestWindow(options: { width: number; height: number }): Promise<Window>

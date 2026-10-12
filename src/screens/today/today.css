@@ -287,13 +287,14 @@
 .timer-ring-progress {
   fill: none;
   stroke-linecap: round;
-  transition: stroke-dashoffset 0.3s linear;
+  /* Gleitet genau eine Sekunde – so lange, bis die Uhr das nächste Mal tickt (useNow). */
+  transition: stroke-dashoffset 1s linear;
 }
 
 .timer-ring-dot {
   transform-box: view-box;
   transform-origin: 50% 50%;
-  transition: transform 0.3s linear;
+  transition: transform 1s linear;
 }
 
 .timer-ring-halo {
@@ -1349,4 +1350,11 @@
 .up-next-label {
   color: var(--text-muted);
   font-size: var(--fs-base);
+}
+
+/* Handy: Mitteilungen abgelehnt – leiser Hinweis unter dem Startknopf */
+.notify-off {
+  margin-top: 0.35rem;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
 }

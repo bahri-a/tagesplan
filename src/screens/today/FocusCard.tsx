@@ -18,9 +18,9 @@ import { formatClock, inviteUrl } from '../../logic/invite'
 import { blockMarks, type Mark } from '../../logic/progress'
 import * as timer from '../../logic/timer'
 import { cleanStartCue, pick } from '../../logic/variety'
-import { SHOWS_START_CUE } from '../../platform/device'
+import { IS_MOBILE, SHOWS_START_CUE } from '../../platform/device'
 import type { ID, Task } from '../../model/types'
-import { requestNotificationPermission } from '../../signals/notifications'
+import { notificationPermission, primeNotifications } from '../../signals/notifications'
 import { haptic, requestFocusFullscreen } from '../../platform/focusMode'
 import {
   abortCurrentBlock,
@@ -80,8 +80,8 @@ export function FocusCard({ task }: { task: Task }) {
       requestFocusFullscreen()
       resumeCurrentBlock()
     } else if (view.action === 'start' || view.action === 'askResume') {
-      void requestNotificationPermission()
-      requestFocusFullscreen()
+      // Erst die Erklärung zu Mitteilungen – dann kein Vollbild, es läge sonst darüber.
+      if (!primeNotifications()) requestFocusFullscreen()
       haptic('tap')
       startBlock(task.id)
     }
@@ -153,8 +153,8 @@ export function FocusCard({ task }: { task: Task }) {
                 className="btn btn-big"
                 onClick={() => {
                   if (view.extraStartsNow) {
-                    void requestNotificationPermission()
-                    requestFocusFullscreen()
+                    // Erst die Erklärung zu Mitteilungen – dann kein Vollbild, es läge sonst darüber.
+                    if (!primeNotifications()) requestFocusFullscreen()
                     haptic('tap')
                   }
                   addExtraBlock(task.id)
@@ -337,6 +337,8 @@ function StartArea({ task, firstBlock, breakOver }: { task: Task; firstBlock: bo
       {firstBlock && cue && <p className="start-cue">{T.today.startCue(cue)}</p>}
       <StartButton task={task} />
       {firstBlock && <p className="start-nudge">{pick(T.today.startNudges, task.createdAt)}</p>}
+      {/* Handy: Mitteilungen abgelehnt → bei gesperrtem Display kommt kein Signal. Leise sagen. */}
+      {IS_MOBILE && notificationPermission() === 'denied' && <p className="notify-off">{T.notifyPrimer.off}</p>}
       {/* Block schon ohne App gemacht → gleich als erledigt eintragen (nicht mitten in der kurzen Pause). */}
       {!inShortBreak && (
         <button
@@ -378,10 +380,9 @@ function StartButton({ task, label: ownLabel }: { task: Task; label?: string }) 
       className="btn btn-primary btn-big"
       title={T.today.spaceHint}
       onClick={() => {
-        // Beim ersten Mal fragt Chrome, ob Benachrichtigungen erlaubt sind.
-        void requestNotificationPermission()
-        // Handy: Vollbild für die Fokus-Ansicht (geht nur direkt im Tippen) und ein leichtes Antippen.
-        requestFocusFullscreen()
+        // Beim ersten Mal: erst erklären, wozu Mitteilungen gut sind, dann fragt Chrome bzw. iOS.
+        // Handy: sonst Vollbild für die Fokus-Ansicht (geht nur direkt im Tippen) und ein leichtes Antippen.
+        if (!primeNotifications()) requestFocusFullscreen()
         haptic('tap')
         startBlock(task.id)
       }}

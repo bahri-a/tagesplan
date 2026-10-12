@@ -15,7 +15,7 @@
  * unten „Zuletzt verwendet“ als eine Zeile. Vorschläge und Aufgeschoben gibt es nur am Mac.
  */
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import {
   closestCenter,
   DndContext,
@@ -46,9 +46,13 @@ import { activeDay, hasRecentTasks, plannedDay, tasksOfDay } from '../../store/s
 import { getState, useAppState } from '../../store/store'
 import { IS_MOBILE } from '../../platform/device'
 import { RecentTasks } from './RecentTasks'
-import { ProjectSuggestions } from './Suggestions'
 import { type PlanDays } from './shared'
-import './plan.css'
+import { lazyScreen } from '../../components/lazyScreen'
+
+// Vorschläge aus „Projekte“ gibt es nur am Mac – am Handy wird dieser Teil gar nicht geladen.
+// Am Mac kommen sie gleich mit dem Planer, damit sie beim Öffnen nicht nachträglich auftauchen.
+const ProjectSuggestions = lazyScreen(() => import('./Suggestions'), (m) => m.ProjectSuggestions)
+if (!IS_MOBILE) void ProjectSuggestions.preload().catch(() => undefined)
 
 /** Kennung der Spalte als Ablagefläche (für leere Spalten und „ans Ende“). */
 const COLUMN_PREFIX = 'column:'
@@ -217,14 +221,16 @@ export function PlanScreen({ startOnTomorrow = false, onTaskDeleted, onNotice }:
         onNotice={onNotice}
       />
       {!IS_MOBILE && (
-        <ProjectSuggestions
-          days={days}
-          targetIndex={targetIndex}
-          onTargetChange={setTargetIndex}
-          // Ohne „Zuletzt verwendet“ zeigen die Vorschläge den Umschalter selbst.
-          showTarget={!hasRecentTasks(state, days.map((d) => d.day.id))}
-          onNotice={onNotice}
-        />
+        <Suspense fallback={null}>
+          <ProjectSuggestions
+            days={days}
+            targetIndex={targetIndex}
+            onTargetChange={setTargetIndex}
+            // Ohne „Zuletzt verwendet“ zeigen die Vorschläge den Umschalter selbst.
+            showTarget={!hasRecentTasks(state, days.map((d) => d.day.id))}
+            onNotice={onNotice}
+          />
+        </Suspense>
       )}
 
     </div>

@@ -9,7 +9,7 @@ import { useState } from 'react'
 import { T } from '../config/texts'
 import { formatClock, type Invite } from '../logic/invite'
 import { haptic, requestFocusFullscreen } from '../platform/focusMode'
-import { requestNotificationPermission } from '../signals/notifications'
+import { primeNotifications } from '../signals/notifications'
 import { addTask, startBlock } from '../store/actions'
 import { activeDay, currentTask } from '../store/selectors'
 import { getState, useAppState } from '../store/store'
@@ -46,8 +46,8 @@ export function InviteDialog({ invite, onClose, onJoined }: Props) {
     const taskId = task?.id ?? (title.trim() ? addTask(activeDay(getState()).id, title).id : null)
     if (taskId === null) return
     // Wie beim Startknopf: Benachrichtigungen erfragen, am Handy Vollbild und ein leichtes Antippen.
-    void requestNotificationPermission()
-    requestFocusFullscreen()
+    // Erst die Erklärung zu Mitteilungen – dann kein Vollbild, es läge sonst darüber.
+    if (!primeNotifications()) requestFocusFullscreen()
     haptic('tap')
     startBlock(taskId, { endsAt: invite.endsAt })
     onJoined()
