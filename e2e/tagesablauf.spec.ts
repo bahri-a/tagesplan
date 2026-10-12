@@ -184,8 +184,14 @@ test('Lange Pause: ein Klick startet die nächste Aufgabe, „Doch nicht erledig
 test('Mitteilungen: erst die Erklärung, dann die Frage von Chrome – der Block läuft', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
-  // Wie beim ersten Öffnen: noch nicht erlaubt und noch nicht abgelehnt.
-  await page.context().clearPermissions()
+  // Wie beim ersten Öffnen: noch nicht erlaubt und noch nicht abgelehnt. (Ohne Bildschirm meldet
+  // Chromium sonst je nach Version gleich „abgelehnt“ – deshalb hier fest vorgegeben.)
+  await page.addInitScript(() => {
+    const api = (globalThis as unknown as { Notification: { requestPermission: () => Promise<string> } }).Notification
+    let permission = 'default'
+    Object.defineProperty(api, 'permission', { get: () => permission })
+    api.requestPermission = async () => (permission = 'granted')
+  })
   await page.clock.install({ time: new Date('2026-10-06T09:00:00') })
   await page.goto('/')
 
