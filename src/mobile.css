@@ -33,17 +33,72 @@
   height: 100dvh;
 }
 
+/* Reiter UNTEN als schmale Leiste (wie in iPhone-Apps üblich – der Daumen kommt gut hin).
+   Im DOM steht die Leiste weiter oben; `order` stellt sie hinter den Inhalt. */
 [data-device='mobile'] .topbar {
   position: relative;
+  order: 1;
   flex: none;
-  padding: calc(0.6rem + var(--safe-top)) 1rem 0.35rem;
+  padding: 0.3rem calc(0.5rem + var(--safe-right)) calc(0.3rem + var(--safe-bottom)) calc(0.5rem + var(--safe-left));
+  border-top: 1px solid var(--panel-edge);
+  background: var(--panel-sheen), var(--panel-bg);
+  -webkit-backdrop-filter: var(--panel-filter);
+  backdrop-filter: var(--panel-filter);
   transition:
     opacity 0.6s,
     visibility 0.6s;
 }
 
+/* Oben braucht es keine Fläche hinter Uhrzeit und Akku mehr – der Inhalt hält selbst Abstand. */
+[data-device='mobile'] .topbar::before {
+  display: none;
+}
+
+/* Vier gleich breite Reiter: Symbol über dem Wort. */
+[data-device='mobile'] .nav {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  width: 100%;
+  max-width: 540px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
 [data-device='mobile'] .nav-item {
-  padding: 0.45em 0.95em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  min-height: 44px;
+  padding: 0.3rem 0 0.15rem;
+  border-radius: var(--radius-small);
+  font-size: var(--fs-xs);
+}
+
+[data-device='mobile'] .nav-item[aria-current='page'] {
+  background: none;
+  font-weight: 600;
+}
+
+[data-device='mobile'] .nav-icon {
+  display: grid;
+  place-items: center;
+  font-size: 1.35rem;
+  /* Füllung der Regler-Knöpfe = Leistenfarbe */
+  --nav-icon-fill: var(--surface);
+}
+
+/* Die Restzeit-Anzeige (auf Planer/Einstellungen) schwebt mittig über der Leiste. */
+[data-device='mobile'] .timer-pill {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 /* Der Inhalt füllt den Rest. Passt einmal etwas nicht (sehr kleines Handy), scrollt nur er. */
@@ -54,7 +109,7 @@
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 0.6rem calc(1rem + var(--safe-right)) calc(0.75rem + var(--safe-bottom)) calc(1rem + var(--safe-left));
+  padding: calc(0.75rem + var(--safe-top)) calc(1rem + var(--safe-right)) 0.75rem calc(1rem + var(--safe-left));
 }
 
 [data-device='mobile'] .main > * {
@@ -442,13 +497,9 @@
 }
 
 /* Notizen als Stift am Ende der Reiter: gleich hoch, nur das Symbol. */
-[data-device='mobile'] .nav-notes {
-  padding-inline: 0.85em;
-  color: var(--accent);
-}
-
 [data-device='mobile'].notes-open .nav-notes {
-  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
 }
 
 /* Pillen und „Zuletzt verwendet“: am Rand weich ausblenden, wenn es seitlich weitergeht. */
@@ -500,12 +551,9 @@
 }
 
 /* Tippflächen: Kleine Knöpfe und leise Links bekommen am Handy unsichtbar mindestens 44 Punkt
-   Höhe (wie Apple empfiehlt) – das Aussehen bleibt gleich. :where() = ohne Gewicht, damit
-   Knöpfe mit eigener Position (z. B. „‹ Zurück“ oben links) ihre Position behalten. */
-:where([data-device='mobile']) :where(.btn-small, .link-quiet, .noise-toggle) {
-  position: relative;
-}
-
+   Höhe (wie Apple empfiehlt) – das Aussehen bleibt gleich. Das nötige `position: relative`
+   steht in styles.css (Ebene „touch“, unter allem), damit Knöpfe mit eigener Position
+   (z. B. „‹ Zurück“ oben links, „+2 Min.“ im Ring) ihre Position behalten. */
 [data-device='mobile'] :is(.btn-small, .link-quiet, .noise-toggle)::before {
   content: '';
   position: absolute;
@@ -514,4 +562,27 @@
   left: -4px;
   height: max(100%, 44px);
   transform: translateY(-50%);
+}
+
+/* Meldungen unten und die Übersicht einer Aufgabe: über der Reiter-Leiste, nicht darauf. */
+[data-device='mobile'] .toast {
+  bottom: calc(4.4rem + var(--safe-bottom));
+}
+
+[data-device='mobile'] .day-peek {
+  bottom: calc(4.4rem + var(--safe-bottom));
+}
+
+/* Niedriges Fenster (z. B. Safari mit Adressleiste): der Hinweis unter dem Block rückt näher,
+   damit „Schon ohne App erledigt?“ über der Reiter-Leiste bleibt. */
+@media (max-height: 720px) {
+  [data-device='mobile'] .focus-card .gentle-line.link-quiet {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+  }
+
+  [data-device='mobile'] .focus-card {
+    gap: 0.75rem;
+    padding-top: 1.1rem;
+  }
 }

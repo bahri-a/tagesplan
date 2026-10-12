@@ -43,7 +43,7 @@
   --accent-line: color-mix(in srgb, var(--accent) 35%, transparent);
   --accent-shadow: rgb(59 118 103 / 0.55);
   --on-accent: #ffffff;
-  --break: #4f7ca6;
+  --break: #44709a;
   --break-soft: #e3ebf4;
   --hint-bg: #f4efe2;
   --hint-text: #6d5b2d;
@@ -217,7 +217,7 @@
   --accent-soft: light-dark(#deeaf3, #1a2835);
   --accent-shadow: light-dark(rgb(47 106 143 / 0.55), rgb(0 0 0 / 0.55));
   --on-accent: light-dark(#ffffff, #0b1a26);
-  --break: light-dark(#6f68ad, #b1a9e3);
+  --break: light-dark(#6b64a7, #b1a9e3);
   --break-soft: light-dark(#e9e7f5, #232236);
   --dot-open: light-dark(rgb(102 115 128 / 0.4), rgb(154 166 177 / 0.4));
   --ring-block-a: light-dark(#a8c9df, #3b6784);
@@ -263,7 +263,7 @@
   --accent-soft: light-dark(#f4e2e5, #33232a);
   --accent-shadow: light-dark(rgb(158 91 106 / 0.5), rgb(0 0 0 / 0.55));
   --on-accent: light-dark(#ffffff, #2a1219);
-  --break: light-dark(#5f86a0, #9dc0d8);
+  --break: light-dark(#507187, #9dc0d8);
   --break-soft: light-dark(#e2ecf2, #1c2830);
   --dot-open: light-dark(rgb(118 104 106 / 0.4), rgb(173 159 161 / 0.4));
   --ring-block-a: light-dark(#e3b7c0, #7c4a57);
@@ -307,7 +307,7 @@
   --accent-soft: light-dark(#e8e5f6, #27233a);
   --accent-shadow: light-dark(rgb(99 86 168 / 0.5), rgb(0 0 0 / 0.55));
   --on-accent: light-dark(#ffffff, #16122b);
-  --break: light-dark(#3f8a9a, #8fcfd9);
+  --break: light-dark(#367684, #8fcfd9);
   --break-soft: light-dark(#dff0f2, #172a2d);
   --dot-open: light-dark(rgb(108 106 124 / 0.4), rgb(162 159 179 / 0.4));
   --ring-block-a: light-dark(#c6bfeb, #544a91);

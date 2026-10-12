@@ -6,7 +6,7 @@
  * Dialoge, die überall erscheinen können.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   APP_NAME,
   BACKUP_REMINDER_MS,
@@ -21,25 +21,28 @@ import {
 import { T } from './config/texts'
 import { EndDayDialog } from './components/EndDayDialog'
 import { InviteDialog } from './components/InviteDialog'
-import { useNoise, useNow, useTimerEngine, type WakeEvent } from './components/hooks'
-import { PencilIcon } from './components/icons'
+import { isTypingOrButton, useNow } from './components/hooks'
+import { PencilIcon, PlanIcon, SettingsIcon, TodayIcon } from './components/icons'
 import { NotePad } from './components/NotePad'
 import { openNotePad } from './components/notePadEvents'
-import { MiniWindow } from './components/MiniWindow'
 import { QuickPark } from './components/QuickPark'
+import { ShortcutsDialog } from './components/ShortcutsDialog'
+import { SHORTCUTS_OPEN_EVENT } from './components/shortcutsEvents'
+import { NotifyPrimer } from './components/NotifyPrimer'
+import { NOTIFY_PRIMER_EVENT } from './signals/notifications'
 import { SleepDialog } from './components/SleepDialog'
 import { Toast, type ToastAction } from './components/Toast'
 import { UpdateBanner } from './components/UpdateBanner'
 import { WakeAlert } from './components/WakeAlert'
+import { lazyScreen, preloadWhenIdle } from './components/lazyScreen'
 import { requestPersistentStorage } from './db/database'
 import { parseInvite, type Invite } from './logic/invite'
 import { formatCountdown } from './logic/time'
 import * as timer from './logic/timer'
 import type { ID, PaletteSetting, SurfaceSetting, ThemeSetting, TimerState } from './model/types'
-import { PlanScreen } from './screens/plan/PlanScreen'
-import { SettingsScreen } from './screens/SettingsScreen'
 import { TodayScreen } from './screens/today/TodayScreen'
 import { unlockAudio } from './signals/sounds'
+import { useNoise, useTimerEngine, type WakeEvent } from './signals/timerEngine'
 import { IS_MOBILE } from './platform/device'
 import { useFocusMode } from './platform/focusMode'
 import { downloadBackup } from './db/backup'
@@ -55,7 +58,6 @@ import {
 import { backupAgeDays, lifetimeWork, reachedMilestone, shouldRemindBackup } from './store/selectors'
 import { shareLink } from './platform/share'
 import { getState, initStore, takeFirstStart, useAppState, useSaveFailedAt } from './store/store'
-import './components/components.css'
 
 type Screen = 'today' | 'plan' | 'settings'
 
@@ -69,10 +71,16 @@ interface ToastInfo {
 
 let nextToastId = 1
 
-const SCREENS: { id: Screen; label: string }[] = [
-  { id: 'today', label: T.nav.today },
-  { id: 'plan', label: T.nav.plan },
-  { id: 'settings', label: T.nav.settings },
+// Planer, Einstellungen und Mini-Fenster kommen erst bei Bedarf (siehe components/lazyScreen.ts).
+const PlanScreen = lazyScreen(() => import('./screens/plan/PlanScreen'), (m) => m.PlanScreen)
+const SettingsScreen = lazyScreen(() => import('./screens/SettingsScreen'), (m) => m.SettingsScreen)
+const MiniWindow = lazyScreen(() => import('./components/MiniWindow'), (m) => m.MiniWindow)
+
+// Die Symbole zeigt nur das Handy (Reiter unten, mobile.css) – am Mac bleibt es reiner Text.
+const SCREENS: { id: Screen; label: string; icon: ReactNode }[] = [
+  { id: 'today', label: T.nav.today, icon: <TodayIcon /> },
+  { id: 'plan', label: T.nav.plan, icon: <PlanIcon /> },
+  { id: 'settings', label: T.nav.settings, icon: <SettingsIcon /> },
 ]
 
 export default function App() {
@@ -85,6 +93,8 @@ export default function App() {
       setReady(true)
       // iPhone-App: Startbildschirm erst jetzt ausblenden (sonst blitzt kurz eine leere Seite auf).
       if (__NATIVE_APP__) void import('./platform/nativeApp').then((m) => m.hideSplash())
+      // iPhone-App: einmal am Tag still eine Sicherung in „Dateien › Tagesplan“ ablegen.
+      if (__NATIVE_APP__) void import('./platform/autoBackup').then((m) => m.startDailyBackup())
     })
     void requestPersistentStorage()
     // Chrome erlaubt Töne erst nach einem Klick – daher bei jedem Klick freischalten.
@@ -115,6 +125,18 @@ function Shell() {
   const [toast, setToast] = useState<ToastInfo | null>(null)
   const [wakeEvent, setWakeEvent] = useState<WakeEvent | null>(null)
   const [invite, closeInvite] = useInvite()
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  const [primerOpen, setPrimerOpen] = useState(false)
+
+  // Kurz nach dem Start still nachladen – beim ersten Antippen sind sie dann schon da.
+  useEffect(() => preloadWhenIdle(IS_MOBILE ? [PlanScreen, SettingsScreen] : [PlanScreen, SettingsScreen, MiniWindow]), [])
+
+  // Beim ersten Start eines Blocks: erst erklären, wozu Mitteilungen gut sind (NotifyPrimer).
+  useEffect(() => {
+    const open = () => setPrimerOpen(true)
+    window.addEventListener(NOTIFY_PRIMER_EVENT, open)
+    return () => window.removeEventListener(NOTIFY_PRIMER_EVENT, open)
+  }, [])
 
   useTimerEngine(useCallback((e: WakeEvent) => setWakeEvent(e), []))
   useBackupReminder((message, action) => setToast({ id: nextToastId++, message, duration: BACKUP_REMINDER_MS, action }))
@@ -125,9 +147,34 @@ function Shell() {
   useNoise()
   useTheme(state.settings.theme, state.settings.palette)
   useSurfaces(state.settings.surfaces)
-  useWindowTitle(state.timer)
   // Handy: ruhige Fokus-Ansicht, solange in „Heute“ ein Block läuft (siehe platform/focusMode.ts).
   useFocusMode(state.timer, screen === 'today')
+
+  // Tastenkürzel: ? zeigt die Übersicht, 1 / 2 / 3 wechseln die Reiter.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return
+      if (isTypingOrButton(e.target) && (e.target as HTMLElement).tagName !== 'BUTTON') return
+      if (document.querySelector('dialog[open], [role="dialog"]')) return
+      if (e.key === '?') {
+        e.preventDefault()
+        setShortcutsOpen(true)
+        return
+      }
+      const target = SCREENS[Number(e.key) - 1]
+      if (!target) return
+      e.preventDefault()
+      setScreen(target.id)
+      setPlanTomorrow(false)
+    }
+    const open = () => setShortcutsOpen(true)
+    document.addEventListener('keydown', onKey)
+    window.addEventListener(SHORTCUTS_OPEN_EVENT, open)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      window.removeEventListener(SHORTCUTS_OPEN_EVENT, open)
+    }
+  }, [])
 
   const clearToast = useCallback(() => setToast(null), [])
   const showToast = (message: string, extra: Omit<ToastInfo, 'id' | 'message'> = {}) =>
@@ -174,13 +221,17 @@ function Shell() {
                 if (__NATIVE_APP__) window.scrollTo(0, 0)
               }}
             >
-              {s.label}
+              <span className="nav-icon">{s.icon}</span>
+              <span className="nav-label">{s.label}</span>
             </button>
           ))}
           {/* Handy: Notizen als Stift direkt in der Leiste (am Mac unten rechts). */}
           {IS_MOBILE && (
-            <button type="button" className="nav-item nav-notes" aria-label={T.notes.open} title={T.notes.open} onClick={openNotePad}>
-              <PencilIcon />
+            <button type="button" className="nav-item nav-notes" onClick={openNotePad}>
+              <span className="nav-icon">
+                <PencilIcon />
+              </span>
+              <span className="nav-label">{T.notes.open}</span>
             </button>
           )}
         </nav>
@@ -198,19 +249,26 @@ function Shell() {
             onStartNewDay={startNewDay}
           />
         )}
-        {screen === 'plan' && (
-          <PlanScreen
-            startOnTomorrow={planTomorrow}
-            onTaskDeleted={taskDeleted}
-            onNotice={(message) => showToast(message)}
-          />
-        )}
-        {screen === 'settings' && <SettingsScreen />}
+        {/* Nachgeladen: im allerersten Augenblick leer, danach wie gewohnt. */}
+        <Suspense fallback={null}>
+          {screen === 'plan' && (
+            <PlanScreen
+              startOnTomorrow={planTomorrow}
+              onTaskDeleted={taskDeleted}
+              onNotice={(message) => showToast(message)}
+            />
+          )}
+          {screen === 'settings' && <SettingsScreen />}
+        </Suspense>
       </main>
 
       <NotePad />
       {/* Ein Fenster über allen anderen Fenstern gibt es nur am Mac. */}
-      {!IS_MOBILE && <MiniWindow />}
+      {!IS_MOBILE && (
+        <Suspense fallback={null}>
+          <MiniWindow />
+        </Suspense>
+      )}
       {/* Fokus-Ansicht am Handy: wird im Lauf des Blocks langsam etwas dunkler (mobile.css). */}
       <div className="focus-dim" aria-hidden="true" />
       <QuickPark onParked={() => showToast(T.park.done, { duration: PARKED_TOAST_MS })} />
@@ -234,6 +292,8 @@ function Shell() {
       {state.timer.phase === 'block' && state.timer.sleptAt !== undefined && (
         <SleepDialog key={state.timer.sleptAt} sleptAt={state.timer.sleptAt} />
       )}
+      {primerOpen && <NotifyPrimer onClose={() => setPrimerOpen(false)} />}
+      {shortcutsOpen && <ShortcutsDialog onClose={() => setShortcutsOpen(false)} />}
       {wakeEvent && <WakeAlert event={wakeEvent} onClose={() => setWakeEvent(null)} />}
       {invite && (
         <InviteDialog
@@ -246,6 +306,8 @@ function Shell() {
         />
       )}
       <UpdateBanner />
+      {/* Eigener kleiner Baustein: tickt jede Sekunde, ohne die ganze App neu zu zeichnen. */}
+      <WindowTitle timerState={state.timer} />
     </>
   )
 }
@@ -282,6 +344,8 @@ function useTheme(theme: ThemeSetting, palette: PaletteSetting) {
 function useBackupReminder(show: (message: string, action: ToastAction) => void) {
   const showRef = useRef(show)
   useEffect(() => {
+    // iPhone-App: sichert jeden Tag von selbst (platform/autoBackup.ts) – keine Erinnerung nötig.
+    if (__NATIVE_APP__) return
     const now = Date.now()
     const s = getState()
     if (!shouldRemindBackup(s, now)) return
@@ -383,14 +447,15 @@ function useSurfaces(surfaces: SurfaceSetting) {
 }
 
 /** Zeigt die Restzeit im Fenstertitel – praktisch, wenn die App im Hintergrund ist. */
-function useWindowTitle(t: TimerState) {
+function WindowTitle({ timerState: t }: { timerState: TimerState }) {
   const running = t.phase === 'block' || (t.phase === 'break' && !t.endSignaled)
-  const now = useNow(running, 1000)
+  const now = useNow(running)
   const remaining = running ? remainingOf(t, now) : null
   const title = remaining === null ? APP_NAME : `${formatCountdown(remaining)} · ${APP_NAME}`
   useEffect(() => {
     document.title = title
   }, [title])
+  return null
 }
 
 function remainingOf(t: TimerState, now: number): number | null {

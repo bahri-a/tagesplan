@@ -21,7 +21,7 @@ export function QuickPark({ onParked }: { onParked: () => void }) {
     const onKey = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() !== 'n' || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return
       if (isTypingOrButton(e.target) && (e.target as HTMLElement).tagName !== 'BUTTON') return
-      if (document.querySelector('[role="dialog"]')) return
+      if (document.querySelector('dialog[open], [role="dialog"]')) return
       e.preventDefault()
       // Ist der Notizzettel schon offen, einfach dort weiterschreiben.
       const notes = document.querySelector<HTMLTextAreaElement>('.notes-text')

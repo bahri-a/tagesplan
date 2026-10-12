@@ -74,10 +74,9 @@ export async function startNativeNotifications(): Promise<void> {
 }
 
 function sync(): void {
+  // Um Erlaubnis fragt nicht dieser Abgleich, sondern „Weiter“ in der Erklärung vor dem ersten
+  // Block (components/NotifyPrimer.tsx) – sonst läge die iOS-Frage über der Erklärung.
   const s = getState()
-  // Beim ersten Start eines Blocks einmal um Erlaubnis fragen (wie ein Wecker, der klingeln darf).
-  if (permission === 'default' && s.timer.phase === 'block') void requestNativePermission()
-
   const plan = plannedNotifications(s)
   const sounds = s.settings.sounds
   const key = JSON.stringify([plan.map((n) => [n.id, n.at, n.body]), sounds, permission])

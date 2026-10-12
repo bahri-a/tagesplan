@@ -1,7 +1,8 @@
 /**
  * Ein ganzer Ablauf, wie man die App benutzt: planen → Block → kurze Pause →
  * „Schon ohne App erledigt?“ → „Erledigt“ → „Morgen planen“. Dazu der schnelle Weg aus dem
- * leeren „Heute“, die Beispielaufgabe beim allerersten Start und die Fokus-Einladung per Link.
+ * leeren „Heute“, die Beispielaufgabe beim allerersten Start, die Fokus-Einladung per Link und
+ * die Erklärung vor der Frage nach Mitteilungen.
  * Die Uhr wird vorgespult.
  */
 import { expect, test, type Page } from '@playwright/test'
@@ -40,7 +41,7 @@ test('Aufgabe planen, Block und Pause durchlaufen, Aufgabe erledigen', async ({ 
   const card = await page.locator('.focus-card').boundingBox()
   expect(card!.y + card!.height).toBeLessThanOrEqual(page.viewportSize()!.height)
   await page.clock.fastForward(25 * MIN + 2000)
-  await expect(page.getByText('Kurze Pause')).toBeVisible()
+  await expect(page.getByText('Kurze Pause', { exact: true })).toBeVisible()
 
   // Pause vorbei → Blöcke 2 und 3 ohne App gemacht
   await page.clock.fastForward(7 * MIN + 2000)
@@ -175,6 +176,30 @@ test('Lange Pause: ein Klick startet die nächste Aufgabe, „Doch nicht erledig
   // Ein Klick: Pause zu Ende und der erste Block von „Mails“ läuft
   await page.getByRole('button', { name: 'Nächste Hauptaufgabe starten' }).click()
   await expect(page.locator('.focus-title')).toHaveText('Mails')
+  await expect(page.getByRole('button', { name: 'Früher fertig' })).toBeVisible()
+
+  expect(errors).toEqual([])
+})
+
+test('Mitteilungen: erst die Erklärung, dann die Frage von Chrome – der Block läuft', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+  // Wie beim ersten Öffnen: noch nicht erlaubt und noch nicht abgelehnt. (Ohne Bildschirm meldet
+  // Chromium sonst je nach Version gleich „abgelehnt“ – deshalb hier fest vorgegeben.)
+  await page.addInitScript(() => {
+    const api = (globalThis as unknown as { Notification: { requestPermission: () => Promise<string> } }).Notification
+    let permission = 'default'
+    Object.defineProperty(api, 'permission', { get: () => permission })
+    api.requestPermission = async () => (permission = 'granted')
+  })
+  await page.clock.install({ time: new Date('2026-10-06T09:00:00') })
+  await page.goto('/')
+
+  await page.getByRole('button', { name: 'Starten', exact: true }).click()
+  const primer = page.getByRole('dialog', { name: 'Eine Sache vorab' })
+  await expect(primer).toBeVisible()
+  await primer.getByRole('button', { name: 'Weiter' }).click()
+  await expect(primer).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Früher fertig' })).toBeVisible()
 
   expect(errors).toEqual([])

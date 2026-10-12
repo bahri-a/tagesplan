@@ -349,6 +349,29 @@ export const T = {
     hint: 'N = Gedanke parken',
   },
 
+  // Vor der ersten Frage nach Mitteilungen (die kommt nur ein einziges Mal).
+  notifyPrimer: {
+    title: 'Eine Sache vorab',
+    textMobile: 'Damit du das Blockende hörst,\nauch wenn das iPhone gesperrt ist:\nerlaube gleich die Mitteilungen.',
+    textMac: 'Damit du das Blockende mitbekommst,\nauch wenn Tagesplan im Hintergrund ist:\nerlaube gleich die Mitteilungen.',
+    next: 'Weiter',
+    // Leise unter dem Startknopf (Handy), wenn Mitteilungen abgelehnt sind.
+    off: 'Mitteilungen aus · Blockende nur bei offener App',
+  },
+
+  // Tafel mit allen Tastenkürzeln (Taste ?).
+  shortcuts: {
+    title: 'Tastenkürzel',
+    list: [
+      [['Leertaste'], 'Starten · Pausieren · Weiter'],
+      [['N'], 'Schnellnotiz für deine Notizen'],
+      [['1', '2', '3'], 'Heute · Planer · Einstellungen'],
+      [['?'], 'Diese Übersicht'],
+    ] as [string[], string][],
+    close: 'Fertig',
+    open: 'Tastenkürzel anzeigen (?)',
+  },
+
   // Mac hat mitten im Block geschlafen (Deckel zu).
   sleep: {
     title: 'Warst du die ganze Zeit dran?',
@@ -448,6 +471,8 @@ export const T = {
     backup: 'Sichern',
     backupHint: 'Speichert alle deine Daten als Datei.',
     backupShareTitle: 'Tagesplan-Sicherung',
+    // iPhone-App: unter „Sichern“, wo die täglichen Sicherungen liegen.
+    backupAuto: 'Jeden Tag automatisch:\nDateien › Auf meinem iPhone › Tagesplan.',
     // Unter „Sichern“: wann zuletzt gesichert wurde (auf diesem Gerät).
     backupLast: (days: number | null) =>
       days === null
@@ -488,6 +513,14 @@ export const T = {
     breakEndBody: (title: string) => `Bereit für den nächsten Block? (${title})`,
     // iPhone-App: Pop-up beim Zurückkehren, wenn die Mitteilung während der Sperre schon geklingelt hat.
     wakeButton: 'Weiter',
+  },
+
+  // Ansagen für VoiceOver (unsichtbar, nur mit eingeschaltetem Screenreader zu hören).
+  a11y: {
+    blockWarning: () => 'Noch 2 Minuten in diesem Block.',
+    blockEnd: (lastBlock: boolean) =>
+      lastBlock ? 'Block geschafft. Hauptaufgabe erledigt oder noch ein Block?' : 'Block geschafft. Zeit für eine kurze Pause.',
+    breakEnd: () => 'Pause vorbei. Bereit für den nächsten Block.',
   },
 
   update: {

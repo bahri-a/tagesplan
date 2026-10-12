@@ -10,6 +10,7 @@ import { NOISE_PREVIEW_S, PUBLIC_URL, SETTINGS_LIMITS } from '../config/defaults
 import { T } from '../config/texts'
 import { Dialog } from '../components/Dialog'
 import { useNow } from '../components/hooks'
+import { openShortcuts } from '../components/shortcutsEvents'
 import { PlayIcon, ShareIcon } from '../components/icons'
 import { NumberStepper } from '../components/NumberStepper'
 import { ShareButton } from '../components/ShareButton'
@@ -25,7 +26,6 @@ import { markBackupMade, updateSettings } from '../store/actions'
 import { backupAgeDays } from '../store/selectors'
 import { useAppState } from '../store/store'
 import { IS_MOBILE } from '../platform/device'
-import './settings.css'
 
 const THEMES: { value: ThemeSetting; label: string }[] = [
   { value: 'system', label: T.settings.themeSystem },
@@ -336,6 +336,12 @@ export function SettingsScreen() {
         </div>
       </section>
 
+      {/* Mac: Die Tastenkürzel einmal leise erwähnen (Handy hat keine Tastatur). */}
+      {!IS_MOBILE && (
+        <button type="button" className="link-quiet settings-shortcuts" onClick={openShortcuts}>
+          {T.shortcuts.open}
+        </button>
+      )}
       <p className="muted small settings-version" hidden={hiddenUnless('data')}>
         {T.settings.version(new Date(__BUILD_TIME__).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }))}
       </p>
@@ -385,6 +391,7 @@ function DataSection({ hidden = false }: { hidden?: boolean }) {
           {T.settings.backupHint}
           <br />
           {T.settings.backupLast(backupAgeDays(state, now))}
+          {__NATIVE_APP__ && <span className="settings-auto-backup">{T.settings.backupAuto}</span>}
         </div>
         <button
           type="button"

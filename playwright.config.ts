@@ -20,6 +20,9 @@ export default defineConfig({
     baseURL: 'http://localhost:4173',
     locale: 'de-DE',
     serviceWorkers: 'block',
+    // Mitteilungen schon erlaubt – sonst steht beim ersten Start die Erklärung (NotifyPrimer) im Weg.
+    // Die Erklärung selbst prüft ein eigener Test (tagesablauf.spec.ts).
+    permissions: ['notifications'],
     screenshot: 'only-on-failure',
     launchOptions: process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {},
   },
