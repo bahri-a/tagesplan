@@ -221,7 +221,9 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   damit kommst du wieder zur Frage (bis zum Start des Blocks und noch in seinen ersten 3 Minuten).
 - Erledigte Hauptaufgaben stehen oben als eigene kleine Karte mit ✓ – mit Blöcken und echter
   Arbeitszeit. Die nächste Aufgabe steht darunter.
-- Vor jeder weiteren Aufgabe: **Lange Pause gemacht? / Weiter mit „…“** (nicht getimt).
+- Nach „Erledigt“ kommt die **Lange Pause** (nicht getimt). Darunter steht schon, was als Nächstes
+  kommt – **Nächste Hauptaufgabe starten** beendet die Pause und startet gleich den ersten Block.
+  Verklickt? Eine Minute lang steht oben links **‹ Doch nicht erledigt**.
 - An einem früheren Tag angefangen, aber noch nicht fertig? Dann fragt die App:
   **Weitermachen** oder **Abschließen**.
 - Im laufenden Block steht direkt unter dem Ring **Zum Einstieg: …** – dein nächster erster Schritt zum Abhaken.
@@ -232,7 +234,9 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
 - **Mini-Fenster** (unten links): ein kleiner Timer, der immer über allen anderen Fenstern
   liegt – auch über deinem PDF oder Editor. Mit Ring, Rauschen an/aus und Start/Pausieren.
   Du kannst es mit der Maus verschieben und größer ziehen. Nochmal auf den Knopf klicken
-  (oder das kleine Fenster schließen) macht es wieder zu.
+  (oder das kleine Fenster schließen) macht es wieder zu. In der installierten App legt Chrome
+  das große Fenster dabei gleich ins Dock (sofern deine Chrome-Version das schon kann).
+  **N** und „Pause überspringen“ gehen auch im Mini-Fenster.
 - Bist du auf einem anderen Tab, zeigt oben rechts eine kleine Anzeige die Restzeit.
   Auch im Fenstertitel steht die Restzeit.
 

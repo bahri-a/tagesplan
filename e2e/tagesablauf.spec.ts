@@ -141,3 +141,41 @@ test('Fokus-Einladung per Link: Block endet zur selben Minute', async ({ page })
 
   expect(errors).toEqual([])
 })
+
+test('Lange Pause: ein Klick startet die nächste Aufgabe, „Doch nicht erledigt“ hilft beim Verklicken', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+
+  await page.clock.install({ time: new Date('2026-10-06T09:00:00') })
+  await page.goto('/')
+  await deleteExample(page)
+  const input = page.locator('.new-task input').first()
+  for (const title of ['Bericht', 'Mails']) {
+    await input.fill(title)
+    await input.press('Enter')
+  }
+  await page.getByRole('button', { name: 'Heute', exact: true }).first().click()
+
+  // Bericht: alle drei Blöcke ohne App, dann „Erledigt“ → lange Pause
+  const alreadyDone = page.getByRole('button', { name: /Schon ohne App erledigt/ })
+  for (let i = 0; i < 3; i++) await alreadyDone.click()
+  await page.getByRole('button', { name: 'Erledigt', exact: true }).click()
+  await expect(page.getByText('Lange Pause')).toBeVisible()
+  await expect(page.locator('.up-next')).toContainText('„Mails“')
+
+  // Verklickt → zurück zur Frage
+  await page.getByRole('button', { name: /Verklickt/ }).click()
+  await expect(page.getByText('Hauptaufgabe erledigt oder noch ein Block?')).toBeVisible()
+  await page.getByRole('button', { name: 'Erledigt', exact: true }).click()
+
+  // Nach einer Minute ist der Weg zurück vorbei
+  await page.clock.fastForward(61_000)
+  await expect(page.getByRole('button', { name: /Verklickt/ })).toHaveCount(0)
+
+  // Ein Klick: Pause zu Ende und der erste Block von „Mails“ läuft
+  await page.getByRole('button', { name: 'Nächste Hauptaufgabe starten' }).click()
+  await expect(page.locator('.focus-title')).toHaveText('Mails')
+  await expect(page.getByRole('button', { name: 'Früher fertig' })).toBeVisible()
+
+  expect(errors).toEqual([])
+})

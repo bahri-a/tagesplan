@@ -5,7 +5,7 @@
  * „Welche Aufgabe ist gerade dran?“. Sie ändern nichts.
  */
 
-import { BACKUP_REMINDER_DAYS, MILESTONES, UNDO_EXTRA_BLOCK_MS } from '../config/defaults'
+import { BACKUP_REMINDER_DAYS, MILESTONES, UNDO_EXTRA_BLOCK_MS, UNDO_FINISH_MS } from '../config/defaults'
 import { T } from '../config/texts'
 import { dayKey } from '../logic/time'
 import { blockWorkedMs, isBreakOver } from '../logic/timer'
@@ -228,6 +228,23 @@ export function canUndoExtraBlock(s: AppState, task: Task, now: number): boolean
   const t = s.timer
   if (t.phase === 'block') return t.taskId === task.id && blockWorkedMs(t, now) < UNDO_EXTRA_BLOCK_MS
   return true
+}
+
+/**
+ * Lässt sich „Erledigt“ gerade noch zurücknehmen (Verklickt)? Ja für die zuletzt erledigte
+ * Hauptaufgabe von heute, höchstens UNDO_FINISH_MS lang und nur, solange seitdem kein Block
+ * gestartet wurde. Gibt die Aufgabe und das Ende des Zeitfensters zurück – sonst `null`.
+ */
+export function undoableFinish(s: AppState, now: number): { task: Task; until: number } | null {
+  if (s.timer.phase === 'block') return null
+  const done = tasksOfDay(s, activeDay(s).id).filter((t) => t.completedAt !== null)
+  const last = done.sort((a, b) => b.completedAt! - a.completedAt!)[0]
+  if (!last) return null
+  const finishedAt = last.completedAt!
+  const until = finishedAt + UNDO_FINISH_MS
+  if (now >= until) return null
+  if (alive(Object.values(s.blocks)).some((b) => b.startedAt > finishedAt)) return null
+  return { task: last, until }
 }
 
 /**

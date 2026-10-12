@@ -4,16 +4,18 @@
  * drückst du N, tippst eine Zeile und Enter – der Gedanke landet unten im Notizzettel,
  * und du bist sofort wieder bei der Arbeit. Escape oder Klick daneben schließt ohne Speichern.
  * Idee aus der Verhaltenstherapie bei ADHS: Ablenkung aufschreiben statt ihr zu folgen.
+ * Klappt auch im Mini-Fenster: Dort gilt die Taste in dessen eigenem Dokument (WindowContext).
  */
 
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { T } from '../config/texts'
 import { parkThought } from '../store/actions'
-import { isTypingOrButton } from './hooks'
+import { isTypingOrButton, WindowContext } from './hooks'
 
 export function QuickPark({ onParked }: { onParked: () => void }) {
   const [open, setOpen] = useState(false)
   const [text, setText] = useState('')
+  const { document } = useContext(WindowContext)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -31,7 +33,7 @@ export function QuickPark({ onParked }: { onParked: () => void }) {
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [])
+  }, [document])
 
   if (!open) return null
   const close = () => {

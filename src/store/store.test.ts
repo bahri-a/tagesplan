@@ -176,13 +176,17 @@ describe('Ultra-Modus', () => {
     expect(actions.checkTimer(at(BLOCK + 20_000 + BREAK + 100))).toEqual([{ type: 'breakEnd', taskTitle: 'A', fresh: true }])
   })
 
-  it('unbestätigte Pause läuft nicht ab – das Piepen hört nach der Pausenlänge trotzdem auf', () => {
+  it('unbestätigte Pause läuft nicht ab – das Piepen hört nach 20 Sekunden trotzdem auf', () => {
     actions.updateSettings({ ultraMode: true })
     const task = actions.addTask(today(), 'A')
     actions.startBlock(task.id)
     actions.checkTimer(at(BLOCK + 500))
-    expect(actions.isUltraRinging(at(BLOCK + BREAK - 1000))).toBe(true)
-    expect(actions.isUltraRinging(at(BLOCK + BREAK + 1000))).toBe(false)
+    expect(actions.isUltraRinging(at(BLOCK + 19_000))).toBe(true)
+    expect(actions.isUltraRinging(at(BLOCK + 21_000))).toBe(false)
+    expect(actions.isUltraRinging(at(BLOCK + BREAK - 1000))).toBe(false)
+    // „Pause machen“ steht weiter da, bis bestätigt.
+    const waiting = getState().timer
+    expect(waiting.phase === 'break' && waiting.nagging).toBe(true)
     expect(actions.checkTimer(at(BLOCK + 2 * BREAK))).toEqual([])
     const t = getState().timer
     expect(t.phase === 'break' && t.nagging).toBe(true)
@@ -312,6 +316,60 @@ describe('Hauptaufgabe erledigt, lange Pause', () => {
     resetStoreForTests()
     await initStore()
     expect(sel.isOnLongPause(getState(), getState().tasks[b.id])).toBe(false)
+  })
+})
+
+describe('Lange Pause: ein Klick startet die nächste Aufgabe, „Doch nicht erledigt“', () => {
+  function finishFirst() {
+    const a = actions.addTask(today(), 'A')
+    const b = actions.addTask(today(), 'B')
+    actions.updateTask(a.id, { estimatedBlocks: 1 })
+    actions.startBlock(a.id)
+    actions.checkTimer(at(BLOCK))
+    actions.finishTask(a.id)
+    return { a, b }
+  }
+
+  it('„Nächste Hauptaufgabe starten“ beendet die lange Pause und startet gleich den Block', () => {
+    const { b } = finishFirst()
+    actions.startAfterLongPause(b.id)
+    const s = getState()
+    expect(sel.isOnLongPause(s, s.tasks[b.id])).toBe(false)
+    expect(s.timer.phase === 'block' && s.timer.taskId).toBe(b.id)
+  })
+
+  it('steht bei der nächsten Aufgabe „Erledigt oder noch ein Block?“ an, endet nur die Pause', () => {
+    const { b } = finishFirst()
+    // B: der eine geschätzte Block ist schon (ohne App) gemacht.
+    actions.updateTask(b.id, { estimatedBlocks: 1 })
+    actions.logBlockAsDone(b.id, at(BLOCK + MIN))
+    actions.startAfterLongPause(b.id)
+    expect(getState().timer.phase).toBe('idle')
+  })
+
+  it('„Doch nicht erledigt“ geht eine Minute lang – danach nicht mehr', () => {
+    const { a } = finishFirst()
+    expect(sel.undoableFinish(getState(), at(BLOCK + 59_000))?.task.id).toBe(a.id)
+    expect(sel.undoableFinish(getState(), at(BLOCK + 61_000))).toBeNull()
+    actions.undoFinishTask(a.id, at(BLOCK + 61_000))
+    expect(getState().tasks[a.id].completedAt).not.toBeNull()
+  })
+
+  it('„Doch nicht erledigt“ öffnet die Aufgabe wieder mit ihrer Frage', () => {
+    const { a } = finishFirst()
+    actions.undoFinishTask(a.id, at(BLOCK + 10_000))
+    const s = getState()
+    expect(s.tasks[a.id].completedAt).toBeNull()
+    expect(sel.currentTask(s)?.id).toBe(a.id)
+    expect(sel.isAskingDone(s, s.tasks[a.id])).toBe(true)
+  })
+
+  it('nach dem Start eines neuen Blocks gibt es kein „Doch nicht erledigt“ mehr', () => {
+    const { b } = finishFirst()
+    at(BLOCK + 5_000)
+    actions.startAfterLongPause(b.id)
+    actions.abortCurrentBlock()
+    expect(sel.undoableFinish(getState(), at(BLOCK + 10_000))).toBeNull()
   })
 })
 
