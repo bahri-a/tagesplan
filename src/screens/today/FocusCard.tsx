@@ -45,28 +45,29 @@ import {
   activeDay,
   blockMinutesFor,
   blocksDone,
-  currentStep,
   needsLongPause,
   stepsOfTask,
   tasksOfDay,
 } from '../../store/selectors'
 import { focusNeedsClock, focusView } from '../../store/focusView'
-import { useAppState } from '../../store/store'
+import { shallowEqual, useAppSelector } from '../../store/store'
 import { noteFinished, prefersReducedMotion } from './celebrate'
 import { useSpaceKey } from './useSpaceKey'
 
 /** Die große Karte mit der aktuellen Hauptaufgabe. */
 export function FocusCard({ task }: { task: Task }) {
-  const state = useAppState()
   const undoToast = useUndoToast()
-  const t = state.timer
-  const now = useNow(focusNeedsClock(state, task))
-  const view = focusView(state, task, now)
+  const t = useAppSelector((s) => s.timer)
+  const now = useNow(useAppSelector((s) => focusNeedsClock(s, task)))
+  const view = useAppSelector((s) => focusView(s, task, now), shallowEqual)
 
-  const tasks = tasksOfDay(state, activeDay(state).id)
-  const number = tasks.findIndex((x) => x.id === task.id) + 1
-  const done = blocksDone(state, task.id)
-  const minutes = blockMinutesFor(state, task)
+  // „Aufgabe 2 von 3“
+  const [number, taskCount] = useAppSelector((s) => {
+    const tasks = tasksOfDay(s, activeDay(s).id)
+    return [tasks.findIndex((x) => x.id === task.id) + 1, tasks.length]
+  }, shallowEqual)
+  const done = useAppSelector((s) => blocksDone(s, task.id))
+  const minutes = useAppSelector((s) => blockMinutesFor(s, task))
 
   // Der ganze Stand als Satz – für den Hinweis beim Drüberfahren und für Screenreader.
   let blockLine: string
@@ -96,7 +97,7 @@ export function FocusCard({ task }: { task: Task }) {
         taskId={task.id}
         marks={blockMarks(done, task.estimatedBlocks, view.highlightBlock)}
         suffix={t.phase === 'idle' && view.action !== 'askDone' ? T.today.perBlock(minutes) : null}
-        sentence={`${T.today.taskOf(number, tasks.length)} · ${blockLine}`}
+        sentence={`${T.today.taskOf(number, taskCount)} · ${blockLine}`}
       />
       <h1 className="focus-title">{task.title}</h1>
 
@@ -299,7 +300,7 @@ function BlockDots({ taskId, marks, suffix, sentence }: BlockDotsProps) {
 function StartArea({ task, firstBlock, breakOver }: { task: Task; firstBlock: boolean; breakOver: boolean }) {
   // Startsignal nur auf dem Mac (auf dem Handy gibt es kein Feld dafür).
   const cue = SHOWS_START_CUE && task.startCue ? cleanStartCue(task.startCue) : ''
-  const timer = useAppState().timer
+  const timer = useAppSelector((s) => s.timer)
   const undoToast = useUndoToast()
   // Pause nach einer erledigten Hauptaufgabe: zeigen, welche als Nächstes drankommt.
   const upNext = timer.phase === 'break' && timer.taskId !== task.id
@@ -340,12 +341,13 @@ function StartArea({ task, firstBlock, breakOver }: { task: Task; firstBlock: bo
  * Mit `label` (z. B. „Weitermachen“ bei der Frage „Weitermachen oder abschließen?“) nur dieser Text.
  */
 function StartButton({ task, label: ownLabel }: { task: Task; label?: string }) {
-  const state = useAppState()
-  let label: ReactNode = ownLabel ?? (state.timer.phase === 'break'
-      ? state.timer.taskId === task.id ? T.today.nextBlock : T.today.nextTask
+  const timer = useAppSelector((s) => s.timer)
+  const longPause = useAppSelector((s) => needsLongPause(s, task) && s.local.longPauseEndedFor !== task.id)
+  let label: ReactNode = ownLabel ?? (timer.phase === 'break'
+      ? timer.taskId === task.id ? T.today.nextBlock : T.today.nextTask
       : T.today.startBlock)
   // Mit eigener Beschriftung (z. B. „Weitermachen“) bleibt der Knopf bewusst einzeilig.
-  if (!ownLabel && needsLongPause(state, task) && state.local.longPauseEndedFor !== task.id) {
+  if (!ownLabel && longPause) {
     label = (
       <span className="long-pause-label">
         <span className="long-pause-ask">{T.today.longPauseAsk}</span>
@@ -512,8 +514,7 @@ function RunningBlock({ timerState, now, step }: { timerState: timer.BlockTimer;
  * Abhaken geht erst, wenn der Block läuft (siehe CurrentStep). Sind alle erledigt, steht hier nichts.
  */
 function StepsPreview({ task }: { task: Task }) {
-  const state = useAppState()
-  const steps = stepsOfTask(state, task.id)
+  const steps = useAppSelector((s) => stepsOfTask(s, task.id), shallowEqual)
   if (!steps.some((s) => s.doneAt === null)) return null
   return (
     <div className="steps-preview">
@@ -539,7 +540,8 @@ function StepsPreview({ task }: { task: Task }) {
  *    – bewusst ohne Kästchen und Haken, damit er nicht wie ein weiterer Schritt aussieht.
  */
 function CurrentStep({ task }: { task: Task }) {
-  const state = useAppState()
+  const steps = useAppSelector((s) => stepsOfTask(s, task.id), shallowEqual)
+  const blockStartedAt = useAppSelector((s) => (s.timer.phase === 'block' ? s.timer.startedAt : 0))
   const [showAll, setShowAll] = useState(false)
   // Der gerade abgehakte Schritt, solange er noch mit Haken zu sehen ist.
   const [justDoneId, setJustDoneId] = useState<ID | null>(null)
@@ -550,8 +552,7 @@ function CurrentStep({ task }: { task: Task }) {
     return () => clearTimeout(timeout)
   }, [justDoneId])
 
-  const steps = stepsOfTask(state, task.id)
-  const next = currentStep(state, task.id)
+  const next = steps.find((st) => st.doneAt === null)
   if (steps.length === 0) return null
   const doneCount = steps.filter((s) => s.doneAt !== null).length
   const justDone = steps.find((s) => s.id === justDoneId)
@@ -583,7 +584,7 @@ function CurrentStep({ task }: { task: Task }) {
           <span className="start-done-title">{T.today.startDone}</span>
           {/* Der Satz danach steht in einer eigenen Zeile darunter. */}
           <span className="start-done-text">
-            {pick(T.today.keepGoingVariants, state.timer.phase === 'block' ? state.timer.startedAt : 0)}
+            {pick(T.today.keepGoingVariants, blockStartedAt)}
           </span>
         </p>
       )}
@@ -601,8 +602,7 @@ function CurrentStep({ task }: { task: Task }) {
  * Einstellung „Töne“.
  */
 export function NoiseToggle() {
-  const { settings } = useAppState()
-  const on = settings.noiseOn
+  const on = useAppSelector((s) => s.settings.noiseOn)
   return (
     <button
       type="button"

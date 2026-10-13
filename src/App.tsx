@@ -58,7 +58,7 @@ import {
 } from './store/actions'
 import { backupAgeDays, lifetimeWork, reachedMilestone, shouldRemindBackup } from './store/selectors'
 import { shareLink } from './platform/share'
-import { getState, initStore, takeFirstStart, useAppState, useSaveFailedAt } from './store/store'
+import { getState, initStore, takeFirstStart, useAppSelector, useSaveFailedAt } from './store/store'
 
 type Screen = 'today' | 'plan' | 'settings'
 
@@ -130,7 +130,10 @@ export default function App() {
 }
 
 function Shell() {
-  const state = useAppState()
+  // Nur Timer und Einstellungen – sonst würde bei jeder Änderung die ganze App neu gezeichnet.
+  const timerState = useAppSelector((s) => s.timer)
+  const settings = useAppSelector((s) => s.settings)
+  const lifetimeBlocks = useAppSelector((s) => lifetimeWork(s).blocks)
   const [screen, setScreen] = useState<Screen>('today')
   // „Morgen planen“ (nach „Alles erledigt“): Der Planer zeigt am Handy gleich „Morgen“.
   const [planTomorrow, setPlanTomorrow] = useState(false)
@@ -154,13 +157,13 @@ function Shell() {
   useWakeEvents(useCallback((e: WakeEvent) => setWakeEvent(e), []))
   useBackupReminder((message, action) => setToast({ id: nextToastId++, message, duration: BACKUP_REMINDER_MS, action }))
   useSaveFailedNotice((message, action) => setToast({ id: nextToastId++, message, duration: SAVE_FAILED_TOAST_MS, action }))
-  useMilestones(lifetimeWork(state).blocks, (message, action, duration = MILESTONE_TOAST_MS) =>
+  useMilestones(lifetimeBlocks, (message, action, duration = MILESTONE_TOAST_MS) =>
     setToast({ id: nextToastId++, message, duration, action }),
   )
-  useTheme(state.settings.theme, state.settings.palette)
-  useSurfaces(state.settings.surfaces)
+  useTheme(settings.theme, settings.palette)
+  useSurfaces(settings.surfaces)
   // Handy: ruhige Fokus-Ansicht, solange in „Heute“ ein Block läuft (siehe platform/focusMode.ts).
-  useFocusMode(state.timer, screen === 'today')
+  useFocusMode(timerState, screen === 'today')
 
   // Tastenkürzel: ? zeigt die Übersicht, 1 / 2 / 3 wechseln die Reiter.
   useEffect(() => {
@@ -249,7 +252,7 @@ function Shell() {
             </button>
           )}
         </nav>
-        {screen !== 'today' && <TimerPill timerState={state.timer} onClick={() => setScreen('today')} />}
+        {screen !== 'today' && <TimerPill timerState={timerState} onClick={() => setScreen('today')} />}
       </header>
 
       <main className="main">
@@ -306,8 +309,8 @@ function Shell() {
           onDone={clearToast}
         />
       )}
-      {state.timer.phase === 'block' && state.timer.sleptAt !== undefined && (
-        <SleepDialog key={state.timer.sleptAt} sleptAt={state.timer.sleptAt} />
+      {timerState.phase === 'block' && timerState.sleptAt !== undefined && (
+        <SleepDialog key={timerState.sleptAt} sleptAt={timerState.sleptAt} />
       )}
       {primerOpen && <NotifyPrimer onClose={() => setPrimerOpen(false)} />}
       {shortcutsOpen && <ShortcutsDialog onClose={() => setShortcutsOpen(false)} />}
@@ -324,7 +327,7 @@ function Shell() {
       )}
       <UpdateBanner />
       {/* Eigener kleiner Baustein: tickt jede Sekunde, ohne die ganze App neu zu zeichnen. */}
-      <WindowTitle timerState={state.timer} />
+      <WindowTitle timerState={timerState} />
     </ToastContext.Provider>
   )
 }

@@ -47,7 +47,7 @@ import {
   undoableFinish,
 } from '../../store/selectors'
 import { addTask, copyTask, startAfterLongPause, undoFinishTask } from '../../store/actions'
-import { useAppState } from '../../store/store'
+import { shallowEqual, useAppSelector } from '../../store/store'
 import { FocusCard } from './FocusCard'
 import { DayBar } from './DayBar'
 import { CheckIcon, SunriseIcon } from '../../components/icons'
@@ -62,19 +62,19 @@ interface Props {
 }
 
 export function TodayScreen({ onPlan, onEndDay, onStartNewDay }: Props) {
-  const state = useAppState()
-  const t = state.timer
-  const tasks = tasksOfDay(state, activeDay(state).id)
+  const t = useAppSelector((s) => s.timer)
+  const tasks = useAppSelector((s) => tasksOfDay(s, activeDay(s).id), shallowEqual)
   // Während eines Blocks: dessen Aufgabe. Sonst: die oberste offene Aufgabe.
-  const task = t.phase === 'block' ? state.tasks[t.taskId] : currentTask(state)
+  const task = useAppSelector((s) => (s.timer.phase === 'block' ? s.tasks[s.timer.taskId] : currentTask(s)))
   // Nach einer erledigten Hauptaufgabe: erst die lange Pause – ihr Knopf startet gleich die nächste Aufgabe.
-  const onLongPause = !!task && isOnLongPause(state, task)
+  const onLongPause = useAppSelector((s) => !!task && isOnLongPause(s, task))
   // Am nächsten Kalendertag steht oben „Neuen Tag beginnen“ – dann gibt es unten kein zweites „Tag beenden“.
-  const newDayOpen = canStartNewDay(state, useNow(true, 60_000))
+  const now = useNow(true, 60_000)
+  const newDayOpen = useAppSelector((s) => canStartNewDay(s, now))
   // Alles erledigt: „Tag beenden“ steht dann in der Karte selbst.
   const allDone = tasks.length > 0 && !task
   // Leerer Tag (nichts geplant, nichts gearbeitet): Es gibt noch nichts zu beenden.
-  const emptyDay = tasks.length === 0 && activeDay(state).firstWorkAt === null
+  const emptyDay = useAppSelector((s) => activeDay(s).firstWorkAt === null) && tasks.length === 0
   // Wer „Heute“ verlässt, hat den Haken schon gesehen – beim Zurückkommen zeichnet er sich nicht noch einmal.
   useEffect(() => forgetFinished, [])
 
@@ -120,10 +120,9 @@ export function TodayScreen({ onPlan, onEndDay, onStartNewDay }: Props) {
  * Tippen legt sie (mit ihren ersten Schritten) für heute an. Ausführlich planen geht im Planer.
  */
 function EmptyToday({ onPlan }: { onPlan: () => void }) {
-  const state = useAppState()
   const [title, setTitle] = useState('')
-  const today = activeDay(state).id
-  const recent = recentTasks(state, today, EMPTY_TODAY_RECENT_COUNT)
+  const today = useAppSelector((s) => activeDay(s).id)
+  const recent = useAppSelector((s) => recentTasks(s, today, EMPTY_TODAY_RECENT_COUNT), shallowEqual)
 
   return (
     <section className="card focus-card is-message empty-today">
@@ -201,17 +200,19 @@ function AllDoneCard({
   onPlanTomorrow: () => void
   onEndDay: (() => void) | null
 }) {
-  const state = useAppState()
-  const day = activeDay(state)
+  const day = useAppSelector(activeDay)
   // Kein Block läuft – die Zahlen ändern sich nicht mehr, ein fester Zeitpunkt genügt.
   const [now] = useState(Date.now)
   const [fresh] = useState(() => tasks.some((x) => wasJustFinished(x.id)))
-  const result = dayYield(state, day.id, now)
+  const result = useAppSelector((s) => {
+    const { completedBlocks, minutes } = dayYield(s, day.id, now)
+    return { completedBlocks, minutes }
+  }, shallowEqual)
   const blocks = useCountUp(result.completedBlocks, fresh)
   const minutes = useCountUp(result.minutes, fresh)
   const hasNumbers = result.completedBlocks > 0 || result.minutes > 0
   // Sammeln statt Serie: die Gesamtzahl seit Beginn, leise darunter.
-  const lifetime = lifetimeWork(state).blocks
+  const lifetime = useAppSelector((s) => lifetimeWork(s).blocks)
 
   return (
     <section className={`card focus-card is-message all-done${fresh ? ' is-fresh' : ''}`}>
@@ -257,10 +258,10 @@ function AllDoneCard({
  * bis du den Link anklickst. Geprüft wird jede Minute und beim Zurückkehren ins Fenster.
  */
 function NewDayLink({ onClick }: { onClick: () => void }) {
-  const state = useAppState()
   const now = useNow(true, 60_000)
-  if (!canStartNewDay(state, now)) return null
-  const firstWorkAt = activeDay(state).firstWorkAt
+  const open = useAppSelector((s) => canStartNewDay(s, now))
+  const firstWorkAt = useAppSelector((s) => activeDay(s).firstWorkAt)
+  if (!open) return null
   const dayName = firstWorkAt === null ? '' : formatDayName(firstWorkAt).split(',')[0]
   return (
     <div className="new-day">
@@ -280,12 +281,14 @@ function NewDayLink({ onClick }: { onClick: () => void }) {
  * gearbeitet hast („Erledigt · 3 Blöcke · 1 Std. 15 Min.“). Die aktuelle Aufgabe steht darunter.
  */
 function DoneCards({ tasks }: { tasks: Task[] }) {
-  const state = useAppState()
+  const works = useAppSelector((s) => tasks.map((task) => taskWork(s, task.id)), (a, b) =>
+    a.length === b.length && a.every((work, i) => shallowEqual(work, b[i])),
+  )
   if (tasks.length === 0) return null
   return (
     <ul className="done-cards" aria-label={T.today.doneCardsLabel}>
-      {tasks.map((task) => {
-        const work = taskWork(state, task.id)
+      {tasks.map((task, index) => {
+        const work = works[index]
         const parts = [T.today.doneCard]
         if (work.blocks > 0) parts.push(T.endDay.yieldBlocks(work.blocks))
         if (work.minutes > 0) parts.push(T.endDay.yieldTime(work.minutes))
@@ -312,10 +315,10 @@ function DoneCards({ tasks }: { tasks: Task[] }) {
  * Steht bei der nächsten Aufgabe noch „Erledigt oder noch ein Block?“ an, heißt der Knopf „Weiter“.
  */
 function LongPauseCard({ task }: { task: Task }) {
-  const state = useAppState()
-  const asking = isAskingDone(state, task)
+  const asking = useAppSelector((s) => isAskingDone(s, task))
+  const firstBlock = useAppSelector((s) => blocksDone(s, task.id) === 0)
   // Startsignal nur auf dem Mac (auf dem Handy gibt es kein Feld dafür).
-  const cue = SHOWS_START_CUE && task.startCue && blocksDone(state, task.id) === 0 ? cleanStartCue(task.startCue) : ''
+  const cue = SHOWS_START_CUE && task.startCue && firstBlock ? cleanStartCue(task.startCue) : ''
   const start = () => {
     if (!asking) {
       // Erst die Erklärung zu Mitteilungen – dann kein Vollbild, es läge sonst darüber.
@@ -355,9 +358,8 @@ function LongPauseCard({ task }: { task: Task }) {
  * Die Aufgabe ist wieder offen und steht wieder mit ihrer Frage da. Verschwindet von selbst.
  */
 function UndoFinish() {
-  const state = useAppState()
   const [now, setNow] = useState(Date.now)
-  const undo = undoableFinish(state, now)
+  const undo = useAppSelector((s) => undoableFinish(s, now), (a, b) => a?.task === b?.task && a?.until === b?.until)
   const until = undo?.until
   // Nach Ablauf einmal neu zeichnen – dann ist der Link weg.
   useEffect(() => {
@@ -399,9 +401,8 @@ function Ambient({ timerState, longPause = false }: { timerState: TimerState; lo
  * Start/Pausieren/Weiter und das Startsignal bleiben.
  */
 export function MiniToday() {
-  const state = useAppState()
-  const t = state.timer
-  const task = t.phase === 'block' ? state.tasks[t.taskId] : currentTask(state)
+  const t = useAppSelector((s) => s.timer)
+  const task = useAppSelector((s) => (s.timer.phase === 'block' ? s.tasks[s.timer.taskId] : currentTask(s)))
   return (
     <div className="today mini-today">
       <Ambient timerState={t} />

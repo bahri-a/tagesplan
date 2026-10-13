@@ -7,14 +7,14 @@ import { T } from '../../config/texts'
 import { alive } from '../../logic/records'
 import { copyTask, hideAllRecentTasks, hideRecentTask } from '../../store/actions'
 import { blocksNeeded, hasRecentTasks, recentTasks } from '../../store/selectors'
-import { getState, useAppState } from '../../store/store'
+import { getState, shallowEqual, useAppSelector } from '../../store/store'
 import { ResetButton, TargetSwitch, type TargetProps } from './shared'
 
 export function RecentTasks({ days, targetIndex, onTargetChange, onNotice }: TargetProps) {
-  const state = useAppState()
   const target = days[targetIndex]
-  const recent = recentTasks(state, target.day.id, RECENT_TASKS_COUNT)
-  if (!hasRecentTasks(state, days.map((d) => d.day.id))) return null
+  const recent = useAppSelector((s) => recentTasks(s, target.day.id, RECENT_TASKS_COUNT), shallowEqual)
+  const shown = useAppSelector((s) => hasRecentTasks(s, days.map((d) => d.day.id)))
+  if (!shown) return null
 
   return (
     <section className="recent" aria-label={T.plan.recentTitle}>
@@ -24,7 +24,7 @@ export function RecentTasks({ days, targetIndex, onTargetChange, onNotice }: Tar
         <ResetButton
           hint={T.plan.recentResetHint}
           onReset={() => {
-            hideAllRecentTasks(alive(Object.values(state.tasks)).map((t) => t.title))
+            hideAllRecentTasks(alive(Object.values(getState().tasks)).map((t) => t.title))
             onNotice(T.plan.recentResetDone)
           }}
         />

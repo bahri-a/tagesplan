@@ -43,7 +43,7 @@ import { TaskCard } from '../../components/TaskCard'
 import type { ID, Task } from '../../model/types'
 import { addTask, copyTask, deleteTask, moveTask, reorderTasks, swapDays } from '../../store/actions'
 import { activeDay, hasRecentTasks, plannedDay, tasksOfDay } from '../../store/selectors'
-import { getState, useAppState } from '../../store/store'
+import { getState, shallowEqual, useAppSelector } from '../../store/store'
 import { IS_MOBILE } from '../../platform/device'
 import { RecentTasks } from './RecentTasks'
 import { type PlanDays } from './shared'
@@ -79,7 +79,9 @@ interface Props {
 }
 
 export function PlanScreen({ startOnTomorrow = false, onTaskDeleted, onNotice }: Props) {
-  const state = useAppState()
+  // Nur die beiden Tage – die Spalten und Karten lesen ihre Aufgaben selbst (so zeichnet nicht alles neu).
+  const today = useAppSelector(activeDay)
+  const tomorrow = useAppSelector(plannedDay)
   // Es ist immer höchstens eine Aufgabe aufgeklappt – das hält es ruhig.
   const [expandedId, setExpandedId] = useState<ID | null>(null)
   const [justCreatedId, setJustCreatedId] = useState<ID | null>(null)
@@ -91,9 +93,10 @@ export function PlanScreen({ startOnTomorrow = false, onTaskDeleted, onNotice }:
   const [shownIndex, setShownIndex] = useState(startOnTomorrow ? 1 : 0)
 
   const days = [
-    { day: activeDay(state), label: T.plan.today },
-    { day: plannedDay(state), label: T.plan.tomorrow },
+    { day: today, label: T.plan.today },
+    { day: tomorrow, label: T.plan.tomorrow },
   ]
+  const recentShown = useAppSelector((s) => hasRecentTasks(s, [today.id, tomorrow.id]))
   const labelOf = (dayId: ID) => days.find((d) => d.day.id === dayId)?.label ?? ''
 
   const toggle = (id: ID) => setExpandedId((current) => (current === id ? null : id))
@@ -227,7 +230,7 @@ export function PlanScreen({ startOnTomorrow = false, onTaskDeleted, onNotice }:
             targetIndex={targetIndex}
             onTargetChange={setTargetIndex}
             // Ohne „Zuletzt verwendet“ zeigen die Vorschläge den Umschalter selbst.
-            showTarget={!hasRecentTasks(state, days.map((d) => d.day.id))}
+            showTarget={!recentShown}
             onNotice={onNotice}
           />
         </Suspense>
@@ -252,8 +255,7 @@ interface DayColumnProps {
 
 function DayColumn(props: DayColumnProps) {
   const { dayId, label, isDropTarget, expandedId, justCreatedId, onToggle, onCreated, onDelete, onCopy } = props
-  const state = useAppState()
-  const tasks = tasksOfDay(state, dayId)
+  const tasks = useAppSelector((s) => tasksOfDay(s, dayId), shallowEqual)
   const [newTitle, setNewTitle] = useState('')
   // Die ganze Spalte ist Ablagefläche – so klappt es auch, wenn der Tag noch leer ist.
   const { setNodeRef } = useDroppable({ id: COLUMN_PREFIX + dayId })
@@ -322,10 +324,9 @@ function DayColumn(props: DayColumnProps) {
  * Hat nur ein Tag Aufgaben, wandern sie auf den anderen. Nur sichtbar, wenn es etwas zu tauschen gibt.
  */
 function SwapDays({ days, onNotice, compact = false }: { days: PlanDays; onNotice: (message: string) => void; compact?: boolean }) {
-  const state = useAppState()
   const [today, tomorrow] = days
-  const todayCount = tasksOfDay(state, today.day.id).length
-  const tomorrowCount = tasksOfDay(state, tomorrow.day.id).length
+  const todayCount = useAppSelector((s) => tasksOfDay(s, today.day.id).length)
+  const tomorrowCount = useAppSelector((s) => tasksOfDay(s, tomorrow.day.id).length)
   if (todayCount === 0 && tomorrowCount === 0) return null
 
   const hint = todayCount === 0 ? T.plan.swapToToday : tomorrowCount === 0 ? T.plan.swapToTomorrow : T.plan.swapDays
@@ -364,11 +365,14 @@ function SwapDays({ days, onNotice, compact = false }: { days: PlanDays; onNotic
 
 /** Handy: „Heute | Morgen“ oben im Planer – zeigt einen der beiden Tage (mit Anzahl der Aufgaben). */
 function DaySwitch({ days, shownIndex, onChange }: { days: PlanDays; shownIndex: number; onChange: (index: number) => void }) {
-  const state = useAppState()
+  const counts = useAppSelector(
+    (s) => days.map(({ day }) => tasksOfDay(s, day.id).filter((t) => t.completedAt === null).length),
+    shallowEqual,
+  )
   return (
     <div className="segmented plan-day-tabs" role="tablist" aria-label={T.plan.dayTabs}>
       {days.map(({ day, label }, index) => {
-        const count = tasksOfDay(state, day.id).filter((t) => t.completedAt === null).length
+        const count = counts[index]
         return (
           <button
             key={day.id}

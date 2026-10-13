@@ -10,10 +10,11 @@
  *      (die Oberfläche zeichnet sich neu).
  *   2. Die geänderten Einträge werden im Hintergrund gespeichert.
  *
- * React-Komponenten lesen den Zustand mit dem Hook `useAppState()`.
+ * React-Komponenten lesen den Zustand mit `useAppSelector()` (nur ihren Ausschnitt) oder
+ * `useAppState()` (alles).
  */
 
-import { useSyncExternalStore } from 'react'
+import { useRef, useSyncExternalStore } from 'react'
 import { DEFAULT_SETTINGS } from '../config/defaults'
 import * as database from '../db/database'
 import { baseFields } from '../logic/records'
@@ -66,9 +67,36 @@ function subscribe(listener: () => void): () => void {
   return () => listeners.delete(listener)
 }
 
-/** React-Hook: gibt den aktuellen Zustand zurück und zeichnet bei Änderungen neu. */
+/**
+ * React-Hook: gibt den ganzen Zustand zurück und zeichnet bei JEDER Änderung neu.
+ * Für Stellen, die oft neu zeichnen würden, lieber `useAppSelector`.
+ */
 export function useAppState(): AppState {
   return useSyncExternalStore(subscribe, getState)
+}
+
+/**
+ * React-Hook: liest nur einen Ausschnitt des Zustands. Die Komponente zeichnet nur neu, wenn sich
+ * IHR Ausschnitt ändert (verglichen mit `equal`) – nicht bei jeder Änderung irgendwo in der App.
+ * Liefert `select` jedes Mal ein neues Objekt oder eine neue Liste, `shallowEqual` mitgeben.
+ */
+export function useAppSelector<T>(select: (s: AppState) => T, equal: (a: T, b: T) => boolean = Object.is): T {
+  const last = useRef<{ value: T } | null>(null)
+  return useSyncExternalStore(subscribe, () => {
+    const next = select(getState())
+    if (last.current && equal(last.current.value, next)) return last.current.value
+    last.current = { value: next }
+    return next
+  })
+}
+
+/** Gleich, wenn beide Listen (oder Objekte) dieselben Einträge haben – Eintrag für Eintrag mit `Object.is`. */
+export function shallowEqual<T>(a: T, b: T): boolean {
+  if (Object.is(a, b)) return true
+  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false
+  const keysA = Object.keys(a)
+  if (keysA.length !== Object.keys(b).length) return false
+  return keysA.every((key) => Object.is((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key]))
 }
 
 /** Auch außerhalb von React auf Änderungen reagieren (z. B. für den Timer-Takt). */

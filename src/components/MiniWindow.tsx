@@ -15,7 +15,7 @@ import { createPortal } from 'react-dom'
 import { MINI_WINDOW_SIZE, PARKED_TOAST_MS } from '../config/defaults'
 import { T } from '../config/texts'
 import { MiniToday } from '../screens/today/TodayScreen'
-import { useAppState } from '../store/store'
+import { useAppSelector } from '../store/store'
 import { WindowContext } from './hooks'
 import { QuickPark } from './QuickPark'
 import { Toast } from './Toast'
@@ -105,8 +105,7 @@ export function MiniWindow() {
   const showToast = useCallback((request: ToastRequest) => setToast((old) => ({ id: (old?.id ?? 0) + 1, ...request })), [])
   const clearToast = useCallback(() => setToast(null), [])
   // Hat der Mac im Block geschlafen, steht die Frage im großen Fenster – also holen wir es zurück.
-  const timer = useAppState().timer
-  const sleptAt = timer.phase === 'block' ? timer.sleptAt : undefined
+  const sleptAt = useAppSelector((s) => (s.timer.phase === 'block' ? s.timer.sleptAt : undefined))
 
   useEffect(() => {
     if (sleptAt === undefined || !minimized.current) return
