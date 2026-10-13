@@ -179,3 +179,75 @@ export function startNoise(): () => void {
   }
   return stopNoise
 }
+
+/*
+ * NUR EIN MOTOR
+ * Ist Tagesplan in mehreren Fenstern offen, läuft der Motor (samt Rauschen) nur in einem davon –
+ * sonst gäbe es den Ton doppelt und jedes Fenster würde den Block eintragen. Wer den Motor hat,
+ * regelt ein Web Lock: Wird das Fenster geschlossen, übernimmt das nächste von selbst. Klickst
+ * oder tippst du in einem anderen Fenster, holt es sich den Motor – dort sind Töne sicher erlaubt
+ * (Browser spielen sie erst nach einem Klick in genau diesem Fenster).
+ * Kennt der Browser keine Web Locks, läuft der Motor wie bisher in jedem Fenster.
+ * Das Mini-Fenster gehört zum großen Fenster und braucht keinen eigenen Motor.
+ */
+const MOTOR_LOCK = 'tagesplan-motor'
+let motorStarted = false
+
+/** Einmal nach dem Laden (App.tsx). */
+export function startMotor(): void {
+  if (motorStarted) return
+  motorStarted = true
+  const run = () => {
+    const stops = [startTimerEngine(), startNoise()]
+    return () => stops.forEach((s) => s())
+  }
+  const locks = typeof navigator === 'undefined' ? undefined : navigator.locks
+  if (!locks) {
+    run()
+    return
+  }
+
+  // Welche Anfrage dieses Fensters den Motor gerade hält (0 = keine).
+  let owner = 0
+  let nextId = 0
+  let stopRun: (() => void) | null = null
+  // Die Anfrage, die gerade in der Warteschlange steht (um sie vor dem Holen abzubrechen).
+  let waiting: AbortController | null = null
+  // Wird der Motor gerade geholt? (Dann nicht bei jedem weiteren Klick noch einmal.)
+  let taking = false
+
+  const request = (take: boolean) => {
+    waiting?.abort()
+    const id = ++nextId
+    const controller = new AbortController()
+    waiting = take ? null : controller
+    if (take) taking = true
+    locks
+      .request(MOTOR_LOCK, take ? { steal: true } : { signal: controller.signal }, () => {
+        if (waiting === controller) waiting = null
+        if (take) taking = false
+        stopRun ??= run()
+        owner = id
+        // Halten, solange das Fenster offen ist – oder bis ein anderes Fenster den Motor holt.
+        return new Promise<void>(() => undefined)
+      })
+      .catch(() => undefined)
+      .then(() => {
+        if (take) taking = false
+        // Nie gehalten (abgebrochen) – nichts zu tun. Sonst hat ein anderes Fenster den Motor
+        // geholt: anhalten und hinten anstellen.
+        if (owner !== id) return
+        owner = 0
+        stopRun?.()
+        stopRun = null
+        request(false)
+      })
+  }
+
+  request(false)
+  const takeOver = () => {
+    if (owner === 0 && !taking) request(true)
+  }
+  document.addEventListener('pointerdown', takeOver, true)
+  document.addEventListener('keydown', takeOver, true)
+}

@@ -43,7 +43,7 @@ import * as timer from './logic/timer'
 import type { ID, PaletteSetting, SurfaceSetting, ThemeSetting, TimerState } from './model/types'
 import { TodayScreen } from './screens/today/TodayScreen'
 import { unlockAudio } from './signals/sounds'
-import { startNoise, startTimerEngine, useWakeEvents, type WakeEvent } from './signals/timerEngine'
+import { startMotor, useWakeEvents, type WakeEvent } from './signals/timerEngine'
 import { IS_MOBILE } from './platform/device'
 import { useFocusMode } from './platform/focusMode'
 import { downloadBackup } from './db/backup'
@@ -58,6 +58,7 @@ import {
 } from './store/actions'
 import { backupAgeDays, lifetimeWork, reachedMilestone, shouldRemindBackup } from './store/selectors'
 import { shareLink } from './platform/share'
+import { startWindowSync } from './store/windowSync'
 import { getState, initStore, takeFirstStart, useAppSelector, useSaveFailedAt } from './store/store'
 
 type Screen = 'today' | 'plan' | 'settings'
@@ -90,9 +91,10 @@ export default function App() {
   useEffect(() => {
     initStore()
       .then(() => {
-        // Timer und Rauschen laufen unabhängig von der Oberfläche (signals/timerEngine.ts).
-        startTimerEngine()
-        startNoise()
+        // Timer und Rauschen laufen unabhängig von der Oberfläche – und nur in einem Fenster
+        // (signals/timerEngine.ts). Andere offene Fenster bekommen jede Änderung mit (windowSync.ts).
+        startWindowSync()
+        startMotor()
         // Allererster Start: eine Beispielaufgabe zum Ausprobieren (genau einmal).
         if (takeFirstStart()) addExampleTask()
         setBoot('ready')

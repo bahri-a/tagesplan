@@ -9,6 +9,8 @@
  *   1. Der Zustand im Arbeitsspeicher wird sofort aktualisiert
  *      (die Oberfläche zeichnet sich neu).
  *   2. Die geänderten Einträge werden im Hintergrund gespeichert.
+ *   3. Andere offene Fenster erfahren davon (windowSync.ts) und übernehmen sie mit
+ *      `applyExternal()` – nur, was dort nicht schon neuer ist.
  *
  * React-Komponenten lesen den Zustand mit `useAppSelector()` (nur ihren Ausschnitt) oder
  * `useAppState()` (alles).
@@ -140,34 +142,89 @@ export function useSaveFailedAt(): number | null {
 }
 
 /**
- * Übernimmt Änderungen in den Zustand und speichert sie.
+ * Wer außerhalb dieses Fensters davon erfahren soll (windowSync.ts: die anderen offenen Fenster;
+ * später der Abgleich zwischen Mac und iPhone).
+ */
+export type StoreEvent = { type: 'changes'; changes: Changes } | { type: 'reload' }
+const outsideListeners = new Set<(event: StoreEvent) => void>()
+
+export function subscribeToCommits(listener: (event: StoreEvent) => void): () => void {
+  outsideListeners.add(listener)
+  return () => outsideListeners.delete(listener)
+}
+
+/**
+ * Übernimmt Änderungen in den Zustand, speichert sie und sagt sie weiter.
  * `updatedAt` wird automatisch gesetzt.
  */
 export function commit(changes: Changes): void {
+  const stamped = stamp(changes, Date.now())
+  apply(stamped)
+  save(stamped)
+  outsideListeners.forEach((l) => l({ type: 'changes', changes: stamped }))
+}
+
+/**
+ * Änderungen von außen (ein anderes Fenster, später der Abgleich): Ein Eintrag wird nur
+ * übernommen, wenn er neuer ist als der hier bekannte (`updatedAt`). Gespeichert wird nicht noch
+ * einmal – das hat das andere Fenster schon getan. Timer und Gerätewerte gelten für das ganze
+ * Gerät und werden immer übernommen.
+ */
+export function applyExternal(changes: Changes): void {
   const current = getState()
-  const now = Date.now()
-  const stamp = <T extends { updatedAt: number }>(r: T): T => ({ ...r, updatedAt: now })
+  const newer = <T extends { id: ID; updatedAt: number }>(table: Record<ID, T>, records?: T[]) => {
+    const kept = records?.filter((r) => r.updatedAt > (table[r.id]?.updatedAt ?? -Infinity))
+    return kept && kept.length > 0 ? kept : undefined
+  }
+  const isNewer = <T extends { updatedAt: number }>(mine: T, theirs?: T) =>
+    theirs && theirs.updatedAt > mine.updatedAt ? theirs : undefined
+  const accepted: Changes = {
+    days: newer(current.days, changes.days),
+    tasks: newer(current.tasks, changes.tasks),
+    steps: newer(current.steps, changes.steps),
+    blocks: newer(current.blocks, changes.blocks),
+    settings: isNewer(current.settings, changes.settings),
+    note: isNewer(current.note, changes.note),
+    timer: changes.timer,
+    local: changes.local,
+  }
+  if (Object.values(accepted).some((value) => value !== undefined)) apply(accepted)
+}
 
-  const days = changes.days?.map(stamp)
-  const tasks = changes.tasks?.map(stamp)
-  const steps = changes.steps?.map(stamp)
-  const blocks = changes.blocks?.map(stamp)
-  const settings = changes.settings && stamp(changes.settings)
-  const note = changes.note && stamp(changes.note)
+/** Setzt bei allen geänderten Einträgen `updatedAt` (Timer und Gerätewerte haben keins). */
+function stamp(changes: Changes, now: number): Changes {
+  const touch = <T extends { updatedAt: number }>(r: T): T => ({ ...r, updatedAt: now })
+  return {
+    days: changes.days?.map(touch),
+    tasks: changes.tasks?.map(touch),
+    steps: changes.steps?.map(touch),
+    blocks: changes.blocks?.map(touch),
+    settings: changes.settings && touch(changes.settings),
+    note: changes.note && touch(changes.note),
+    timer: changes.timer,
+    local: changes.local,
+  }
+}
 
+/** Ersetzt den Zustand im Arbeitsspeicher – die Oberfläche zeichnet sich neu. */
+function apply(changes: Changes): void {
+  const current = getState()
   state = {
-    days: mergeRecords(current.days, days),
-    tasks: mergeRecords(current.tasks, tasks),
-    steps: mergeRecords(current.steps, steps),
-    blocks: mergeRecords(current.blocks, blocks),
-    settings: settings ?? current.settings,
-    note: note ?? current.note,
+    days: mergeRecords(current.days, changes.days),
+    tasks: mergeRecords(current.tasks, changes.tasks),
+    steps: mergeRecords(current.steps, changes.steps),
+    blocks: mergeRecords(current.blocks, changes.blocks),
+    settings: changes.settings ?? current.settings,
+    note: changes.note ?? current.note,
     timer: changes.timer ?? current.timer,
     local: changes.local ?? current.local,
   }
   listeners.forEach((l) => l())
+}
 
-  // Im Hintergrund speichern.
+/** Speichert die Änderungen im Hintergrund (IndexedDB). */
+function save(changes: Changes): void {
+  const { days, tasks, steps, blocks, settings, note, timer, local } = changes
   const saves: Promise<void>[] = []
   if (days) saves.push(database.putRecords('days', days))
   if (tasks) saves.push(database.putRecords('tasks', tasks))
@@ -175,8 +232,8 @@ export function commit(changes: Changes): void {
   if (blocks) saves.push(database.putRecords('blocks', blocks))
   if (settings) saves.push(database.putRecords('settings', [settings]))
   if (note) saves.push(database.putRecords('notes', [note]))
-  if (changes.timer) saves.push(database.putTimer(changes.timer))
-  if (changes.local) saves.push(database.putLocal(changes.local))
+  if (timer) saves.push(database.putTimer(timer))
+  if (local) saves.push(database.putLocal(local))
   pendingSaves = Promise.all([pendingSaves, ...saves]).then(() => undefined, reportSaveError)
 }
 
@@ -214,11 +271,15 @@ export function initStore(): Promise<void> {
   return initPromise
 }
 
-/** Liest (erneut) alles aus der Datenbank – z. B. nach dem Wiederherstellen. */
-export async function reloadStore(): Promise<void> {
+/**
+ * Liest (erneut) alles aus der Datenbank – z. B. nach dem Wiederherstellen. Die anderen offenen
+ * Fenster lesen dann ebenfalls neu (außer `fromOutside`: Das Neuladen kam selbst von dort).
+ */
+export async function reloadStore({ fromOutside = false }: { fromOutside?: boolean } = {}): Promise<void> {
   await pendingSaves
   initPromise = loadFromDatabase()
   await initPromise
+  if (!fromOutside) outsideListeners.forEach((l) => l({ type: 'reload' }))
 }
 
 async function loadFromDatabase(): Promise<void> {
@@ -284,6 +345,7 @@ export function resetStoreForTests(): void {
   initPromise = null
   firstStart = false
   listeners.clear()
+  outsideListeners.clear()
   pendingSaves = Promise.resolve()
   saveFailedAt = null
 }
