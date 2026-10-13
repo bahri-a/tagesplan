@@ -59,7 +59,7 @@ interface TagesplanDB extends DBSchema {
 let dbPromise: Promise<IDBPDatabase<TagesplanDB>> | null = null
 
 /** Verbindung vergessen – beim nächsten Zugriff wird sie neu geöffnet. */
-function forgetConnection() {
+export function forgetConnection(): void {
   dbPromise = null
 }
 

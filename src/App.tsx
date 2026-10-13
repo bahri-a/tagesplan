@@ -1,9 +1,8 @@
 /**
  * DIE APP
  * =======
- * Lädt die Daten, zeigt die Kopfleiste mit Navigation und den gerade
- * gewählten Bildschirm. Außerdem laufen hier der Timer-„Motor“ und die
- * Dialoge, die überall erscheinen können.
+ * Lädt die Daten, startet den Timer-„Motor“ und zeigt die Kopfleiste mit Navigation und den
+ * gerade gewählten Bildschirm. Außerdem die Dialoge, die überall erscheinen können.
  */
 
 import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
@@ -20,6 +19,7 @@ import {
 } from './config/defaults'
 import { T } from './config/texts'
 import { EndDayDialog } from './components/EndDayDialog'
+import { ScreenBoundary, StartFailed } from './components/ErrorBoundary'
 import { InviteDialog } from './components/InviteDialog'
 import { isTypingOrButton, useNow } from './components/hooks'
 import { PencilIcon, PlanIcon, SettingsIcon, TodayIcon } from './components/icons'
@@ -32,6 +32,7 @@ import { NotifyPrimer } from './components/NotifyPrimer'
 import { NOTIFY_PRIMER_EVENT } from './signals/notifications'
 import { SleepDialog } from './components/SleepDialog'
 import { Toast, type ToastAction } from './components/Toast'
+import { ToastContext, type ToastRequest } from './components/toastContext'
 import { UpdateBanner } from './components/UpdateBanner'
 import { WakeAlert } from './components/WakeAlert'
 import { lazyScreen, preloadWhenIdle } from './components/lazyScreen'
@@ -42,7 +43,7 @@ import * as timer from './logic/timer'
 import type { ID, PaletteSetting, SurfaceSetting, ThemeSetting, TimerState } from './model/types'
 import { TodayScreen } from './screens/today/TodayScreen'
 import { unlockAudio } from './signals/sounds'
-import { useNoise, useTimerEngine, type WakeEvent } from './signals/timerEngine'
+import { startNoise, startTimerEngine, useWakeEvents, type WakeEvent } from './signals/timerEngine'
 import { IS_MOBILE } from './platform/device'
 import { useFocusMode } from './platform/focusMode'
 import { downloadBackup } from './db/backup'
@@ -84,18 +85,29 @@ const SCREENS: { id: Screen; label: string; icon: ReactNode }[] = [
 ]
 
 export default function App() {
-  const [ready, setReady] = useState(false)
+  const [boot, setBoot] = useState<'loading' | 'ready' | 'failed'>('loading')
 
   useEffect(() => {
-    void initStore().then(() => {
-      // Allererster Start: eine Beispielaufgabe zum Ausprobieren (genau einmal).
-      if (takeFirstStart()) addExampleTask()
-      setReady(true)
-      // iPhone-App: Startbildschirm erst jetzt ausblenden (sonst blitzt kurz eine leere Seite auf).
-      if (__NATIVE_APP__) void import('./platform/nativeApp').then((m) => m.hideSplash())
-      // iPhone-App: einmal am Tag still eine Sicherung in „Dateien › Tagesplan“ ablegen.
-      if (__NATIVE_APP__) void import('./platform/autoBackup').then((m) => m.startDailyBackup())
-    })
+    initStore()
+      .then(() => {
+        // Timer und Rauschen laufen unabhängig von der Oberfläche (signals/timerEngine.ts).
+        startTimerEngine()
+        startNoise()
+        // Allererster Start: eine Beispielaufgabe zum Ausprobieren (genau einmal).
+        if (takeFirstStart()) addExampleTask()
+        setBoot('ready')
+        // iPhone-App: einmal am Tag still eine Sicherung in „Dateien › Tagesplan“ ablegen.
+        if (__NATIVE_APP__) void import('./platform/autoBackup').then((m) => m.startDailyBackup())
+      })
+      .catch((error: unknown) => {
+        console.error('Daten konnten nicht geladen werden:', error)
+        setBoot('failed')
+      })
+      // iPhone-App: Startbildschirm erst jetzt ausblenden (sonst blitzt kurz eine leere Seite auf) –
+      // auch im Fehlerfall, sonst bliebe er für immer stehen.
+      .finally(() => {
+        if (__NATIVE_APP__) void import('./platform/nativeApp').then((m) => m.hideSplash())
+      })
     void requestPersistentStorage()
     // Chrome erlaubt Töne erst nach einem Klick – daher bei jedem Klick freischalten.
     document.addEventListener('pointerdown', unlockAudio)
@@ -112,7 +124,8 @@ export default function App() {
   }, [])
 
   // Kurz leer lassen, bis die Daten geladen sind (dauert nur Millisekunden).
-  if (!ready) return null
+  if (boot === 'loading') return null
+  if (boot === 'failed') return <StartFailed />
   return <Shell />
 }
 
@@ -138,13 +151,12 @@ function Shell() {
     return () => window.removeEventListener(NOTIFY_PRIMER_EVENT, open)
   }, [])
 
-  useTimerEngine(useCallback((e: WakeEvent) => setWakeEvent(e), []))
+  useWakeEvents(useCallback((e: WakeEvent) => setWakeEvent(e), []))
   useBackupReminder((message, action) => setToast({ id: nextToastId++, message, duration: BACKUP_REMINDER_MS, action }))
   useSaveFailedNotice((message, action) => setToast({ id: nextToastId++, message, duration: SAVE_FAILED_TOAST_MS, action }))
   useMilestones(lifetimeWork(state).blocks, (message, action, duration = MILESTONE_TOAST_MS) =>
     setToast({ id: nextToastId++, message, duration, action }),
   )
-  useNoise()
   useTheme(state.settings.theme, state.settings.palette)
   useSurfaces(state.settings.surfaces)
   // Handy: ruhige Fokus-Ansicht, solange in „Heute“ ein Block läuft (siehe platform/focusMode.ts).
@@ -179,6 +191,8 @@ function Shell() {
   const clearToast = useCallback(() => setToast(null), [])
   const showToast = (message: string, extra: Omit<ToastInfo, 'id' | 'message'> = {}) =>
     setToast({ id: nextToastId++, message, ...extra })
+  // Meldungen aus den Karten (z. B. „Block abgeschlossen · Rückgängig“), siehe toastContext.ts.
+  const requestToast = useCallback((request: ToastRequest) => setToast({ id: nextToastId++, ...request }), [])
 
   // Nach dem Löschen: 8 Sekunden „Aufgabe gelöscht · Rückgängig“. Eine neue Meldung ersetzt
   // die alte – nach mehreren Löschungen lässt sich also nur die letzte zurückholen.
@@ -205,7 +219,7 @@ function Shell() {
   }
 
   return (
-    <>
+    <ToastContext.Provider value={requestToast}>
       <header className="topbar">
         <nav className="nav" aria-label="Hauptnavigation">
           {SCREENS.map((s) => (
@@ -239,27 +253,30 @@ function Shell() {
       </header>
 
       <main className="main">
-        {screen === 'today' && (
-          <TodayScreen
-            onPlan={(tomorrow = false) => {
-              setPlanTomorrow(tomorrow)
-              setScreen('plan')
-            }}
-            onEndDay={() => setEndDayDialog('confirm')}
-            onStartNewDay={startNewDay}
-          />
-        )}
-        {/* Nachgeladen: im allerersten Augenblick leer, danach wie gewohnt. */}
-        <Suspense fallback={null}>
-          {screen === 'plan' && (
-            <PlanScreen
-              startOnTomorrow={planTomorrow}
-              onTaskDeleted={taskDeleted}
-              onNotice={(message) => showToast(message)}
+        {/* Fehler in einem Bildschirm: nur dort eine Karte „Neu laden“, der Rest läuft weiter. */}
+        <ScreenBoundary key={screen}>
+          {screen === 'today' && (
+            <TodayScreen
+              onPlan={(tomorrow = false) => {
+                setPlanTomorrow(tomorrow)
+                setScreen('plan')
+              }}
+              onEndDay={() => setEndDayDialog('confirm')}
+              onStartNewDay={startNewDay}
             />
           )}
-          {screen === 'settings' && <SettingsScreen />}
-        </Suspense>
+          {/* Nachgeladen: im allerersten Augenblick leer, danach wie gewohnt. */}
+          <Suspense fallback={null}>
+            {screen === 'plan' && (
+              <PlanScreen
+                startOnTomorrow={planTomorrow}
+                onTaskDeleted={taskDeleted}
+                onNotice={(message) => showToast(message)}
+              />
+            )}
+            {screen === 'settings' && <SettingsScreen />}
+          </Suspense>
+        </ScreenBoundary>
       </main>
 
       <NotePad />
@@ -308,7 +325,7 @@ function Shell() {
       <UpdateBanner />
       {/* Eigener kleiner Baustein: tickt jede Sekunde, ohne die ganze App neu zu zeichnen. */}
       <WindowTitle timerState={state.timer} />
-    </>
+    </ToastContext.Provider>
   )
 }
 

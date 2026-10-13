@@ -206,10 +206,6 @@
   }
 }
 
-.skip-break-text {
-  white-space: pre-line;
-}
-
 .block-dots {
   display: flex;
   align-items: center;

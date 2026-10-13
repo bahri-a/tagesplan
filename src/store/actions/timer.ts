@@ -12,7 +12,7 @@ import {
   ULTRA_MAX_RING_MS,
 } from '../../config/defaults'
 import * as timer from '../../logic/timer'
-import type { ID } from '../../model/types'
+import type { Block, ID, TimerState } from '../../model/types'
 import {
   activeDay,
   blockMinutesFor,
@@ -23,7 +23,7 @@ import {
   shortBreakMinutesFor,
   undoableFinish,
 } from '../selectors'
-import { commit, getState, type Changes } from '../store'
+import { commit, getState, type AppState, type Changes } from '../store'
 import { blockRecord, clamp, completeBlockChanges, stopTimerChanges } from './helpers'
 import { setTaskCompleted } from './planning'
 
@@ -95,40 +95,68 @@ export function answerSleep(worked: boolean): void {
   commit({ timer: { ...rest, pausedAt: null } })
 }
 
+/** Macht eine Timer-Aktion rückgängig („… · Rückgängig“ in der Meldung danach). */
+export type Undo = () => void
+
+/**
+ * Rückgängig für eine Timer-Aktion: Der Timer kommt auf `before` zurück, die dabei eingetragenen
+ * Blöcke werden weich gelöscht, `revert` stellt Weiteres zurück. Nur solange der Timer noch so
+ * steht wie direkt danach (`after`) – läuft inzwischen schon der nächste Block, passiert nichts.
+ */
+function undoTimerAction(before: TimerState, after: TimerState, blocks: Block[] = [], revert: (s: AppState) => Changes = () => ({})): Undo {
+  return () => {
+    const s = getState()
+    if (JSON.stringify(s.timer) !== JSON.stringify(after)) return
+    const now = Date.now()
+    commit({
+      ...revert(s),
+      timer: before,
+      blocks: blocks.flatMap((b) => {
+        const current = s.blocks[b.id]
+        return current && current.deletedAt === null ? [{ ...current, deletedAt: now }] : []
+      }),
+    })
+  }
+}
+
 /**
  * „Früher fertig“: Der laufende (oder pausierte) Block wird jetzt erfolgreich abgeschlossen –
  * als Ausnahme nur für diesen einen Block. Er zählt als durchgehalten, gespeichert wird die
  * wirklich gearbeitete Zeit, und die kurze Pause startet sofort. Die Blocklänge der Aufgabe
- * und die nächsten Blöcke bleiben unverändert.
+ * und die nächsten Blöcke bleiben unverändert. Gibt „Rückgängig“ zurück: Der Block läuft weiter.
  */
-export function finishBlockEarly(now = Date.now()): void {
+export function finishBlockEarly(now = Date.now()): Undo | null {
   const t = getState().timer
-  if (t.phase !== 'block') return
-  const { blocks, timer: next } = completeBlockChanges(t, now)
+  if (t.phase !== 'block') return null
+  const { blocks = [], timer: next } = completeBlockChanges(t, now)
   commit({ blocks, timer: next })
+  return undoTimerAction(t, next, blocks)
 }
 
 /**
  * „Schon ohne App erledigt?“: Der Block wurde ohne App gemacht. Er zählt als durchgehalten
  * mit voller geplanter Zeit. Keine Pause danach – der nächste Block kann gleich starten.
+ * Gibt „Rückgängig“ zurück: Der Block läuft weiter.
  */
-export function skipBlockAsDone(now = Date.now()): void {
+export function skipBlockAsDone(now = Date.now()): Undo | null {
   const t = getState().timer
-  if (t.phase !== 'block') return
+  if (t.phase !== 'block') return null
   const { blocks } = completeBlockChanges(t, now)
   const done = (blocks ?? []).map((b) => ({ ...b, pausedMs: 0, workedSeconds: Math.round(t.plannedMs / 1000) }))
-  commit({ blocks: done, timer: { phase: 'idle' } })
+  const next: TimerState = { phase: 'idle' }
+  commit({ blocks: done, timer: next })
+  return undoTimerAction(t, next, done)
 }
 
 /**
  * „Schon ohne App erledigt?“ schon vor dem Start: Der Block wurde ganz ohne App gemacht.
  * Er wird mit voller geplanter Zeit (bis jetzt) als durchgehalten eingetragen, ohne Pause danach.
- * Eine abgelaufene kurze Pause endet dabei.
+ * Eine abgelaufene kurze Pause endet dabei. Gibt „Rückgängig“ zurück: Alles ist wie vorher.
  */
-export function logBlockAsDone(taskId: ID, now = Date.now()): void {
+export function logBlockAsDone(taskId: ID, now = Date.now()): Undo | null {
   const s = getState()
   const task = s.tasks[taskId]
-  if (!task || task.completedAt !== null || s.timer.phase === 'block') return
+  if (!task || task.completedAt !== null || s.timer.phase === 'block') return null
   const day = activeDay(s)
   const plannedMs = blockMinutesFor(s, task) * 60_000
   const ran: timer.BlockTimer = {
@@ -140,11 +168,25 @@ export function logBlockAsDone(taskId: ID, now = Date.now()): void {
     pausedAt: null,
     pausedMs: 0,
   }
+  const before = s.timer
+  const next: TimerState = { phase: 'idle' }
+  const blocks = [blockRecord(ran, 'completed', now)]
+  const firstWork = day.firstWorkAt === null
+  const firstEstimate = task.firstEstimatedBlocks === null
   commit({
-    blocks: [blockRecord(ran, 'completed', now)],
-    timer: { phase: 'idle' },
-    days: day.firstWorkAt === null ? [{ ...day, firstWorkAt: ran.startedAt }] : undefined,
-    tasks: task.firstEstimatedBlocks === null ? [{ ...task, firstEstimatedBlocks: task.estimatedBlocks }] : undefined,
+    blocks,
+    timer: next,
+    days: firstWork ? [{ ...day, firstWorkAt: ran.startedAt }] : undefined,
+    tasks: firstEstimate ? [{ ...task, firstEstimatedBlocks: task.estimatedBlocks }] : undefined,
+  })
+  // Rückgängig: auch „heute zuerst gearbeitet um …“ und die erste Schätzung wie vorher.
+  return undoTimerAction(before, next, blocks, (current) => {
+    const d = current.days[day.id]
+    const t = current.tasks[taskId]
+    return {
+      days: firstWork && d?.firstWorkAt === ran.startedAt ? [{ ...d, firstWorkAt: null }] : undefined,
+      tasks: firstEstimate && t ? [{ ...t, firstEstimatedBlocks: null }] : undefined,
+    }
   })
 }
 
@@ -249,11 +291,14 @@ export function confirmBreak(now = Date.now()): void {
 /**
  * „Pause überspringen“: Die kurze Pause ist sofort vorbei (ohne Ton), danach kommt wie
  * gewohnt „Nächsten Block starten“. Im Ultra-Modus hört damit auch das Piepen auf.
+ * Gibt „Rückgängig“ zurück: Die Pause läuft weiter, als wäre nichts gewesen.
  */
-export function skipBreak(): void {
+export function skipBreak(): Undo | null {
   const t = getState().timer
-  if (t.phase !== 'break' || t.endSignaled) return
-  commit({ timer: { ...t, nagging: false, endSignaled: true } })
+  if (t.phase !== 'break' || t.endSignaled) return null
+  const next: TimerState = { ...t, nagging: false, endSignaled: true }
+  commit({ timer: next })
+  return undoTimerAction(t, next)
 }
 
 /** Wird „+2 Min.“ gerade angeboten? Nur in den letzten 5 Minuten eines laufenden Blocks. */

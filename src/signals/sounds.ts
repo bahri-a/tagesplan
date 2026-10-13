@@ -132,7 +132,7 @@ export function playBlockWarning(): void {
 
 /**
  * Ultra-Modus: absichtlich nervig – drei kurze, scharfe Pieptöne (Rechteckwelle, hoch).
- * Wird wiederholt, bis die fällige Pause bestätigt ist (siehe useTimerEngine).
+ * Wird wiederholt, bis die fällige Pause bestätigt ist (siehe startTimerEngine).
  */
 export function playUltraAlarm(): void {
   if (!soundsEnabled()) return
@@ -211,7 +211,7 @@ export function previewNoise(color: NoiseColor): void {
 
 /**
  * Schaltet das Rauschen weich ein oder aus. `play = false` blendet aus.
- * Wird mit jeder Änderung von Timer oder Einstellungen aufgerufen (siehe useNoise).
+ * Wird mit jeder Änderung von Timer oder Einstellungen aufgerufen (siehe startNoise).
  */
 export function setNoise(play: boolean, color: NoiseColor): void {
   if (!play) {

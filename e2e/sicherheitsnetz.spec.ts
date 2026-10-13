@@ -1,0 +1,81 @@
+/**
+ * Sicherheitsnetz: Rückgängig nach Aktionen im Block, eine ruhige Karte, wenn sich die Daten beim
+ * Start nicht öffnen lassen, und ein Fehler in einem Bildschirm hält den Timer nicht an.
+ */
+import { expect, test } from '@playwright/test'
+
+const MIN = 60_000
+
+test('„Früher fertig“ und „Schon ohne App erledigt?“ lassen sich rückgängig machen', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+  await page.clock.install({ time: new Date('2026-10-06T09:00:00') })
+  await page.goto('/')
+
+  // Beispielaufgabe: ein Block à 5 Min.
+  await page.getByRole('button', { name: 'Starten', exact: true }).click()
+  await page.clock.fastForward(MIN)
+  await page.getByRole('button', { name: 'Früher fertig' }).click()
+  await expect(page.locator('.ask-done-question')).toBeVisible()
+  await expect(page.locator('.toast')).toContainText('Block abgeschlossen')
+  await page.waitForTimeout(400) // Meldung ganz eingeblendet
+  await page.screenshot({ path: process.env.SHOT_DIR ? `${process.env.SHOT_DIR}/frueher-fertig-rueckgaengig.png` : undefined })
+
+  // Verklickt → der Block läuft einfach weiter (mit der Zeit, die schon vergangen ist).
+  await page.getByRole('button', { name: 'Rückgängig' }).click()
+  await expect(page.getByRole('button', { name: 'Früher fertig' })).toBeVisible()
+  await expect(page.locator('.timer-ring-time')).toHaveText(/^3:5\d$/)
+
+  // Dasselbe für „Schon ohne App erledigt?“ im Block.
+  await page.getByRole('button', { name: /Schon ohne App erledigt/ }).click()
+  await expect(page.locator('.ask-done-question')).toBeVisible()
+  await expect(page.locator('.toast')).toContainText('Block eingetragen')
+  await page.getByRole('button', { name: 'Rückgängig' }).click()
+  await expect(page.getByRole('button', { name: 'Früher fertig' })).toBeVisible()
+
+  // Nach dem Ablauf zählt genau ein Block.
+  await page.clock.fastForward(5 * MIN)
+  await page.getByRole('button', { name: 'Erledigt', exact: true }).click()
+  await expect(page.locator('.lifetime-line')).toHaveText('Bisher insgesamt: 1 Block')
+
+  expect(errors).toEqual([])
+})
+
+test('Daten lassen sich beim Start nicht öffnen → ruhige Karte statt weißer Seite', async ({ page }) => {
+  await page.addInitScript(`indexedDB.open = () => {
+    throw new Error('Connection to Indexed Database server lost')
+  }`)
+  await page.goto('/')
+  await expect(page.getByRole('alert')).toContainText('Deine Daten ließen sich gerade nicht öffnen.')
+  await expect(page.getByRole('alert')).toContainText('Sie sind nicht weg.')
+  await expect(page.getByRole('button', { name: 'Neu laden' })).toBeVisible()
+  await page.screenshot({ path: process.env.SHOT_DIR ? `${process.env.SHOT_DIR}/start-fehlgeschlagen.png` : undefined })
+})
+
+test('Fehler im Planer: nur dort eine Karte – der Block endet trotzdem mit Signal', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+  // Der Planer lässt sich nicht laden (z. B. nach einem Update ohne Verbindung).
+  await page.route(/PlanScreen-.*\.js$/, (route) =>
+    route.fulfill({ contentType: 'text/javascript', body: 'throw new Error("Planer kaputt")' }),
+  )
+  await page.clock.install({ time: new Date('2026-10-06T09:00:00') })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Starten', exact: true }).click()
+
+  await page.getByRole('button', { name: 'Planer' }).click()
+  await expect(page.getByRole('alert')).toContainText('Hier ist etwas schiefgelaufen.')
+  // Kopfleiste und Timer-Anzeige oben rechts bleiben.
+  await expect(page.locator('.timer-pill')).toContainText('Block')
+  await page.screenshot({ path: process.env.SHOT_DIR ? `${process.env.SHOT_DIR}/planer-fehler.png` : undefined })
+
+  // Der Block läuft ab: Der Motor schaltet weiter und gibt Bescheid (dieselbe Stelle spielt den
+  // Ton und schickt die Mitteilung – hier sichtbar an der Ansage für VoiceOver).
+  await page.clock.fastForward(5 * MIN + 2000)
+  await expect(page.locator('[role="status"][aria-live]')).toContainText('Block geschafft')
+  await expect(page.locator('.timer-pill')).toHaveCount(0)
+  await expect(page).toHaveTitle('Tagesplan')
+  await page.getByRole('button', { name: 'Heute', exact: true }).first().click()
+  await expect(page.locator('.ask-done-question')).toHaveText('Hauptaufgabe erledigt oder noch ein Block?')
+  expect(errors.filter((e) => !e.includes('Planer kaputt'))).toEqual([])
+})
