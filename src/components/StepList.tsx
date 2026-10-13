@@ -5,10 +5,11 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { T } from '../config/texts'
-import type { ID } from '../model/types'
+import type { ID, Step } from '../model/types'
 import { addStep, deleteStep, toggleStep, updateStepText } from '../store/actions'
 import { stepsOfTask } from '../store/selectors'
-import { getState, useAppState } from '../store/store'
+import { getState, shallowEqual, useAppSelector } from '../store/store'
+import { useDraft } from './useDraft'
 
 interface Props {
   taskId: ID
@@ -20,8 +21,7 @@ interface Props {
 }
 
 export function StepList({ taskId, editable = true, autoFocusNew = false, highlightId }: Props) {
-  const state = useAppState()
-  const steps = stepsOfTask(state, taskId)
+  const steps = useAppSelector((s) => stepsOfTask(s, taskId), shallowEqual)
   const [newText, setNewText] = useState('')
   const pending = useRef('')
 
@@ -60,12 +60,7 @@ export function StepList({ taskId, editable = true, autoFocusNew = false, highli
                     aria-label={step.text}
                     onChange={() => toggleStep(step.id)}
                   />
-                  <input
-                    className="step-text-input"
-                    value={step.text}
-                    aria-label={T.plan.steps}
-                    onChange={(e) => updateStepText(step.id, e.target.value)}
-                  />
+                  <StepTextInput step={step} />
                   <button
                     type="button"
                     className="step-remove"
@@ -116,5 +111,19 @@ export function StepList({ taskId, editable = true, autoFocusNew = false, highli
         </form>
       )}
     </div>
+  )
+}
+
+/** Text eines Schritts – beim Tippen nur im Feld, gespeichert nach kurzer Pause (useDraft.ts). */
+function StepTextInput({ step }: { step: Step }) {
+  const text = useDraft(step.text, (value) => updateStepText(step.id, value))
+  return (
+    <input
+      className="step-text-input"
+      value={text.value}
+      aria-label={T.plan.steps}
+      onChange={(e) => text.set(e.target.value)}
+      onBlur={text.flush}
+    />
   )
 }

@@ -9,7 +9,7 @@ import { cleanStartCue } from '../../logic/variety'
 import { SHOWS_START_CUE } from '../../platform/device'
 import type { ID, Task } from '../../model/types'
 import { blockMinutesFor, stepsOfTask, taskWork } from '../../store/selectors'
-import { useAppState } from '../../store/store'
+import { shallowEqual, useAppSelector } from '../../store/store'
 import { CheckIcon } from '../../components/icons'
 import { wasJustFinished } from './celebrate'
 
@@ -63,10 +63,9 @@ export function DayBar({ tasks, currentId }: { tasks: Task[]; currentId: ID | un
 
 /** Kurze Übersicht einer Aufgabe unter der Leiste: Stand, Blöcke, Startsignal, erste Schritte. */
 function DayPeek({ task, mark, onClose }: { task: Task; mark: Mark; onClose: () => void }) {
-  const state = useAppState()
-  const steps = stepsOfTask(state, task.id)
-  const work = taskWork(state, task.id)
-  const minutes = blockMinutesFor(state, task)
+  const steps = useAppSelector((s) => stepsOfTask(s, task.id), shallowEqual)
+  const work = useAppSelector((s) => taskWork(s, task.id), shallowEqual)
+  const minutes = useAppSelector((s) => blockMinutesFor(s, task))
   const cue = SHOWS_START_CUE && task.startCue ? cleanStartCue(task.startCue) : ''
 
   let status: string = T.today.peekUpcoming

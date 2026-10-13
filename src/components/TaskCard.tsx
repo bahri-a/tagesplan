@@ -17,10 +17,11 @@ import { stripStartCuePrefix } from '../logic/variety'
 import { IS_MOBILE, SHOWS_START_CUE } from '../platform/device'
 import { rememberStartCue, setTaskCompleted, updateTask } from '../store/actions'
 import { blockMinutesFor, shortBreakMinutesFor, stepsOfTask } from '../store/selectors'
-import { useAppState } from '../store/store'
+import { shallowEqual, useAppSelector } from '../store/store'
 import { CheckIcon, CopyIcon, TrashIcon } from './icons'
 import { NumberStepper } from './NumberStepper'
 import { StepList } from './StepList'
+import { useDraft } from './useDraft'
 
 interface Props {
   task: Task
@@ -36,10 +37,10 @@ interface Props {
 }
 
 export function TaskCard({ task, number, expanded, focusStepInput, onToggle, onDelete, onCopy }: Props) {
-  const state = useAppState()
-  const steps = stepsOfTask(state, task.id)
+  // Nur die eigenen Schritte und die eigene Blocklänge – so zeichnet die Karte nicht bei jeder Änderung neu.
+  const steps = useAppSelector((s) => stepsOfTask(s, task.id), shallowEqual)
   const stepsDone = steps.filter((s) => s.doneAt !== null).length
-  const minutes = blockMinutesFor(state, task)
+  const minutes = useAppSelector((s) => blockMinutesFor(s, task))
   const isDone = task.completedAt !== null
 
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
@@ -124,7 +125,11 @@ export function TaskCard({ task, number, expanded, focusStepInput, onToggle, onD
 }
 
 function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepInput: boolean; onClose: () => void }) {
-  const state = useAppState()
+  const settings = useAppSelector((s) => s.settings)
+  const blockMinutes = useAppSelector((s) => blockMinutesFor(s, task))
+  const breakMinutes = useAppSelector((s) => shortBreakMinutesFor(s, task))
+  // Startsignal: beim Tippen nur im Feld, gespeichert nach kurzer Pause (useDraft.ts).
+  const cue = useDraft(stripStartCuePrefix(task.startCue ?? ''), (value) => updateTask(task.id, { startCue: value }))
   const isDone = task.completedAt !== null
   // Kleines „i“ neben „Erste Schritte“: Erklärung auf- und zuklappen
   const [stepsInfoOpen, setStepsInfoOpen] = useState(false)
@@ -144,20 +149,15 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
       document.removeEventListener('keydown', onKey)
     }
   }, [stepsInfoOpen])
-  const cueText = stripStartCuePrefix(task.startCue ?? '')
-  const cueTrimmed = cueText.trim()
+  const cueTrimmed = cue.value.trim()
   // Angehakt, solange genau dieser Satz der gemerkte ist – wer ihn hier ändert, gilt die Änderung nur für diese Aufgabe.
-  const cueRemembered = cueTrimmed !== '' && cueTrimmed === state.settings.defaultStartCue
+  const cueRemembered = cueTrimmed !== '' && cueTrimmed === settings.defaultStartCue
 
   return (
     <div className="task-editor">
       <label className="field">
         <span className="field-label">{T.plan.title}</span>
-        <input
-          className="input"
-          value={task.title}
-          onChange={(e) => updateTask(task.id, { title: e.target.value })}
-        />
+        <TitleInput task={task} />
       </label>
 
       {/* Erste Schritte: nur zum Loslegen – keine Blöcke, keine Blocknamen. */}
@@ -182,10 +182,11 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
               {T.plan.startCuePrefix}
             </span>
             <input
-              value={cueText}
+              value={cue.value}
               placeholder={T.plan.startCuePlaceholder}
               aria-label={`${T.plan.startCue}: ${T.plan.startCuePrefix} …`}
-              onChange={(e) => updateTask(task.id, { startCue: e.target.value })}
+              onChange={(e) => cue.set(e.target.value)}
+              onBlur={cue.flush}
             />
           </label>
           <label className={`start-cue-remember${cueTrimmed ? '' : ' is-disabled'}`} title={T.plan.startCueRememberHint}>
@@ -218,7 +219,7 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
 
         <DurationRow
           label={T.plan.blockLength}
-          standardMinutes={state.settings.blockMinutes}
+          standardMinutes={settings.blockMinutes}
           override={task.blockMinutesOverride}
           limits={SETTINGS_LIMITS.blockMinutes}
           onChange={(v) => updateTask(task.id, { blockMinutesOverride: v })}
@@ -226,7 +227,7 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
 
         <DurationRow
           label={T.plan.shortBreak}
-          standardMinutes={state.settings.shortBreakMinutes}
+          standardMinutes={settings.shortBreakMinutes}
           override={task.shortBreakMinutesOverride}
           limits={SETTINGS_LIMITS.shortBreakMinutes}
           onChange={(v) => updateTask(task.id, { shortBreakMinutesOverride: v })}
@@ -235,9 +236,7 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
         />
 
         <div className="task-total-time">
-          {T.plan.totalTime(
-            task.estimatedBlocks * blockMinutesFor(state, task) + (task.estimatedBlocks - 1) * shortBreakMinutesFor(state, task),
-          )}
+          {T.plan.totalTime(task.estimatedBlocks * blockMinutes + (task.estimatedBlocks - 1) * breakMinutes)}
         </div>
       </div>
 
@@ -252,6 +251,16 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
       </div>
     </div>
   )
+}
+
+/**
+ * Titel – beim Tippen nur im Feld, gespeichert nach kurzer Pause (useDraft.ts). Als eigener kleiner
+ * Baustein, damit beim Tippen nur das Feld neu gezeichnet wird. Ein leerer Titel wird nicht
+ * gespeichert – beim Verlassen des Feldes steht wieder der alte da.
+ */
+function TitleInput({ task }: { task: Task }) {
+  const title = useDraft(task.title, (value) => updateTask(task.id, { title: value }), { keepOldIfEmpty: true })
+  return <input className="input" value={title.value} onChange={(e) => title.set(e.target.value)} onBlur={title.flush} />
 }
 
 /**

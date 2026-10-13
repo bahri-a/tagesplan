@@ -70,6 +70,9 @@ export const SOUND_VOLUME = 0.32
 /** Wie lange nach dem Tippen der Notizzettel gespeichert wird (Millisekunden). */
 export const NOTE_SAVE_DELAY_MS = 400
 
+/** Titel, Startsignal und Schritte im Planer: so lange nach dem letzten Buchstaben wird gespeichert (Millisekunden). */
+export const DRAFT_SAVE_DELAY_MS = 400
+
 /**
  * Wie lange ein abgehakter Schritt unter dem Timer noch mit Haken zu sehen ist,
  * bevor der nächste erscheint (Millisekunden) – ein kleines Erfolgserlebnis.
