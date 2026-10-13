@@ -167,9 +167,22 @@ let firstStart = false
  * Lädt alle Daten aus der Datenbank. Beim allerersten Start werden
  * Einstellungen, Notizzettel und die Tage „heute“ und „morgen“ angelegt.
  * Mehrfache Aufrufe laden nur einmal.
+ * Klappt das Laden nicht (iPhone: „Connection to Indexed Database server lost“), wird die
+ * Verbindung neu geöffnet und ein zweites Mal geladen. Scheitert auch das, lehnt das Versprechen
+ * ab (App.tsx zeigt dann „Neu laden“) – ein späterer Aufruf versucht es wieder von vorn.
  */
 export function initStore(): Promise<void> {
-  initPromise ??= loadFromDatabase()
+  if (!initPromise) {
+    const loading = loadFromDatabase().catch((error: unknown) => {
+      console.warn('Laden fehlgeschlagen, zweiter Versuch:', error)
+      database.forgetConnection()
+      return loadFromDatabase()
+    })
+    loading.catch(() => {
+      if (initPromise === loading) initPromise = null
+    })
+    initPromise = loading
+  }
   return initPromise
 }
 

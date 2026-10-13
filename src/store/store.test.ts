@@ -978,6 +978,114 @@ describe('Bereits erledigt, ohne die App zu starten', () => {
   })
 })
 
+describe('Rückgängig nach Aktionen im Block', () => {
+  it('„Früher fertig“ rückgängig: Der Block läuft weiter und zählt nicht', () => {
+    const task = actions.addTask(today(), 'A')
+    actions.startBlock(task.id)
+    const before = getState().timer
+    const undo = actions.finishBlockEarly(at(10 * MIN))
+    expect(sel.blocksDone(getState(), task.id)).toBe(1)
+    at(10 * MIN + 5000)
+    undo!()
+    expect(getState().timer).toEqual(before)
+    expect(sel.blocksDone(getState(), task.id)).toBe(0)
+    expect(sel.lifetimeWork(getState())).toEqual({ blocks: 0, minutes: 0 })
+    // Er endet später ganz normal – als einziger Block.
+    actions.checkTimer(at(BLOCK + 500))
+    expect(sel.blocksDone(getState(), task.id)).toBe(1)
+  })
+
+  it('„Schon ohne App erledigt?“ im Block rückgängig: Der Block läuft weiter', () => {
+    const task = actions.addTask(today(), 'A')
+    actions.startBlock(task.id)
+    const before = getState().timer
+    const undo = actions.skipBlockAsDone(at(5 * MIN))
+    expect(getState().timer.phase).toBe('idle')
+    undo!()
+    expect(getState().timer).toEqual(before)
+    expect(sel.blocksDone(getState(), task.id)).toBe(0)
+  })
+
+  it('„Schon ohne App erledigt?“ vor dem Start rückgängig: alles wie vorher', () => {
+    const task = actions.addTask(today(), 'A')
+    const undo = actions.logBlockAsDone(task.id, at(BLOCK))
+    expect(sel.activeDay(getState()).firstWorkAt).toBe(START)
+    undo!()
+    const s = getState()
+    expect(sel.blocksDone(s, task.id)).toBe(0)
+    expect(s.timer.phase).toBe('idle')
+    expect(sel.activeDay(s).firstWorkAt).toBeNull()
+    expect(s.tasks[task.id].firstEstimatedBlocks).toBeNull()
+  })
+
+  it('„Pause überspringen“ rückgängig: Die Pause läuft weiter', () => {
+    const task = actions.addTask(today(), 'A')
+    actions.startBlock(task.id)
+    actions.checkTimer(at(BLOCK + 500))
+    const before = getState().timer
+    const undo = actions.skipBreak()
+    undo!()
+    expect(getState().timer).toEqual(before)
+    // Die Pause endet später mit Ton wie gewohnt.
+    expect(actions.checkTimer(at(BLOCK + BREAK + 1000)).map((e) => e.type)).toEqual(['breakEnd'])
+  })
+
+  it('tut nichts mehr, wenn schon der nächste Block läuft', () => {
+    const task = actions.addTask(today(), 'A')
+    actions.updateTask(task.id, { estimatedBlocks: 3 })
+    actions.startBlock(task.id)
+    const undo = actions.skipBlockAsDone(at(5 * MIN))
+    actions.startBlock(task.id)
+    const running = getState().timer
+    undo!()
+    expect(getState().timer).toEqual(running)
+    expect(sel.blocksDone(getState(), task.id)).toBe(1)
+  })
+
+  it('ohne Wirkung gibt es auch kein Rückgängig', () => {
+    expect(actions.finishBlockEarly()).toBeNull()
+    expect(actions.skipBlockAsDone()).toBeNull()
+    expect(actions.skipBreak()).toBeNull()
+  })
+})
+
+describe('Laden beim Start', () => {
+  /** Eine Datenbank, deren Öffnen die ersten `failures` Male scheitert (wie am iPhone). */
+  function flakyDatabase(failures: number) {
+    const real = new IDBFactory()
+    let left = failures
+    globalThis.indexedDB = {
+      open: (...args: Parameters<IDBFactory['open']>) => {
+        if (left-- > 0) throw new Error('Connection to Indexed Database server lost')
+        return real.open(...args)
+      },
+    } as IDBFactory
+  }
+
+  beforeEach(() => {
+    resetDatabaseForTests()
+    resetStoreForTests()
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('versucht es nach einem Fehler ein zweites Mal', async () => {
+    flakyDatabase(1)
+    await initStore()
+    expect(sel.activeDay(getState())).toBeTruthy()
+  })
+
+  it('scheitert auch der zweite Versuch, lehnt es ab – ein späterer Aufruf versucht es neu', async () => {
+    flakyDatabase(2)
+    await expect(initStore()).rejects.toThrow('Connection to Indexed Database server lost')
+    await initStore()
+    expect(sel.activeDay(getState())).toBeTruthy()
+  })
+})
+
 describe('Sammeln statt Serie', () => {
   it('zählt alle durchgehaltenen Blöcke seit Beginn – abgebrochene nicht', () => {
     const task = actions.addTask(today(), 'A')

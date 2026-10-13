@@ -6,7 +6,7 @@ import { expect, test } from '@playwright/test'
 
 const MIN = 60_000
 
-test('Mini-Fenster: Pause überspringen und Gedanke parken (N)', async ({ page, context }) => {
+test('Mini-Fenster: Pause überspringen (mit Rückgängig) und Gedanke parken (N)', async ({ page, context }) => {
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
   await page.addInitScript(`window.documentPictureInPicture = {
@@ -32,9 +32,14 @@ test('Mini-Fenster: Pause überspringen und Gedanke parken (N)', async ({ page, 
   await page.clock.fastForward(25 * MIN + 2000)
   await expect(mini.getByText('Kurze Pause')).toBeVisible()
   await mini.screenshot({ path: process.env.SHOT_DIR ? `${process.env.SHOT_DIR}/mini-pause.png` : undefined })
+  // Sofort übersprungen – mit „Rückgängig“ in der Meldung, ebenfalls im Mini-Fenster.
   await mini.getByRole('button', { name: 'Pause überspringen' }).click()
-  await mini.screenshot({ path: process.env.SHOT_DIR ? `${process.env.SHOT_DIR}/mini-dialog.png` : undefined })
-  await mini.getByRole('button', { name: 'Überspringen', exact: true }).click()
+  await expect(mini.getByText('Pause vorbei')).toBeVisible()
+  await mini.waitForTimeout(400) // Meldung ganz eingeblendet
+  await mini.screenshot({ path: process.env.SHOT_DIR ? `${process.env.SHOT_DIR}/mini-rueckgaengig.png` : undefined })
+  await mini.getByRole('button', { name: 'Rückgängig' }).click()
+  await expect(mini.getByText('Kurze Pause')).toBeVisible()
+  await mini.getByRole('button', { name: 'Pause überspringen' }).click()
   await expect(mini.getByText('Pause vorbei')).toBeVisible()
 
   // Taste N im Mini-Fenster: Gedanke parken → landet im Notizzettel.

@@ -19,6 +19,7 @@ import { useAppState } from '../store/store'
 import { WindowContext } from './hooks'
 import { QuickPark } from './QuickPark'
 import { Toast } from './Toast'
+import { ToastContext, type ToastRequest } from './toastContext'
 
 interface DocumentPictureInPicture {
   requestWindow(options: { width: number; height: number }): Promise<Window>
@@ -99,9 +100,10 @@ export function MiniWindow() {
   const [pip, setPip] = useState<Window | null>(null)
   // Wurde das große Fenster beim Öffnen ins Dock gelegt? Dann kommt es beim Schließen zurück.
   const minimized = useRef(false)
-  // „Geparkt“ (Taste N) – als kurze Meldung im Mini-Fenster selbst.
-  const [parkedToast, setParkedToast] = useState(0)
-  const clearParked = useCallback(() => setParkedToast(0), [])
+  // Meldungen („Geparkt“ nach Taste N, „Pause übersprungen · Rückgängig“ …) im Mini-Fenster selbst.
+  const [toast, setToast] = useState<(ToastRequest & { id: number }) | null>(null)
+  const showToast = useCallback((request: ToastRequest) => setToast((old) => ({ id: (old?.id ?? 0) + 1, ...request })), [])
+  const clearToast = useCallback(() => setToast(null), [])
   // Hat der Mac im Block geschlafen, steht die Frage im großen Fenster – also holen wir es zurück.
   const timer = useAppState().timer
   const sleptAt = timer.phase === 'block' ? timer.sleptAt : undefined
@@ -170,11 +172,19 @@ export function MiniWindow() {
       {pip &&
         createPortal(
           <WindowContext.Provider value={pip}>
-            <MiniToday />
-            <QuickPark onParked={() => setParkedToast((n) => n + 1)} />
-            {parkedToast > 0 && (
-              <Toast key={parkedToast} message={T.park.done} duration={PARKED_TOAST_MS} onDone={clearParked} />
-            )}
+            <ToastContext.Provider value={showToast}>
+              <MiniToday />
+              <QuickPark onParked={() => showToast({ message: T.park.done, duration: PARKED_TOAST_MS })} />
+              {toast && (
+                <Toast
+                  key={toast.id}
+                  message={toast.message}
+                  duration={toast.duration}
+                  action={toast.action}
+                  onDone={clearToast}
+                />
+              )}
+            </ToastContext.Provider>
           </WindowContext.Provider>,
           pip.document.body,
         )}

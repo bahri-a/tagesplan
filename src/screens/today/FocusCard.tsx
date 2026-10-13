@@ -9,9 +9,9 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { STEP_DONE_FEEDBACK_MS } from '../../config/defaults'
 import { T } from '../../config/texts'
 import { useNow } from '../../components/hooks'
-import { Dialog } from '../../components/Dialog'
 import { StepList } from '../../components/StepList'
 import { TimerRing } from '../../components/TimerRing'
+import { useUndoToast } from '../../components/toastContext'
 import { LinkIcon, PauseIcon } from '../../components/icons'
 import { ShareButton } from '../../components/ShareButton'
 import { formatClock, inviteUrl } from '../../logic/invite'
@@ -58,6 +58,7 @@ import { useSpaceKey } from './useSpaceKey'
 /** Die große Karte mit der aktuellen Hauptaufgabe. */
 export function FocusCard({ task }: { task: Task }) {
   const state = useAppState()
+  const undoToast = useUndoToast()
   const t = state.timer
   const now = useNow(focusNeedsClock(state, task))
   const view = focusView(state, task, now)
@@ -135,7 +136,7 @@ export function FocusCard({ task }: { task: Task }) {
             type="button"
             className="gentle-line link-quiet"
             title={T.today.skipAsDoneHint}
-            onClick={() => skipBlockAsDone()}
+            onClick={() => undoToast(T.today.loggedAsDone, skipBlockAsDone())}
           >
             {T.today.skipAsDone}
           </button>
@@ -227,36 +228,14 @@ function BackToAsk() {
 
 /**
  * Ganz leise unten rechts in der Karte, solange die kurze Pause läuft (oder auf „Pause machen“
- * wartet): „Pause überspringen“. Erst ein kurzer Hinweis, dann wird wirklich übersprungen.
+ * wartet): „Pause überspringen“. Sofort – danach „Pause übersprungen · Rückgängig“.
  */
 function SkipBreak() {
-  const [asking, setAsking] = useState(false)
+  const undoToast = useUndoToast()
   return (
-    <>
-      <button type="button" className="skip-break link-quiet" onClick={() => setAsking(true)}>
-        {T.today.skipBreak}
-      </button>
-      {asking && (
-        <Dialog title={T.today.skipBreakTitle} onClose={() => setAsking(false)}>
-          <p className="dialog-text skip-break-text">{T.today.skipBreakText}</p>
-          <div className="dialog-actions">
-            <button type="button" className="btn btn-quiet" onClick={() => setAsking(false)}>
-              {T.today.skipBreakNo}
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => {
-                setAsking(false)
-                skipBreak()
-              }}
-            >
-              {T.today.skipBreakYes}
-            </button>
-          </div>
-        </Dialog>
-      )}
-    </>
+    <button type="button" className="skip-break link-quiet" onClick={() => undoToast(T.today.breakSkipped, skipBreak())}>
+      {T.today.skipBreak}
+    </button>
   )
 }
 
@@ -321,6 +300,7 @@ function StartArea({ task, firstBlock, breakOver }: { task: Task; firstBlock: bo
   // Startsignal nur auf dem Mac (auf dem Handy gibt es kein Feld dafür).
   const cue = SHOWS_START_CUE && task.startCue ? cleanStartCue(task.startCue) : ''
   const timer = useAppState().timer
+  const undoToast = useUndoToast()
   // Pause nach einer erledigten Hauptaufgabe: zeigen, welche als Nächstes drankommt.
   const upNext = timer.phase === 'break' && timer.taskId !== task.id
   const inShortBreak = timer.phase === 'break' && timer.taskId === task.id && !breakOver
@@ -345,7 +325,7 @@ function StartArea({ task, firstBlock, breakOver }: { task: Task; firstBlock: bo
           type="button"
           className="gentle-line link-quiet"
           title={T.today.skipAsDoneHint}
-          onClick={() => logBlockAsDone(task.id)}
+          onClick={() => undoToast(T.today.loggedAsDone, logBlockAsDone(task.id))}
         >
           {T.today.skipAsDone}
         </button>
@@ -399,6 +379,7 @@ function StartButton({ task, label: ownLabel }: { task: Task; label?: string }) 
  */
 function RunningBlock({ timerState, now, step }: { timerState: timer.BlockTimer; now: number; step: ReactNode }) {
   const [confirmAbort, setConfirmAbort] = useState(false)
+  const undoToast = useUndoToast()
   const paused = timerState.pausedAt !== null
   const extendable = canExtendBlock(timerState, now)
 
@@ -497,7 +478,7 @@ function RunningBlock({ timerState, now, step }: { timerState: timer.BlockTimer;
               type="button"
               className="btn btn-quiet btn-small"
               title={T.today.finishEarlyHint}
-              onClick={() => finishBlockEarly()}
+              onClick={() => undoToast(T.today.finishedEarly, finishBlockEarly())}
             >
               {T.today.finishEarly}
             </button>

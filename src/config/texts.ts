@@ -47,6 +47,7 @@ export const T = {
     // Ganz unten in der Karte: anklickbar, zählt den Block als erledigt. Kurz – die Erklärung kommt beim Drüberfahren.
     skipAsDone: 'Schon ohne App erledigt?',
     skipAsDoneHint: 'Habe ich bereits erledigt, aber vergessen die App zu starten.\nDer Block zählt mit voller Zeit.',
+    loggedAsDone: 'Block eingetragen',
     startBlock: 'Starten',
     spaceHint: 'Leertaste',
     // Startknopf ab der zweiten Aufgabe – zwei Zeilen: oben die Frage, darunter „Weiter mit …“.
@@ -66,6 +67,7 @@ export const T = {
     // Block vorzeitig erfolgreich abschließen – nur dieser Block wird kürzer, die kurze Pause startet.
     finishEarly: 'Früher fertig',
     finishEarlyHint: 'Diesen Block jetzt erfolgreich abschließen und in die kurze Pause gehen',
+    finishedEarly: 'Block abgeschlossen',
     abortConfirm: 'Block wirklich abbrechen?',
     abortYes: 'Ja, abbrechen',
     abortNo: 'Nein, weiter',
@@ -85,10 +87,7 @@ export const T = {
     breakConfirm: 'Pause machen',
     // Leise unten rechts in der Pause – mit kurzer Nachfrage.
     skipBreak: 'Pause überspringen',
-    skipBreakTitle: 'Pause überspringen?',
-    skipBreakText: 'Kurze Pausen halten den Kopf klar.\nManchmal ist weniger mehr.',
-    skipBreakNo: 'Pause behalten',
-    skipBreakYes: 'Überspringen',
+    breakSkipped: 'Pause übersprungen',
     // In den letzten 2 Minuten eines Blocks: den Block um 2 Minuten verlängern.
     extendBlock: '+2 Min.',
     extendBlockHint: 'Block um 2 Minuten verlängern',
@@ -387,6 +386,12 @@ export const T = {
     text: 'Deine gespeicherten Daten sind unberührt.\nLade die App einfach neu.',
     reload: 'Neu laden',
     backup: 'Sicherung herunterladen',
+    // Nur ein Bildschirm (Heute, Planer, Einstellungen) – der Rest der App läuft weiter.
+    screenTitle: 'Hier ist etwas schiefgelaufen.',
+    screenText: 'Der Timer läuft weiter,\ndeine Daten sind unberührt.',
+    // Die Daten ließen sich beim Start nicht öffnen (auch nicht beim zweiten Versuch).
+    startTitle: 'Deine Daten ließen sich gerade nicht öffnen.',
+    startText: 'Sie sind nicht weg.\nLade die App einfach neu.',
   },
 
   // Mini-Fenster: kleiner Timer, der immer über allen Fenstern liegt.
