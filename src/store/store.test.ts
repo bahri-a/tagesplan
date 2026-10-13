@@ -12,7 +12,9 @@ import type { Settings } from '../model/types'
 import * as actions from './actions'
 import * as sel from './selectors'
 import * as timer from '../logic/timer'
-import { flushSaves, getState, initStore, resetStoreForTests, takeFirstStart } from './store'
+import { applyExternal, flushSaves, getState, initStore, resetStoreForTests, takeFirstStart, type StoreEvent } from './store'
+import { startWindowSync } from './windowSync'
+import * as database from '../db/database'
 
 const MIN = 60_000
 // Die Abläufe rechnen mit den Standardwerten – so passen sie auch, wenn sich diese ändern.
@@ -1046,6 +1048,51 @@ describe('Rückgängig nach Aktionen im Block', () => {
     expect(actions.finishBlockEarly()).toBeNull()
     expect(actions.skipBlockAsDone()).toBeNull()
     expect(actions.skipBreak()).toBeNull()
+  })
+})
+
+describe('Mehrere Fenster', () => {
+  it('übernimmt von außen nur Neueres – und speichert es nicht noch einmal', async () => {
+    const task = actions.addTask(today(), 'A')
+    await flushSaves()
+    const mine = getState().tasks[task.id]
+    // Ein anderes Fenster mit altem Stand: wird ignoriert.
+    applyExternal({ tasks: [{ ...mine, title: 'Alt', updatedAt: mine.updatedAt - 1 }] })
+    expect(getState().tasks[task.id].title).toBe('A')
+    // Neuer: wird übernommen, aber nicht gespeichert (das andere Fenster hat das schon getan).
+    applyExternal({ tasks: [{ ...mine, title: 'Neu', updatedAt: mine.updatedAt + 1 }] })
+    expect(getState().tasks[task.id].title).toBe('Neu')
+    await flushSaves()
+    const stored = (await database.loadAll()).tasks.find((t) => t.id === task.id)
+    expect(stored?.title).toBe('A')
+  })
+
+  it('übernimmt Timer und Gerätewerte immer', () => {
+    const task = actions.addTask(today(), 'A')
+    const block = { phase: 'block', taskId: task.id, dayId: today(), startedAt: START, plannedMs: BLOCK, pausedAt: null, pausedMs: 0 } as const
+    applyExternal({ timer: block, local: { longPauseEndedFor: task.id } })
+    expect(getState().timer).toEqual(block)
+    expect(getState().local.longPauseEndedFor).toBe(task.id)
+  })
+
+  it('sagt Änderungen an die anderen Fenster weiter und übernimmt deren Änderungen', async () => {
+    const stop = startWindowSync()
+    const other = new BroadcastChannel('tagesplan')
+    try {
+      const received = new Promise<StoreEvent>((resolve) => {
+        other.onmessage = (e: MessageEvent<StoreEvent>) => resolve(e.data)
+      })
+      const task = actions.addTask(today(), 'A')
+      const event = await received
+      expect(event.type === 'changes' && event.changes.tasks?.[0].title).toBe('A')
+
+      const mine = getState().tasks[task.id]
+      other.postMessage({ type: 'changes', changes: { tasks: [{ ...mine, completedAt: START, updatedAt: mine.updatedAt + 1 }] } })
+      await vi.waitFor(() => expect(getState().tasks[task.id].completedAt).toBe(START))
+    } finally {
+      other.close()
+      stop()
+    }
   })
 })
 
