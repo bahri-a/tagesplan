@@ -1,6 +1,6 @@
 /**
  * Ein ganzer Ablauf, wie man die App benutzt: planen → Block → kurze Pause →
- * „Schon ohne App erledigt?“ → „Erledigt“ → „Morgen planen“. Dazu der schnelle Weg aus dem
+ * „Schon ohne App erledigt?“ → „Erledigt“ → „Tag abschließen“ / „Weitere Aufgaben hinzufügen“. Dazu der schnelle Weg aus dem
  * leeren „Heute“, die Beispielaufgabe beim allerersten Start, die Fokus-Einladung per Link und
  * die Erklärung vor der Frage nach Mitteilungen.
  * Die Uhr wird vorgespult.
@@ -56,9 +56,22 @@ test('Aufgabe planen, Block und Pause durchlaufen, Aufgabe erledigen', async ({ 
   await expect(page.locator('.done-card')).toHaveCount(1)
   await expect(page.locator('.all-done-numbers')).toContainText('3 Blöcke · 1 Std. 15 Min.')
 
-  // „Morgen planen“ führt in den Planer
-  await page.getByRole('button', { name: 'Morgen planen' }).click()
-  await expect(page.getByRole('button', { name: 'Planer', exact: true })).toHaveAttribute('aria-current', 'page')
+  // „Tag abschließen“ öffnet die Frage zum Tag beenden (hier abgebrochen)
+  await page.getByRole('button', { name: 'Tag abschließen' }).click()
+  await expect(page.getByRole('dialog')).toContainText('Möchtest du den Tag jetzt beenden?')
+  await page.getByRole('button', { name: 'Abbrechen' }).click()
+
+  // „Weitere Aufgaben hinzufügen“: gleich hier eintippen, „Zurück“ führt wieder zu den zwei Knöpfen
+  await page.getByRole('button', { name: 'Weitere Aufgaben hinzufügen' }).click()
+  await expect(page.locator('.all-done input')).toBeFocused()
+  await page.getByRole('button', { name: 'Zurück', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Tag abschließen' })).toBeVisible()
+  await page.getByRole('button', { name: 'Weitere Aufgaben hinzufügen' }).click()
+  await page.locator('.all-done input').fill('Belege abheften')
+  await page.locator('.all-done input').press('Enter')
+  // Nach einer erledigten Hauptaufgabe kommt wie immer erst die lange Pause, mit der neuen als Nächstes.
+  await expect(page.getByText('„Belege abheften“')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Nächste Hauptaufgabe starten' })).toBeVisible()
 
   expect(errors).toEqual([])
 })
