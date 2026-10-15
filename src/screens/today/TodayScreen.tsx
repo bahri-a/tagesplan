@@ -15,7 +15,7 @@
  *    (dann ohne das untere „Tag beenden“ – es gibt immer nur einen Weg zum neuen Tag)
  *  - noch nichts für heute: direkt in der Karte eintippen (Enter → „Starten“ steht da), darunter
  *    bis zu drei aus „Zuletzt verwendet“ – ohne „Tag beenden“, es gibt ja noch nichts zu beenden
- *  - alles erledigt: Feierabend-Moment mit den Tageszahlen, „Morgen planen“ und leise „Tag beenden“
+ *  - alles erledigt: Feierabend-Moment mit den Tageszahlen, „Tag abschließen“ und leise „Weitere Aufgaben hinzufügen“
  *  - über der Karte: für jede heute erledigte Hauptaufgabe eine kleine Karte mit ✓ (motiviert)
  *  - unter der Karte: schlanke Leiste mit den Aufgaben des Tages (nicht während eines Blocks;
  *    am Mac auch nicht bei „Alles erledigt“ – dort stehen die Aufgaben schon als Karten oben)
@@ -71,7 +71,7 @@ export function TodayScreen({ onPlan, onEndDay, onStartNewDay }: Props) {
   // Am nächsten Kalendertag steht oben „Neuen Tag beginnen“ – dann gibt es unten kein zweites „Tag beenden“.
   const now = useNow(true, 60_000)
   const newDayOpen = useAppSelector((s) => canStartNewDay(s, now))
-  // Alles erledigt: „Tag beenden“ steht dann in der Karte selbst.
+  // Alles erledigt: „Tag abschließen“ steht dann in der Karte selbst.
   const allDone = tasks.length > 0 && !task
   // Leerer Tag (nichts geplant, nichts gearbeitet): Es gibt noch nichts zu beenden.
   const emptyDay = useAppSelector((s) => activeDay(s).firstWorkAt === null) && tasks.length === 0
@@ -94,7 +94,7 @@ export function TodayScreen({ onPlan, onEndDay, onStartNewDay }: Props) {
       ) : task ? (
         <FocusCard task={task} />
       ) : (
-        <AllDoneCard tasks={tasks} onPlanTomorrow={() => onPlan(true)} onEndDay={newDayOpen ? null : onEndDay} />
+        <AllDoneCard tasks={tasks} onEndDay={newDayOpen ? onStartNewDay : onEndDay} onAddMore={() => onPlan()} />
       )}
 
       {/* Während ein Block läuft, bleibt nur das Wichtigste sichtbar. Am Mac stehen erledigte
@@ -187,18 +187,19 @@ function EmptyToday({ onPlan }: { onPlan: () => void }) {
 
 /**
  * Alles erledigt: ein kleiner Feierabend-Moment. Oben die Tageszahlen („9 Blöcke · 3 Std. 45 Min.“),
- * leise die Gesamtzahl seit Beginn („Bisher insgesamt: 214 Blöcke“), darunter ein Satz und die zwei Wege weiter: „Morgen planen“ und leise „Tag beenden“
- * (`onEndDay` = null, wenn oben schon „Neuen Tag beginnen“ steht). Direkt nach dem letzten
+ * leise die Gesamtzahl seit Beginn („Bisher insgesamt: 214 Blöcke“), darunter ein Satz und die zwei Wege weiter:
+ * „Tag abschließen“ (wie „Tag beenden“; steht oben schon „Neuen Tag beginnen“, macht er dasselbe wie dieser Link)
+ * und leise „Weitere Aufgaben hinzufügen“ (zum Planer, Heute) – falls du doch noch weitermachen willst. Direkt nach dem letzten
  * „Erledigt“ zeichnet sich der Haken, und die Zahlen zählen kurz hoch.
  */
 function AllDoneCard({
   tasks,
-  onPlanTomorrow,
   onEndDay,
+  onAddMore,
 }: {
   tasks: Task[]
-  onPlanTomorrow: () => void
-  onEndDay: (() => void) | null
+  onEndDay: () => void
+  onAddMore: () => void
 }) {
   const day = useAppSelector(activeDay)
   // Kein Block läuft – die Zahlen ändern sich nicht mehr, ein fester Zeitpunkt genügt.
@@ -239,14 +240,12 @@ function AllDoneCard({
       {lifetime > 0 && <p className="lifetime-line">{T.endDay.lifetime(lifetime)}</p>}
       <p className="message-text">{pick(T.today.allDoneTexts, day.createdAt)}</p>
       <div className="all-done-actions">
-        <button type="button" className="btn btn-primary btn-big" onClick={onPlanTomorrow}>
-          {T.today.planTomorrow}
+        <button type="button" className="btn btn-primary btn-big" onClick={onEndDay}>
+          {T.today.closeDay}
         </button>
-        {onEndDay && (
-          <button type="button" className="btn btn-quiet" onClick={onEndDay}>
-            {T.today.endDay}
-          </button>
-        )}
+        <button type="button" className="btn btn-quiet" onClick={onAddMore}>
+          {T.today.addMore}
+        </button>
       </div>
     </section>
   )

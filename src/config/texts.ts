@@ -109,14 +109,16 @@ export const T = {
     backToAsk: 'Zurück',
     backToAskHint: 'Zurück zur Frage „Erledigt oder noch ein Block?“',
     allDoneTitle: 'Alles erledigt für heute.',
-    allDoneText: 'Stark gemacht! Du kannst jetzt morgen planen oder den Tag beenden.',
-    // Unter den Tageszahlen in „Alles erledigt“ – die Knöpfe „Morgen planen“ und „Tag beenden“ stehen darunter.
+    allDoneText: 'Stark gemacht! Du kannst den Tag jetzt abschließen oder weitermachen.',
+    // Unter den Tageszahlen in „Alles erledigt“ – die Knöpfe „Tag abschließen“ und „Weitere Aufgaben hinzufügen“ stehen darunter.
     allDoneTexts: [
-      'Stark gemacht!\nJetzt noch kurz morgen vorbereiten.',
-      'Alles geschafft – gönn dir was.\nMorgen ist schnell geplant.',
-      'Richtig gut!\nKurz morgen planen, dann Feierabend.',
+      'Stark gemacht!\nZeit für den Feierabend.',
+      'Alles geschafft –\ngönn dir was.',
+      'Richtig gut!\nSchließ den Tag ab oder mach weiter.',
     ],
-    planTomorrow: 'Morgen planen',
+    // „Tag abschließen“ = dasselbe wie „Tag beenden“; „Weitere Aufgaben hinzufügen“ führt zum Planer (Heute).
+    closeDay: 'Tag abschließen',
+    addMore: 'Weitere Aufgaben hinzufügen',
     // Leeres „Heute“: direkt hier eintippen (Enter legt die Aufgabe für heute an).
     emptyTitle: 'Womit fängst du heute an?',
     emptyText: 'Die schwerste Aufgabe zuerst.',

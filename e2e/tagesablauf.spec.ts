@@ -1,6 +1,6 @@
 /**
  * Ein ganzer Ablauf, wie man die App benutzt: planen → Block → kurze Pause →
- * „Schon ohne App erledigt?“ → „Erledigt“ → „Morgen planen“. Dazu der schnelle Weg aus dem
+ * „Schon ohne App erledigt?“ → „Erledigt“ → „Weitere Aufgaben hinzufügen“ / „Tag abschließen“. Dazu der schnelle Weg aus dem
  * leeren „Heute“, die Beispielaufgabe beim allerersten Start, die Fokus-Einladung per Link und
  * die Erklärung vor der Frage nach Mitteilungen.
  * Die Uhr wird vorgespult.
@@ -56,9 +56,14 @@ test('Aufgabe planen, Block und Pause durchlaufen, Aufgabe erledigen', async ({ 
   await expect(page.locator('.done-card')).toHaveCount(1)
   await expect(page.locator('.all-done-numbers')).toContainText('3 Blöcke · 1 Std. 15 Min.')
 
-  // „Morgen planen“ führt in den Planer
-  await page.getByRole('button', { name: 'Morgen planen' }).click()
+  // „Weitere Aufgaben hinzufügen“ führt in den Planer
+  await page.getByRole('button', { name: 'Weitere Aufgaben hinzufügen' }).click()
   await expect(page.getByRole('button', { name: 'Planer', exact: true })).toHaveAttribute('aria-current', 'page')
+
+  // Zurück in „Heute“: „Tag abschließen“ fragt wie „Tag beenden“ nach
+  await page.getByRole('button', { name: 'Heute', exact: true }).first().click()
+  await page.getByRole('button', { name: 'Tag abschließen' }).click()
+  await expect(page.getByRole('dialog')).toContainText('Möchtest du den Tag jetzt beenden?')
 
   expect(errors).toEqual([])
 })
