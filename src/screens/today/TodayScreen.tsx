@@ -15,7 +15,8 @@
  *    (dann ohne das untere „Tag beenden“ – es gibt immer nur einen Weg zum neuen Tag)
  *  - noch nichts für heute: direkt in der Karte eintippen (Enter → „Starten“ steht da), darunter
  *    bis zu drei aus „Zuletzt verwendet“ – ohne „Tag beenden“, es gibt ja noch nichts zu beenden
- *  - alles erledigt: Feierabend-Moment mit den Tageszahlen, „Morgen planen“ und leise „Tag beenden“
+ *  - alles erledigt: Feierabend-Moment mit den Tageszahlen, „Tag abschließen“ und leise „Weitere Aufgaben hinzufügen“
+ *    (das öffnet in der Karte dieselbe Eingabe wie im leeren „Heute“)
  *  - über der Karte: für jede heute erledigte Hauptaufgabe eine kleine Karte mit ✓ (motiviert)
  *  - unter der Karte: schlanke Leiste mit den Aufgaben des Tages (nicht während eines Blocks;
  *    am Mac auch nicht bei „Alles erledigt“ – dort stehen die Aufgaben schon als Karten oben)
@@ -71,7 +72,7 @@ export function TodayScreen({ onPlan, onEndDay, onStartNewDay }: Props) {
   // Am nächsten Kalendertag steht oben „Neuen Tag beginnen“ – dann gibt es unten kein zweites „Tag beenden“.
   const now = useNow(true, 60_000)
   const newDayOpen = useAppSelector((s) => canStartNewDay(s, now))
-  // Alles erledigt: „Tag beenden“ steht dann in der Karte selbst.
+  // Alles erledigt: „Tag abschließen“ steht dann in der Karte selbst.
   const allDone = tasks.length > 0 && !task
   // Leerer Tag (nichts geplant, nichts gearbeitet): Es gibt noch nichts zu beenden.
   const emptyDay = useAppSelector((s) => activeDay(s).firstWorkAt === null) && tasks.length === 0
@@ -94,7 +95,7 @@ export function TodayScreen({ onPlan, onEndDay, onStartNewDay }: Props) {
       ) : task ? (
         <FocusCard task={task} />
       ) : (
-        <AllDoneCard tasks={tasks} onPlanTomorrow={() => onPlan(true)} onEndDay={newDayOpen ? null : onEndDay} />
+        <AllDoneCard tasks={tasks} onEndDay={onEndDay} />
       )}
 
       {/* Während ein Block läuft, bleibt nur das Wichtigste sichtbar. Am Mac stehen erledigte
@@ -120,7 +121,6 @@ export function TodayScreen({ onPlan, onEndDay, onStartNewDay }: Props) {
  * Tippen legt sie (mit ihren ersten Schritten) für heute an. Ausführlich planen geht im Planer.
  */
 function EmptyToday({ onPlan }: { onPlan: () => void }) {
-  const [title, setTitle] = useState('')
   const today = useAppSelector((s) => activeDay(s).id)
   const recent = useAppSelector((s) => recentTasks(s, today, EMPTY_TODAY_RECENT_COUNT), shallowEqual)
 
@@ -134,27 +134,7 @@ function EmptyToday({ onPlan }: { onPlan: () => void }) {
       </div>
       <h1 className="message-title">{T.today.emptyTitle}</h1>
       <p className="message-text">{T.today.emptyText}</p>
-      <form
-        className="new-task empty-today-new"
-        onSubmit={(e) => {
-          e.preventDefault()
-          if (title.trim()) addTask(today, title)
-        }}
-      >
-        <input
-          className="input"
-          value={title}
-          placeholder={T.plan.newTask}
-          aria-label={`${T.plan.newTask} (${T.plan.today})`}
-          enterKeyHint="go"
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <button type="submit" className="btn new-task-add" disabled={!title.trim()} aria-label={T.plan.add} title={T.plan.add}>
-          <svg viewBox="0 0 16 16" aria-hidden="true">
-            <path d="M8 3.25v9.5M3.25 8h9.5" />
-          </svg>
-        </button>
-      </form>
+      <QuickAdd />
       {recent.length > 0 && (
         <div className="empty-today-recent">
           <p className="empty-today-recent-title">{T.plan.recentTitle}</p>
@@ -186,21 +166,51 @@ function EmptyToday({ onPlan }: { onPlan: () => void }) {
 }
 
 /**
+ * Eine Hauptaufgabe für heute eintippen: Enter (oder das Plus) legt sie an – dann steht sofort
+ * „Starten“ da. Im leeren „Heute“ und nach „Weitere Aufgaben hinzufügen“ in „Alles erledigt“.
+ */
+function QuickAdd({ autoFocus = false, onEscape }: { autoFocus?: boolean; onEscape?: () => void }) {
+  const [title, setTitle] = useState('')
+  const today = useAppSelector((s) => activeDay(s).id)
+  return (
+    <form
+      className="new-task empty-today-new"
+      onSubmit={(e) => {
+        e.preventDefault()
+        if (title.trim()) addTask(today, title)
+      }}
+    >
+      <input
+        className="input"
+        value={title}
+        placeholder={T.plan.newTask}
+        aria-label={`${T.plan.newTask} (${T.plan.today})`}
+        enterKeyHint="go"
+        autoFocus={autoFocus}
+        onChange={(e) => setTitle(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape' && onEscape) onEscape()
+        }}
+      />
+      <button type="submit" className="btn new-task-add" disabled={!title.trim()} aria-label={T.plan.add} title={T.plan.add}>
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M8 3.25v9.5M3.25 8h9.5" />
+        </svg>
+      </button>
+    </form>
+  )
+}
+
+/**
  * Alles erledigt: ein kleiner Feierabend-Moment. Oben die Tageszahlen („9 Blöcke · 3 Std. 45 Min.“),
- * leise die Gesamtzahl seit Beginn („Bisher insgesamt: 214 Blöcke“), darunter ein Satz und die zwei Wege weiter: „Morgen planen“ und leise „Tag beenden“
- * (`onEndDay` = null, wenn oben schon „Neuen Tag beginnen“ steht). Direkt nach dem letzten
+ * leise die Gesamtzahl seit Beginn („Bisher insgesamt: 214 Blöcke“), darunter ein Satz und die zwei Wege weiter:
+ * „Tag abschließen“ und leise „Weitere Aufgaben hinzufügen“ (öffnet hier die Eingabe für eine neue Aufgabe;
+ * „Zurück“ oder Escape schließt sie wieder). Direkt nach dem letzten
  * „Erledigt“ zeichnet sich der Haken, und die Zahlen zählen kurz hoch.
  */
-function AllDoneCard({
-  tasks,
-  onPlanTomorrow,
-  onEndDay,
-}: {
-  tasks: Task[]
-  onPlanTomorrow: () => void
-  onEndDay: (() => void) | null
-}) {
+function AllDoneCard({ tasks, onEndDay }: { tasks: Task[]; onEndDay: () => void }) {
   const day = useAppSelector(activeDay)
+  const [adding, setAdding] = useState(false)
   // Kein Block läuft – die Zahlen ändern sich nicht mehr, ein fester Zeitpunkt genügt.
   const [now] = useState(Date.now)
   const [fresh] = useState(() => tasks.some((x) => wasJustFinished(x.id)))
@@ -238,16 +248,23 @@ function AllDoneCard({
       )}
       {lifetime > 0 && <p className="lifetime-line">{T.endDay.lifetime(lifetime)}</p>}
       <p className="message-text">{pick(T.today.allDoneTexts, day.createdAt)}</p>
-      <div className="all-done-actions">
-        <button type="button" className="btn btn-primary btn-big" onClick={onPlanTomorrow}>
-          {T.today.planTomorrow}
-        </button>
-        {onEndDay && (
-          <button type="button" className="btn btn-quiet" onClick={onEndDay}>
-            {T.today.endDay}
+      {adding ? (
+        <div className="all-done-actions">
+          <QuickAdd autoFocus onEscape={() => setAdding(false)} />
+          <button type="button" className="btn btn-quiet btn-small" onClick={() => setAdding(false)}>
+            {T.today.addMoreBack}
           </button>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="all-done-actions">
+          <button type="button" className="btn btn-primary btn-big" onClick={onEndDay}>
+            {T.today.closeDay}
+          </button>
+          <button type="button" className="btn btn-quiet" onClick={() => setAdding(true)}>
+            {T.today.addMore}
+          </button>
+        </div>
+      )}
     </section>
   )
 }
