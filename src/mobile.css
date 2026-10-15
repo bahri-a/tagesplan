@@ -155,7 +155,7 @@
 }
 
 /* Der Ring wächst mit dem Display, bleibt aber so klein, dass alles daneben Platz hat.
-   Sein Rahmen (mit „+2 Min.“) ist genau so breit – so steht der Ring genau in der Mitte. */
+   Sein Rahmen (mit „+3 Min.“) ist genau so breit – so steht der Ring genau in der Mitte. */
 [data-device='mobile'] .timer-ring {
   width: min(70vw, 32dvh, 280px);
   container-type: inline-size;
@@ -255,7 +255,7 @@
     box-shadow 0.8s;
 }
 
-/* Knöpfe erst nach einem Tippen (ein paar Sekunden lang) – „+2 Min.“ bleibt immer da. */
+/* Knöpfe erst nach einem Tippen (ein paar Sekunden lang) – „+3 Min.“ bleibt immer da. */
 [data-focus] .block-dots,
 [data-focus] .noise-toggle,
 [data-focus] .quiet-actions,
@@ -553,7 +553,7 @@
 /* Tippflächen: Kleine Knöpfe und leise Links bekommen am Handy unsichtbar mindestens 44 Punkt
    Höhe (wie Apple empfiehlt) – das Aussehen bleibt gleich. Das nötige `position: relative`
    steht in styles.css (Ebene „touch“, unter allem), damit Knöpfe mit eigener Position
-   (z. B. „‹ Zurück“ oben links, „+2 Min.“ im Ring) ihre Position behalten. */
+   (z. B. „‹ Zurück“ oben links, „+3 Min.“ im Ring) ihre Position behalten. */
 [data-device='mobile'] :is(.btn-small, .link-quiet, .noise-toggle)::before {
   content: '';
   position: absolute;

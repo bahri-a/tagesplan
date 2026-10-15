@@ -210,10 +210,10 @@ describe('Ultra-Modus', () => {
     expect(actions.checkTimer(at(BLOCK + BREAK + 100))).toEqual([])
   })
 
-  it('„+2 Min.“ verlängert nur den Block, und nur in seinen letzten 5 Minuten', () => {
+  it('„+3 Min.“ verlängert nur den Block, nur einmal, und nur in seinen letzten 5 Minuten', () => {
     const task = actions.addTask(today(), 'A')
     actions.startBlock(task.id)
-    // Vorher gibt es kein „+2 Min.“.
+    // Vorher gibt es kein „+3 Min.“.
     actions.extendBlock(at(BLOCK - 6 * MIN))
     let t = getState().timer
     expect(t.phase === 'block' && t.plannedMs).toBe(BLOCK)
@@ -222,17 +222,21 @@ describe('Ultra-Modus', () => {
     expect(t.phase === 'block' && actions.canExtendBlock(t, at(BLOCK - MIN))).toBe(true)
     actions.extendBlock(at(BLOCK - MIN))
     t = getState().timer
-    expect(t.phase === 'block' && t.plannedMs).toBe(BLOCK + 2 * MIN)
-    // Der Block läuft 2 Minuten länger, danach beginnt die Pause in normaler Länge.
+    expect(t.phase === 'block' && t.plannedMs).toBe(BLOCK + 3 * MIN)
+    // Nur einmal pro Block: danach wird nichts mehr angeboten und nichts mehr verlängert.
+    expect(t.phase === 'block' && actions.canExtendBlock(t, at(BLOCK))).toBe(false)
+    actions.extendBlock(at(BLOCK))
+    expect(getState().timer).toEqual(t)
+    // Der Block läuft 3 Minuten länger, danach beginnt die Pause in normaler Länge.
     expect(actions.checkTimer(at(BLOCK)).map((e) => e.type)).not.toContain('blockEnd')
     expect(getState().timer.phase).toBe('block')
-    actions.checkTimer(at(BLOCK + 2 * MIN))
+    actions.checkTimer(at(BLOCK + 3 * MIN))
     t = getState().timer
     expect(t.phase).toBe('break')
-    expect(t.phase === 'break' && t.startedAt).toBe(START + BLOCK + 2 * MIN)
+    expect(t.phase === 'break' && t.startedAt).toBe(START + BLOCK + 3 * MIN)
     expect(t.phase === 'break' && t.durationMs).toBe(BREAK)
-    // In der Pause verlängert „+2 Min.“ nichts.
-    actions.extendBlock(at(BLOCK + 3 * MIN))
+    // In der Pause verlängert „+3 Min.“ nichts.
+    actions.extendBlock(at(BLOCK + 4 * MIN))
     expect(getState().timer).toEqual(t)
   })
 

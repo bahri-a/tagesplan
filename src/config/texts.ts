@@ -88,9 +88,9 @@ export const T = {
     // Leise unten rechts in der Pause – mit kurzer Nachfrage.
     skipBreak: 'Pause überspringen',
     breakSkipped: 'Pause übersprungen',
-    // In den letzten 2 Minuten eines Blocks: den Block um 2 Minuten verlängern.
-    extendBlock: '+2 Min.',
-    extendBlockHint: 'Block um 2 Minuten verlängern',
+    // In den letzten Minuten eines Blocks: den Block einmalig um 3 Minuten verlängern.
+    extendBlock: '+3 Min.',
+    extendBlockHint: 'Block einmalig um 3 Minuten verlängern',
     nextBlock: 'Nächsten Block starten',
     nextTask: 'Nächste Hauptaufgabe starten',
     upNext: 'Als Nächstes:',

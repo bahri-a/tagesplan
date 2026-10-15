@@ -244,7 +244,7 @@
 
 /* ---------- Der weiche Ring ---------- */
 
-/* Ring mit Knopf daneben („+2 Min.“): Der Ring bleibt mittig, der Knopf hängt rechts daneben auf halber Höhe. */
+/* Ring mit Knopf daneben („+3 Min.“): Der Ring bleibt mittig, der Knopf hängt rechts daneben auf halber Höhe. */
 .ring-with-side {
   position: relative;
   width: 280px;
@@ -1049,7 +1049,7 @@
     padding: 2rem 1.25rem 1.75rem;
   }
 
-  /* Schmal ist neben dem Ring kein Platz: „+2 Min.“ sitzt dann oben im Ring, gespiegelt zum Pausen-Symbol unten. */
+  /* Schmal ist neben dem Ring kein Platz: „+3 Min.“ sitzt dann oben im Ring, gespiegelt zum Pausen-Symbol unten. */
   .ring-side-action {
     display: none;
   }
