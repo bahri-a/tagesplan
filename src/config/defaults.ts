@@ -103,10 +103,10 @@ export const ULTRA_REPEAT_MS = 2000
  */
 export const ULTRA_MAX_RING_MS = 20_000
 
-/** Um so viel (Millisekunden) verlängert „+2 Min.“ den laufenden Block. */
-export const BLOCK_EXTEND_MS = 2 * 60_000
+/** Um so viel (Millisekunden) verlängert „+3 Min.“ den laufenden Block – einmalig pro Block. */
+export const BLOCK_EXTEND_MS = 3 * 60_000
 
-/** „+2 Min.“ wird nur in den letzten 5 Minuten (Millisekunden) eines Blocks angeboten. */
+/** „+3 Min.“ wird nur in den letzten 5 Minuten (Millisekunden) eines Blocks angeboten. */
 export const BLOCK_EXTEND_OFFER_MS = 5 * 60_000
 
 /** Lautstärke des Ultra-Tons (bewusst deutlich lauter und schärfer als die Glocken). */

@@ -387,7 +387,7 @@ function RunningBlock({ timerState, now, step }: { timerState: timer.BlockTimer;
 
   return (
     <>
-      {/* „+2 Min.“ steht rechts neben dem Ring, mittig auf Höhe der Zeit. Der Ring bleibt dabei in der Mitte. */}
+      {/* „+3 Min.“ steht rechts neben dem Ring, mittig auf Höhe der Zeit. Der Ring bleibt dabei in der Mitte. */}
       <div className="ring-with-side">
         <TimerRing
           remainingMs={timer.blockRemainingMs(timerState, now)}
@@ -397,7 +397,7 @@ function RunningBlock({ timerState, now, step }: { timerState: timer.BlockTimer;
           warm={isInWarningTime(timerState, now)}
           action={
             <>
-              {/* Schmal: „+2 Min.“ oben im Ring – gespiegelt zum Pausen-Symbol unten (siehe today.css). */}
+              {/* Schmal: „+3 Min.“ oben im Ring – gespiegelt zum Pausen-Symbol unten (siehe today.css). */}
               {extendable && (
                 <button
                   type="button"

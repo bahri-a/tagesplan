@@ -93,7 +93,7 @@
   transform: none;
 }
 
-/* „+2 Min.“ steht hier statt „noch“ unter der Zeit – alles mittig untereinander. */
+/* „+3 Min.“ steht hier statt „noch“ unter der Zeit – alles mittig untereinander. */
 .mini-today .ring-inner-extend {
   position: static;
   transform: none;

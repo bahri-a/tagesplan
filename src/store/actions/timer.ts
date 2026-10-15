@@ -301,18 +301,18 @@ export function skipBreak(): Undo | null {
   return undoTimerAction(t, next)
 }
 
-/** Wird „+2 Min.“ gerade angeboten? Nur in den letzten 5 Minuten eines laufenden Blocks. */
+/** Wird „+3 Min.“ gerade angeboten? Nur in den letzten 5 Minuten eines laufenden Blocks, und nur einmal pro Block. */
 export function canExtendBlock(t: timer.BlockTimer, now: number): boolean {
-  if (t.pausedAt !== null) return false
+  if (t.pausedAt !== null || t.extended) return false
   const remaining = timer.blockRemainingMs(t, now)
   return remaining > 0 && remaining <= BLOCK_EXTEND_OFFER_MS
 }
 
-/** „+2 Min.“: Der laufende Block wird 2 Minuten länger. Die kurze Pause danach bleibt, wie sie ist. */
+/** „+3 Min.“: Der laufende Block wird einmalig 3 Minuten länger. Die kurze Pause danach bleibt, wie sie ist. */
 export function extendBlock(now = Date.now()): void {
   const t = getState().timer
   if (t.phase !== 'block' || !canExtendBlock(t, now)) return
-  commit({ timer: { ...t, plannedMs: t.plannedMs + BLOCK_EXTEND_MS } })
+  commit({ timer: { ...t, plannedMs: t.plannedMs + BLOCK_EXTEND_MS, extended: true } })
 }
 
 /**
