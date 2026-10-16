@@ -293,7 +293,7 @@ export function SettingsScreen() {
                 <PlayIcon /> {T.settings.testBreakEnd}
               </button>
               {settings.ultraMode && (
-                <button type="button" className="btn" onClick={playUltraAlarm}>
+                <button type="button" className="btn" onClick={() => playUltraAlarm()}>
                   <PlayIcon /> {T.settings.testUltra}
                 </button>
               )}

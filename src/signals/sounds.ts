@@ -10,7 +10,16 @@
  * in config/defaults.ts.
  */
 
-import { NOISE_FADE_S, NOISE_PREVIEW_S, NOISE_VOLUME, SOUND_VOLUME, ULTRA_VOLUME, WARNING_VOLUME } from '../config/defaults'
+import {
+  NOISE_FADE_S,
+  NOISE_PREVIEW_S,
+  NOISE_VOLUME,
+  SOUND_VOLUME,
+  ULTRA_RAMP_RINGS,
+  ULTRA_VOLUME,
+  ULTRA_VOLUME_START,
+  WARNING_VOLUME,
+} from '../config/defaults'
 import { noiseSamples } from '../logic/noise'
 import type { NoiseColor } from '../model/types'
 import { getState } from '../store/store'
@@ -131,27 +140,44 @@ export function playBlockWarning(): void {
 }
 
 /**
- * Ultra-Modus: absichtlich nervig – drei kurze, scharfe Pieptöne (Rechteckwelle, hoch).
- * Wird wiederholt, bis die fällige Pause bestätigt ist (siehe startTimerEngine).
+ * Lautstärke des `ring`-ten Ultra-Piepens (0 = das erste): von ULTRA_VOLUME_START bis ULTRA_VOLUME
+ * in gleichmäßigen Schritten fürs Ohr (jedes Mal um denselben Faktor lauter), danach gleichbleibend.
  */
-export function playUltraAlarm(): void {
+export function ultraVolume(ring: number): number {
+  const step = Math.min(Math.max(ring, 0), ULTRA_RAMP_RINGS - 1) / (ULTRA_RAMP_RINGS - 1)
+  return ULTRA_VOLUME_START * (ULTRA_VOLUME / ULTRA_VOLUME_START) ** step
+}
+
+/**
+ * Ultra-Modus: drei kurze, klare Töne (a'' – c''' – a''), deutlich, aber nicht schrill:
+ * runde Dreieckswelle statt Rechteck, weicher Ein- und Ausklang, leichter Tiefpass.
+ * Wird wiederholt, bis die fällige Pause bestätigt ist (siehe startTimerEngine), und wird
+ * dabei mit jedem Mal etwas lauter (`ring` zählt mit, siehe ultraVolume).
+ * Ohne Angabe (Probehören in den Einstellungen): so laut, wie es höchstens wird.
+ */
+export function playUltraAlarm(ring = ULTRA_RAMP_RINGS - 1): void {
   if (!soundsEnabled()) return
   unlockAudio()
   if (!ctx) return
+  const volume = ultraVolume(ring)
+  const soften = ctx.createBiquadFilter()
+  soften.type = 'lowpass'
+  soften.frequency.value = 3000
+  soften.connect(ctx.destination)
   const now = ctx.currentTime + 0.02
   for (let i = 0; i < 3; i++) {
-    const start = now + i * 0.16
+    const start = now + i * 0.18
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
-    osc.type = 'square'
-    osc.frequency.value = i % 2 === 0 ? 1760 : 2093
+    osc.type = 'triangle'
+    osc.frequency.value = i % 2 === 0 ? 880 : 1046.5
     gain.gain.setValueAtTime(0, start)
-    gain.gain.linearRampToValueAtTime(ULTRA_VOLUME, start + 0.005)
-    gain.gain.setValueAtTime(ULTRA_VOLUME, start + 0.1)
-    gain.gain.linearRampToValueAtTime(0, start + 0.11)
-    osc.connect(gain).connect(ctx.destination)
+    gain.gain.linearRampToValueAtTime(volume, start + 0.015)
+    gain.gain.setValueAtTime(volume, start + 0.1)
+    gain.gain.linearRampToValueAtTime(0, start + 0.14)
+    osc.connect(gain).connect(soften)
     osc.start(start)
-    osc.stop(start + 0.12)
+    osc.stop(start + 0.15)
   }
 }
 
