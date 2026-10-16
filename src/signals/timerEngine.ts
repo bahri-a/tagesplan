@@ -108,6 +108,8 @@ export function startTimerEngine(): () => void {
   // Ultra-Modus: Solange die fällige Pause nicht bestätigt ist, alle ULTRA_REPEAT_MS piepen.
   // Läuft im selben Sekundentakt wie der Timer – so klappt es auch im Hintergrund.
   let lastUltraAt = 0
+  // Wie oft es in dieser Pause schon gepiept hat: jedes Mal etwas lauter (siehe ultraVolume).
+  let ultraRing = 0
   // Mac: Wann lief der Block zuletzt nachweislich (letzter Takt)? Eine große Lücke = der Mac
   // hat geschlafen. Am Handy nicht – dort ist die App bei gesperrtem Display immer still.
   let lastRunningAt: number | null = null
@@ -121,9 +123,11 @@ export function startTimerEngine(): () => void {
     const after = getState().timer
     lastRunningAt = after.phase === 'block' && after.pausedAt === null ? Date.now() : null
     const now = Date.now()
-    if (isUltraRinging(now) && now - lastUltraAt >= ULTRA_REPEAT_MS - 100) {
+    if (!isUltraRinging(now)) {
+      ultraRing = 0
+    } else if (now - lastUltraAt >= ULTRA_REPEAT_MS - 100) {
       lastUltraAt = now
-      playUltraAlarm()
+      playUltraAlarm(ultraRing++)
     }
   }
 

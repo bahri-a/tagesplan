@@ -109,8 +109,15 @@ export const BLOCK_EXTEND_MS = 3 * 60_000
 /** „+3 Min.“ wird nur in den letzten 5 Minuten (Millisekunden) eines Blocks angeboten. */
 export const BLOCK_EXTEND_OFFER_MS = 5 * 60_000
 
-/** Lautstärke des Ultra-Tons (bewusst deutlich lauter und schärfer als die Glocken). */
-export const ULTRA_VOLUME = 0.3
+/**
+ * Lautstärke des Ultra-Tons: Er fängt leise an (ULTRA_VOLUME_START) und wird mit jedem Piepen
+ * etwas lauter, bis ULTRA_VOLUME beim ULTRA_RAMP_RINGS-ten Piepen erreicht ist (nach ca. 15 s).
+ * Am Ende ist er ungefähr so laut wie die Glocken: gut hörbar am Schreibtisch, aber nicht
+ * schmerzhaft mit Kopfhörern und nicht laut genug, um Nachbarn zu stören.
+ */
+export const ULTRA_VOLUME_START = 0.028
+export const ULTRA_VOLUME = 0.125
+export const ULTRA_RAMP_RINGS = 8
 
 /** Lautstärke des Rauschens (0 = stumm, 1 = sehr laut). */
 export const NOISE_VOLUME = 0.12
