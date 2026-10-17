@@ -417,6 +417,11 @@
   border-color: var(--accent);
 }
 
+/* „Weiter“ im Ring gibt es nur im Mini-Fenster (mini.css) – hier steht der große Knopf unter dem Ring. */
+.ring-resume {
+  display: none;
+}
+
 .ring-pause svg {
   width: 1.15rem;
   height: 1.15rem;
