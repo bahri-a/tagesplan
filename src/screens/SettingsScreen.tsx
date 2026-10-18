@@ -180,6 +180,13 @@ const TABS: { value: SettingsTab; label: string }[] = [
   { value: 'data', label: T.settings.tabData },
 ]
 
+/** Stand der Erlaubnis in Worten – iPhone-App, Handy im Browser („Mitteilungen“) oder Mac („Benachrichtigungen“). */
+const notifyText = __NATIVE_APP__
+  ? { granted: T.settings.nativeNotifyGranted, default: T.settings.nativeNotifyDefault, denied: T.settings.nativeNotifyDenied }
+  : IS_MOBILE
+    ? { granted: T.settings.mobileNotifyGranted, default: T.settings.mobileNotifyDefault, denied: T.settings.mobileNotifyDenied }
+    : { granted: T.settings.notifyGranted, default: T.settings.notifyDefault, denied: T.settings.notifyDenied }
+
 export function SettingsScreen() {
   const { settings } = useAppState()
   const [permission, setPermission] = useState<PermissionState>(notificationPermission)
@@ -263,7 +270,7 @@ export function SettingsScreen() {
       </section>
 
       <section className="card settings-section" hidden={hiddenUnless('sounds')}>
-        <h2>{T.settings.sounds}</h2>
+        <h2>{IS_MOBILE ? T.settings.soundsMobile : T.settings.sounds}</h2>
         <SettingRow label={T.settings.soundsLabel} hint={T.settings.soundsHint}>
           <Segmented
             label={T.settings.soundsLabel}
@@ -303,9 +310,7 @@ export function SettingsScreen() {
         {permission !== 'unsupported' && (
           <div className="settings-note">
             <span className="muted small">
-              {permission === 'granted' && (__NATIVE_APP__ ? T.settings.nativeNotifyGranted : T.settings.notifyGranted)}
-              {permission === 'default' && (__NATIVE_APP__ ? T.settings.nativeNotifyDefault : T.settings.notifyDefault)}
-              {permission === 'denied' && (__NATIVE_APP__ ? T.settings.nativeNotifyDenied : T.settings.notifyDenied)}
+              {notifyText[permission]}
             </span>
             {permission === 'default' && (
               <button

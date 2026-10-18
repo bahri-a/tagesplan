@@ -14,6 +14,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { MINI_WINDOW_SIZE, PARKED_TOAST_MS } from '../config/defaults'
 import { T } from '../config/texts'
+import { dropToast, emptyToasts, pushToast } from '../logic/toasts'
 import { MiniToday } from '../screens/today/TodayScreen'
 import { useAppSelector } from '../store/store'
 import { WindowContext } from './hooks'
@@ -101,9 +102,15 @@ export function MiniWindow() {
   // Wurde das große Fenster beim Öffnen ins Dock gelegt? Dann kommt es beim Schließen zurück.
   const minimized = useRef(false)
   // Meldungen („Geparkt“ nach Taste N, „Pause übersprungen · Rückgängig“ …) im Mini-Fenster selbst.
-  const [toast, setToast] = useState<(ToastRequest & { id: number }) | null>(null)
-  const showToast = useCallback((request: ToastRequest) => setToast((old) => ({ id: (old?.id ?? 0) + 1, ...request })), [])
-  const clearToast = useCallback(() => setToast(null), [])
+  // Hier ist nur Platz für eine: „Geparkt“ wartet, bis „Rückgängig“ vorbei ist (logic/toasts.ts).
+  const [toasts, setToasts] = useState(emptyToasts<ToastRequest & { id: number }>)
+  const nextId = useRef(1)
+  const showToast = useCallback(
+    (request: ToastRequest) => setToasts((stack) => pushToast(stack, { id: nextId.current++, ...request }, 1)),
+    [],
+  )
+  const toast = toasts.visible[0]
+  const clearToast = useCallback(() => setToasts((stack) => dropToast(stack, stack.visible[0]?.id ?? -1, 1)), [])
   // Hat der Mac im Block geschlafen, steht die Frage im großen Fenster – also holen wir es zurück.
   const sleptAt = useAppSelector((s) => (s.timer.phase === 'block' ? s.timer.sleptAt : undefined))
 

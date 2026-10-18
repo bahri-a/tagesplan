@@ -9,6 +9,17 @@ async function openPlanner(page: Page) {
   await page.getByRole('button', { name: 'Planer' }).click()
 }
 
+/** Alle gespeicherten Schritt-Texte, direkt aus der Datenbank. */
+function storedStepTexts(page: Page): Promise<string[]> {
+  return page.evaluate(`new Promise((resolve) => {
+    const request = indexedDB.open('tagesplan')
+    request.onsuccess = () => {
+      const all = request.result.transaction('steps').objectStore('steps').getAll()
+      all.onsuccess = () => resolve(all.result.filter((s) => s.deletedAt === null).map((s) => s.text))
+    }
+  })`)
+}
+
 test('Titel und Schritte: gespeichert beim Zuklappen, leerer Titel kommt zurück', async ({ page }) => {
   const problems: string[] = []
   page.on('pageerror', (e) => problems.push(e.message))
@@ -39,7 +50,9 @@ test('Titel und Schritte: gespeichert beim Zuklappen, leerer Titel kommt zurück
   await card.getByRole('button', { name: 'Zuklappen' }).click()
   await expect(page.locator('.task-title', { hasText: 'Bericht schreiben' })).toHaveCount(1)
 
-  // Auch nach dem Neuladen.
+  // Auch nach dem Neuladen – sobald der Schritt in der Datenbank steht (sonst bricht das
+  // Neuladen den Schreibvorgang mitten ab, was ein Mensch nie so schnell schafft).
+  await expect.poll(() => storedStepTexts(page)).toContain('PDF suchen')
   await page.reload()
   await openPlanner(page)
   await page.locator('.task-card-summary', { hasText: 'Bericht schreiben' }).click()

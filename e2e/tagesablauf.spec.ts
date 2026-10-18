@@ -56,9 +56,13 @@ test('Aufgabe planen, Block und Pause durchlaufen, Aufgabe erledigen', async ({ 
   await expect(page.locator('.done-card')).toHaveCount(1)
   await expect(page.locator('.all-done-numbers')).toContainText('3 Blöcke · 1 Std. 15 Min.')
 
-  // „Tag abschließen“ öffnet die Frage zum Tag beenden (hier abgebrochen)
+  // Für „Morgen“ ist noch nichts geplant – leise steht es da.
+  await expect(page.locator('.all-done .planned-line')).toHaveText('Für Morgen noch nichts geplant · Planen')
+
+  // „Tag abschließen“ öffnet die Frage (hier abgebrochen). Offen ist nichts, also kein Wort davon.
   await page.getByRole('button', { name: 'Tag abschließen' }).click()
-  await expect(page.getByRole('dialog')).toContainText('Möchtest du den Tag jetzt beenden?')
+  await expect(page.getByRole('dialog')).toContainText('Möchtest du den Tag jetzt abschließen?')
+  await expect(page.getByRole('dialog')).not.toContainText('Offene Aufgaben')
   await page.getByRole('button', { name: 'Abbrechen' }).click()
 
   // „Weitere Aufgaben hinzufügen“: gleich hier eintippen, „Zurück“ führt wieder zu den zwei Knöpfen
@@ -85,8 +89,8 @@ test('Leeres „Heute“: Aufgabe direkt eintippen und gleich starten', async ({
   await deleteExample(page)
   await page.getByRole('button', { name: 'Heute', exact: true }).first().click()
 
-  // Leerer Tag: Es gibt noch nichts zu beenden.
-  await expect(page.getByRole('button', { name: 'Tag beenden' })).toHaveCount(0)
+  // Leerer Tag: Es gibt noch nichts abzuschließen.
+  await expect(page.getByRole('button', { name: 'Tag abschließen' })).toHaveCount(0)
 
   // Ohne Umweg über den Planer: eintippen, Enter → „Starten“ steht da
   const input = page.locator('.empty-today input')
@@ -95,6 +99,86 @@ test('Leeres „Heute“: Aufgabe direkt eintippen und gleich starten', async ({
   await expect(page.locator('.focus-title')).toHaveText('Bericht schreiben')
   await page.getByRole('button', { name: 'Starten', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Früher fertig' })).toBeVisible()
+
+  expect(errors).toEqual([])
+})
+
+test('Feierabend: „Planen“ führt zu Morgen, nach „Tag abschließen“ kommt der geplante Tag', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+  await page.clock.install({ time: new Date('2026-10-06T18:00:00') })
+  await page.goto('/')
+
+  // Beispielaufgabe ohne App erledigt → „Alles erledigt“
+  await page.getByRole('button', { name: /Schon ohne App erledigt/ }).click()
+  await page.getByRole('button', { name: 'Erledigt', exact: true }).click()
+  await page.getByRole('button', { name: 'Planen', exact: true }).click()
+
+  // Planer: eine Aufgabe für Morgen (rechte Spalte)
+  const tomorrowInput = page.locator('.new-task input').nth(1)
+  await tomorrowInput.fill('Wochenplan')
+  await tomorrowInput.press('Enter')
+  await page.getByRole('button', { name: 'Heute', exact: true }).first().click()
+  await expect(page.locator('.all-done .planned-line')).toHaveText('Für Morgen geplant:\n1 Aufgabe')
+  // Auch im niedrigen Laptop-Fenster (1280 × 720) passt „Alles erledigt“ mit der Zeile ganz auf den Bildschirm.
+  const card = await page.locator('.all-done').boundingBox()
+  expect(card!.y + card!.height).toBeLessThanOrEqual(page.viewportSize()!.height)
+
+  await page.getByRole('button', { name: 'Tag abschließen' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Tag abschließen' }).click()
+  await expect(page.locator('.toast', { hasText: 'Feierabend!' })).toHaveText('Feierabend!\nMorgen geht es hier weiter.')
+  await expect(page.locator('.focus-title')).toHaveText('Wochenplan')
+
+  expect(errors).toEqual([])
+})
+
+test('Leeres „Heute“ am Morgen danach: „Jetzt holen“ holt den geplanten Tag', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+  await page.clock.install({ time: new Date('2026-10-06T20:00:00') })
+  await page.goto('/')
+  await deleteExample(page)
+  const tomorrowInput = page.locator('.new-task input').nth(1)
+  await tomorrowInput.fill('Wochenplan')
+  await tomorrowInput.press('Enter')
+  await page.getByRole('button', { name: 'Heute', exact: true }).first().click()
+
+  // Am selben Abend: nichts holen (sonst landete der Plan für morgen schon heute).
+  await expect(page.locator('.empty-today')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Jetzt holen' })).toHaveCount(0)
+
+  // Am nächsten Morgen: Zeile und „Jetzt holen“
+  await page.clock.fastForward(13 * 60 * MIN)
+  await expect(page.locator('.empty-today .planned-line')).toHaveText('Für Morgen geplant:\n1 Aufgabe')
+  await page.getByRole('button', { name: 'Jetzt holen' }).click()
+  await expect(page.locator('.focus-title')).toHaveText('Wochenplan')
+  await expect(page.locator('.toast')).toHaveCount(0)
+
+  expect(errors).toEqual([])
+})
+
+test('Gedanke parken: Klick daneben parkt, nur Escape verwirft', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+  await page.clock.install({ time: new Date('2026-10-06T09:00:00') })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Starten', exact: true }).click()
+
+  const park = page.getByRole('textbox', { name: 'Gedanke parken' })
+  await page.keyboard.press('n')
+  await park.fill('Mama anrufen')
+  await page.locator('.focus-title').click()
+  await expect(page.getByText('Geparkt. Weiter geht’s.')).toBeVisible()
+  await expect(park).toHaveCount(0)
+
+  await page.keyboard.press('n')
+  await park.fill('Nicht so wichtig')
+  await park.press('Escape')
+  await expect(park).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Notizen' }).click()
+  await expect(page.locator('.notes-text')).toHaveValue(/Mama anrufen/)
+  await expect(page.locator('.notes-text')).not.toHaveValue(/Nicht so wichtig/)
 
   expect(errors).toEqual([])
 })

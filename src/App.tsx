@@ -40,6 +40,7 @@ import { requestPersistentStorage } from './db/database'
 import { parseInvite, type Invite } from './logic/invite'
 import { formatCountdown } from './logic/time'
 import * as timer from './logic/timer'
+import { dropToast, emptyToasts, pushToast } from './logic/toasts'
 import type { ID, PaletteSetting, SurfaceSetting, ThemeSetting, TimerState } from './model/types'
 import { TodayScreen } from './screens/today/TodayScreen'
 import { unlockAudio } from './signals/sounds'
@@ -64,11 +65,8 @@ import { getState, initStore, takeFirstStart, useAppSelector, useSaveFailedAt } 
 type Screen = 'today' | 'plan' | 'settings'
 
 /** Eine Meldung unten. `id` ist bei jeder Meldung neu – so startet ihre Anzeigezeit neu. */
-interface ToastInfo {
+interface ToastInfo extends ToastRequest {
   id: number
-  message: string
-  duration?: number
-  action?: ToastAction
 }
 
 let nextToastId = 1
@@ -140,7 +138,7 @@ function Shell() {
   // „Morgen planen“ (nach „Alles erledigt“): Der Planer zeigt am Handy gleich „Morgen“.
   const [planTomorrow, setPlanTomorrow] = useState(false)
   const [endDayDialog, setEndDayDialog] = useState<'closed' | 'confirm' | 'conflicts'>('closed')
-  const [toast, setToast] = useState<ToastInfo | null>(null)
+  const [toasts, setToasts] = useState(emptyToasts<ToastInfo>)
   const [wakeEvent, setWakeEvent] = useState<WakeEvent | null>(null)
   const [invite, closeInvite] = useInvite()
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
@@ -157,10 +155,17 @@ function Shell() {
   }, [])
 
   useWakeEvents(useCallback((e: WakeEvent) => setWakeEvent(e), []))
-  useBackupReminder((message, action) => setToast({ id: nextToastId++, message, duration: BACKUP_REMINDER_MS, action }))
-  useSaveFailedNotice((message, action) => setToast({ id: nextToastId++, message, duration: SAVE_FAILED_TOAST_MS, action }))
+  // Neue Meldung: bis zu zwei übereinander, Wichtiges wird nicht verdrängt (logic/toasts.ts).
+  const requestToast = useCallback(
+    (request: ToastRequest) => setToasts((stack) => pushToast(stack, { id: nextToastId++, ...request })),
+    [],
+  )
+  useBackupReminder((message, action) => requestToast({ message, duration: BACKUP_REMINDER_MS, action }))
+  useSaveFailedNotice((message, action) =>
+    requestToast({ message, kind: 'error', duration: SAVE_FAILED_TOAST_MS, action }),
+  )
   useMilestones(lifetimeBlocks, (message, action, duration = MILESTONE_TOAST_MS) =>
-    setToast({ id: nextToastId++, message, duration, action }),
+    requestToast({ message, duration, action }),
   )
   useTheme(settings.theme, settings.palette)
   useSurfaces(settings.surfaces)
@@ -193,24 +198,23 @@ function Shell() {
     }
   }, [])
 
-  const clearToast = useCallback(() => setToast(null), [])
-  const showToast = (message: string, extra: Omit<ToastInfo, 'id' | 'message'> = {}) =>
-    setToast({ id: nextToastId++, message, ...extra })
-  // Meldungen aus den Karten (z. B. „Block abgeschlossen · Rückgängig“), siehe toastContext.ts.
-  const requestToast = useCallback((request: ToastRequest) => setToast({ id: nextToastId++, ...request }), [])
+  const dismissToast = useCallback((id: number) => setToasts((stack) => dropToast(stack, id)), [])
+  const showToast = (message: string, extra: Omit<ToastRequest, 'message'> = {}) => requestToast({ message, ...extra })
 
-  // Nach dem Löschen: 8 Sekunden „Aufgabe gelöscht · Rückgängig“. Eine neue Meldung ersetzt
-  // die alte – nach mehreren Löschungen lässt sich also nur die letzte zurückholen.
+  // Nach dem Löschen: 8 Sekunden „Aufgabe gelöscht · Rückgängig“. Ein neues „Rückgängig“ ersetzt
+  // das alte – nach mehreren Löschungen lässt sich also nur die letzte zurückholen.
   const taskDeleted = (taskId: ID) =>
     showToast(T.plan.deleted, {
+      kind: 'undo',
       duration: UNDO_DELETE_MS,
       action: { label: T.plan.undo, onClick: () => restoreTask(taskId) },
     })
 
-  const dayEnded = () => {
+  // Abends über „Tag abschließen“: „Feierabend!“. Am Morgen über „Neuen Tag beginnen“: Begrüßung.
+  const dayEnded = (when: 'evening' | 'morning') => {
     setEndDayDialog('closed')
     setScreen('today')
-    showToast(T.endDay.finished)
+    showToast(when === 'evening' ? T.endDay.finished : T.endDay.welcome)
   }
 
   // „Neuen Tag beginnen“ (am nächsten Kalendertag): ohne weitere Rückfrage.
@@ -219,7 +223,7 @@ function Shell() {
       setEndDayDialog('conflicts')
     } else {
       endDay()
-      dayEnded()
+      dayEnded('morning')
     }
   }
 
@@ -299,16 +303,8 @@ function Shell() {
         <EndDayDialog
           skipConfirm={endDayDialog === 'conflicts'}
           onCancel={() => setEndDayDialog('closed')}
-          onEnded={dayEnded}
-        />
-      )}
-      {toast && (
-        <Toast
-          key={toast.id}
-          message={toast.message}
-          duration={toast.duration}
-          action={toast.action}
-          onDone={clearToast}
+          // „conflicts“ kommt nur über „Neuen Tag beginnen“ (am Morgen danach).
+          onEnded={() => dayEnded(endDayDialog === 'conflicts' ? 'morning' : 'evening')}
         />
       )}
       {timerState.phase === 'block' && timerState.sleptAt !== undefined && (
@@ -327,7 +323,19 @@ function Shell() {
           }}
         />
       )}
-      <UpdateBanner />
+      {/* Unten in der Mitte: ganz oben „Neue Version“, darunter bis zu zwei Meldungen. */}
+      <div className="toast-stack">
+        <UpdateBanner />
+        {toasts.visible.map((toast) => (
+          <Toast
+            key={toast.id}
+            message={toast.message}
+            duration={toast.duration}
+            action={toast.action}
+            onDone={() => dismissToast(toast.id)}
+          />
+        ))}
+      </div>
       {/* Eigener kleiner Baustein: tickt jede Sekunde, ohne die ganze App neu zu zeichnen. */}
       <WindowTitle timerState={timerState} />
     </ToastContext.Provider>
