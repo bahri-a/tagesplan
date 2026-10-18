@@ -41,6 +41,33 @@ test('„Früher fertig“ und „Schon ohne App erledigt?“ lassen sich rückg
   expect(errors).toEqual([])
 })
 
+test('Meilenstein kommt dazu, „Rückgängig“ bleibt erreichbar', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+  await page.clock.install({ time: new Date('2026-10-06T09:00:00') })
+  await page.goto('/')
+
+  // Neun Blöcke ohne App eintragen (Beispielaufgabe, jedes Mal „Noch ein Block“, Pause abwarten).
+  const alreadyDone = page.getByRole('button', { name: /Schon ohne App erledigt/ })
+  for (let i = 0; i < 9; i++) {
+    await alreadyDone.click()
+    await page.getByRole('button', { name: 'Noch ein Block', exact: true }).click()
+    await page.clock.fastForward(10 * MIN)
+  }
+  // Der zehnte per „Früher fertig“ → Meilenstein und „Block abgeschlossen · Rückgängig“ übereinander.
+  await page.getByRole('button', { name: /Block starten|^Starten$/ }).first().click()
+  await page.clock.fastForward(MIN)
+  await page.getByRole('button', { name: 'Früher fertig' }).click()
+  const toasts = page.locator('.toast-stack > .toast')
+  await expect(toasts).toHaveCount(2)
+  await expect(toasts.filter({ hasText: 'Block abgeschlossen' })).toBeVisible()
+  await expect(toasts.filter({ hasText: '10' })).toBeVisible()
+  await page.getByRole('button', { name: 'Rückgängig' }).click()
+  await expect(page.getByRole('button', { name: 'Früher fertig' })).toBeVisible()
+
+  expect(errors).toEqual([])
+})
+
 test('Daten lassen sich beim Start nicht öffnen → ruhige Karte statt weißer Seite', async ({ page }) => {
   await page.addInitScript(`indexedDB.open = () => {
     throw new Error('Connection to Indexed Database server lost')

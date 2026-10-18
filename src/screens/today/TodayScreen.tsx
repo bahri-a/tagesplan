@@ -14,9 +14,11 @@
  *  - am nächsten Kalendertag, solange der alte Tag noch offen ist: ganz oben leise „Neuen Tag beginnen →“
  *    (dann ohne das untere „Tag beenden“ – es gibt immer nur einen Weg zum neuen Tag)
  *  - noch nichts für heute: direkt in der Karte eintippen (Enter → „Starten“ steht da), darunter
- *    bis zu drei aus „Zuletzt verwendet“ – ohne „Tag beenden“, es gibt ja noch nichts zu beenden
- *  - alles erledigt: Feierabend-Moment mit den Tageszahlen, „Tag abschließen“ und leise „Weitere Aufgaben hinzufügen“
- *    (das öffnet in der Karte dieselbe Eingabe wie im leeren „Heute“)
+ *    bis zu drei aus „Zuletzt verwendet“ – ohne „Tag abschließen“, es gibt ja noch nichts abzuschließen.
+ *    Am Morgen danach, wenn unter „Morgen“ etwas geplant ist: „Für Morgen geplant: 3 Aufgaben“ + „Jetzt holen“
+ *  - alles erledigt: Feierabend-Moment mit den Tageszahlen, leise was für „Morgen“ geplant ist,
+ *    „Tag abschließen“ und leise „Weitere Aufgaben hinzufügen“ (das öffnet in der Karte dieselbe
+ *    Eingabe wie im leeren „Heute“)
  *  - über der Karte: für jede heute erledigte Hauptaufgabe eine kleine Karte mit ✓ (motiviert)
  *  - unter der Karte: schlanke Leiste mit den Aufgaben des Tages (nicht während eines Blocks;
  *    am Mac auch nicht bei „Alles erledigt“ – dort stehen die Aufgaben schon als Karten oben)
@@ -36,18 +38,20 @@ import type { Task, TimerState } from '../../model/types'
 import {
   activeDay,
   blocksDone,
+  canFetchPlanned,
   canStartNewDay,
   currentTask,
   dayYield,
   isAskingDone,
   isOnLongPause,
   lifetimeWork,
+  plannedWaiting,
   recentTasks,
   tasksOfDay,
   taskWork,
   undoableFinish,
 } from '../../store/selectors'
-import { addTask, copyTask, startAfterLongPause, undoFinishTask } from '../../store/actions'
+import { addTask, copyTask, endDay, startAfterLongPause, undoFinishTask } from '../../store/actions'
 import { shallowEqual, useAppSelector } from '../../store/store'
 import { FocusCard } from './FocusCard'
 import { DayBar } from './DayBar'
@@ -95,7 +99,7 @@ export function TodayScreen({ onPlan, onEndDay, onStartNewDay }: Props) {
       ) : task ? (
         <FocusCard task={task} />
       ) : (
-        <AllDoneCard tasks={tasks} onEndDay={onEndDay} />
+        <AllDoneCard tasks={tasks} onEndDay={onEndDay} onPlanTomorrow={() => onPlan(true)} />
       )}
 
       {/* Während ein Block läuft, bleibt nur das Wichtigste sichtbar. Am Mac stehen erledigte
@@ -123,6 +127,9 @@ export function TodayScreen({ onPlan, onEndDay, onStartNewDay }: Props) {
 function EmptyToday({ onPlan }: { onPlan: () => void }) {
   const today = useAppSelector((s) => activeDay(s).id)
   const recent = useAppSelector((s) => recentTasks(s, today, EMPTY_TODAY_RECENT_COUNT), shallowEqual)
+  // Am Morgen danach: Was gestern unter „Morgen“ geplant wurde, ist mit einem Tippen da.
+  const now = useNow(true, 60_000)
+  const waiting = useAppSelector((s) => (canFetchPlanned(s, now) ? plannedWaiting(s) : 0))
 
   return (
     <section className="card focus-card is-message empty-today">
@@ -134,6 +141,15 @@ function EmptyToday({ onPlan }: { onPlan: () => void }) {
       </div>
       <h1 className="message-title">{T.today.emptyTitle}</h1>
       <p className="message-text">{T.today.emptyText}</p>
+      {waiting > 0 && (
+        <div className="planned-waiting">
+          <p className="planned-line">{T.today.plannedTomorrow(waiting)}</p>
+          {/* Der leere Tag endet, der geplante wird „Heute“ – ohne Begrüßung, es geht ja gleich los. */}
+          <button type="button" className="btn btn-small" onClick={() => endDay()}>
+            {T.today.fetchPlanned}
+          </button>
+        </div>
+      )}
       <QuickAdd />
       {recent.length > 0 && (
         <div className="empty-today-recent">
@@ -208,8 +224,9 @@ function QuickAdd({ autoFocus = false, onEscape }: { autoFocus?: boolean; onEsca
  * „Zurück“ oder Escape schließt sie wieder). Direkt nach dem letzten
  * „Erledigt“ zeichnet sich der Haken, und die Zahlen zählen kurz hoch.
  */
-function AllDoneCard({ tasks, onEndDay }: { tasks: Task[]; onEndDay: () => void }) {
+function AllDoneCard({ tasks, onEndDay, onPlanTomorrow }: { tasks: Task[]; onEndDay: () => void; onPlanTomorrow: () => void }) {
   const day = useAppSelector(activeDay)
+  const planned = useAppSelector(plannedWaiting)
   const [adding, setAdding] = useState(false)
   // Kein Block läuft – die Zahlen ändern sich nicht mehr, ein fester Zeitpunkt genügt.
   const [now] = useState(Date.now)
@@ -248,6 +265,17 @@ function AllDoneCard({ tasks, onEndDay }: { tasks: Task[]; onEndDay: () => void 
       )}
       {lifetime > 0 && <p className="lifetime-line">{T.endDay.lifetime(lifetime)}</p>}
       <p className="message-text">{pick(T.today.allDoneTexts, day.createdAt)}</p>
+      {/* Leise: was für „Morgen“ schon bereitsteht – oder ein kurzer Weg dorthin. */}
+      {planned > 0 ? (
+        <p className="planned-line">{T.today.plannedTomorrow(planned)}</p>
+      ) : (
+        <p className="planned-line">
+          {T.today.nothingPlanned} ·{' '}
+          <button type="button" className="link-quiet planned-link" onClick={onPlanTomorrow}>
+            {T.today.planTomorrow}
+          </button>
+        </p>
+      )}
       {adding ? (
         <div className="all-done-actions">
           <QuickAdd autoFocus onEscape={() => setAdding(false)} />

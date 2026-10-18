@@ -47,6 +47,9 @@ test('Mini-Fenster: Pause überspringen (mit Rückgängig) und Gedanke parken (N
   await mini.getByRole('textbox', { name: 'Gedanke parken' }).fill('Mama anrufen')
   await mini.screenshot({ path: process.env.SHOT_DIR ? `${process.env.SHOT_DIR}/mini-parken.png` : undefined })
   await mini.keyboard.press('Enter')
+  // Hier ist nur Platz für eine Meldung: „Geparkt“ wartet, bis „Rückgängig“ vorbei ist.
+  await expect(mini.getByRole('button', { name: 'Rückgängig' })).toBeVisible()
+  await page.clock.fastForward(9_000)
   await expect(mini.getByText('Geparkt. Weiter geht’s.')).toBeVisible()
   await page.getByRole('button', { name: 'Notizen' }).click()
   await expect(page.locator('.notes-text')).toHaveValue('Mama anrufen')

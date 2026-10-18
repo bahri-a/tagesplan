@@ -2,12 +2,13 @@
  * GEDANKEN PARKEN (Taste N)
  * Schießt dir im Block etwas durch den Kopf („Mama anrufen“, „Was war nochmal …?“),
  * drückst du N, tippst eine Zeile und Enter – der Gedanke landet unten im Notizzettel,
- * und du bist sofort wieder bei der Arbeit. Escape oder Klick daneben schließt ohne Speichern.
+ * und du bist sofort wieder bei der Arbeit. Klick daneben (oder ein anderes Fenster) parkt den Gedanken
+ * ebenfalls – nur Escape verwirft ihn.
  * Idee aus der Verhaltenstherapie bei ADHS: Ablenkung aufschreiben statt ihr zu folgen.
  * Klappt auch im Mini-Fenster: Dort gilt die Taste in dessen eigenem Dokument (WindowContext).
  */
 
-import { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import { T } from '../config/texts'
 import { parkThought } from '../store/actions'
 import { isTypingOrButton, WindowContext } from './hooks'
@@ -16,6 +17,8 @@ export function QuickPark({ onParked }: { onParked: () => void }) {
   const [open, setOpen] = useState(false)
   const [text, setText] = useState('')
   const { document } = useContext(WindowContext)
+  // Schon erledigt (Enter oder Escape) – das folgende Verlassen des Feldes parkt nicht noch einmal.
+  const settled = useRef(false)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -29,6 +32,7 @@ export function QuickPark({ onParked }: { onParked: () => void }) {
         notes.focus()
         return
       }
+      settled.current = false
       setOpen(true)
     }
     document.addEventListener('keydown', onKey)
@@ -36,7 +40,13 @@ export function QuickPark({ onParked }: { onParked: () => void }) {
   }, [document])
 
   if (!open) return null
-  const close = () => {
+  const close = (park: boolean) => {
+    if (settled.current) return
+    settled.current = true
+    if (park && text.trim()) {
+      parkThought(text)
+      onParked()
+    }
     setOpen(false)
     setText('')
   }
@@ -45,11 +55,7 @@ export function QuickPark({ onParked }: { onParked: () => void }) {
       className="quick-park"
       onSubmit={(e) => {
         e.preventDefault()
-        if (text.trim()) {
-          parkThought(text)
-          onParked()
-        }
-        close()
+        close(true)
       }}
     >
       <input
@@ -59,9 +65,9 @@ export function QuickPark({ onParked }: { onParked: () => void }) {
         aria-label={T.park.label}
         autoFocus
         onChange={(e) => setText(e.target.value)}
-        onBlur={close}
+        onBlur={() => close(true)}
         onKeyDown={(e) => {
-          if (e.key === 'Escape') close()
+          if (e.key === 'Escape') close(false)
         }}
       />
     </form>

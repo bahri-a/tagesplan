@@ -129,27 +129,42 @@ export function moveTask(taskId: ID, dayId: ID, index: number): boolean {
 }
 
 /**
- * Heute und morgen tauschen: Alle Hauptaufgaben von heute wandern nach morgen und umgekehrt,
- * jeweils in ihrer Reihenfolge. Hat nur ein Tag Aufgaben, landen sie einfach auf dem anderen.
- * Läuft gerade ein Block, passiert nichts (Rückgabe `false`); eine kurze Pause endet dabei.
+ * Heute und morgen tauschen: Die offenen Hauptaufgaben von heute wandern nach morgen und umgekehrt,
+ * jeweils in ihrer Reihenfolge. Erledigtes bleibt, wo es erledigt wurde (es gehört zu dem Tag).
+ * Hat nur ein Tag offene Aufgaben, landen sie einfach auf dem anderen.
+ * Läuft gerade ein Block oder gibt es nichts zu tauschen, passiert nichts (Rückgabe `null`);
+ * eine kurze Pause endet dabei. Sonst kommt „Rückgängig“ zurück.
  */
-export function swapDays(): boolean {
+export function swapDays(): (() => void) | null {
   const s = getState()
-  if (s.timer.phase === 'block') return false
+  if (s.timer.phase === 'block') return null
   const today = activeDay(s).id
   const tomorrow = plannedDay(s).id
-  const fromToday = tasksOfDay(s, today)
-  const fromTomorrow = tasksOfDay(s, tomorrow)
-  if (fromToday.length === 0 && fromTomorrow.length === 0) return false
+  const isOpen = (task: Task) => task.completedAt === null
+  const onToday = tasksOfDay(s, today)
+  const onTomorrow = tasksOfDay(s, tomorrow)
+  const openToday = onToday.filter(isOpen)
+  const openTomorrow = onTomorrow.filter(isOpen)
+  if (openToday.length === 0 && openTomorrow.length === 0) return null
+
+  // Erledigtes bleibt vorne, die offenen Aufgaben des anderen Tags kommen dahinter.
+  const newToday = [...onToday.filter((t) => !isOpen(t)), ...openTomorrow]
+  const newTomorrow = [...onTomorrow.filter((t) => !isOpen(t)), ...openToday]
+  const before = new Map([...onToday, ...onTomorrow].map((t) => [t.id, { dayId: t.dayId, position: t.position }]))
   const changes: Changes = {
     tasks: [
-      ...fromToday.map((task, index) => ({ ...task, dayId: tomorrow, position: index })),
-      ...fromTomorrow.map((task, index) => ({ ...task, dayId: today, position: index })),
+      ...newToday.map((task, index) => ({ ...task, dayId: today, position: index })),
+      ...newTomorrow.map((task, index) => ({ ...task, dayId: tomorrow, position: index })),
     ],
   }
   if (s.timer.phase === 'break') changes.timer = { phase: 'idle' }
   commit(changes)
-  return true
+
+  return () => {
+    const current = getState().tasks
+    const restored = [...before].flatMap(([id, place]) => (current[id] ? [{ ...current[id], ...place }] : []))
+    if (restored.length > 0) commit({ tasks: restored })
+  }
 }
 
 type TaskPatch = Partial<

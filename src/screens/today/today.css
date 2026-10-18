@@ -755,6 +755,52 @@
   width: 100%;
 }
 
+/* Leise: was unter „Morgen“ geplant ist („Für Morgen geplant:\n3 Aufgaben“). */
+.planned-line {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  white-space: pre-line;
+}
+
+.all-done .planned-line {
+  margin-bottom: 0.5rem;
+}
+
+.planned-line .planned-link {
+  padding-inline: 0.15em;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Niedriges Laptop-Fenster (z. B. 1280 × 720): „Alles erledigt“ passt mit der Zeile ganz auf den
+   Bildschirm – die Zeile steht dann in einer Zeile, Haken und Ränder sind etwas kleiner. */
+@media (max-height: 760px) {
+  :root:not([data-device='mobile']) .today:not(.mini-today) .all-done .planned-line {
+    margin-bottom: 0.3rem;
+    white-space: normal;
+  }
+
+  :root:not([data-device='mobile']) .today:not(.mini-today) .all-done {
+    padding-block: 2.75rem 2.25rem;
+  }
+
+  :root:not([data-device='mobile']) .today:not(.mini-today) .all-done .message-mark {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 0.3rem;
+  }
+}
+
+/* Leeres „Heute“ am Morgen danach: Zeile und „Jetzt holen“ nebeneinander. */
+.planned-waiting {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  margin: 0.1rem 0 0.35rem;
+  text-align: left;
+}
+
 /* ---------- Kleine Belohnung direkt nach „Erledigt“ (celebrate.ts) – alles unter 0,6 s ---------- */
 /* Der Haken zeichnet sich in einem Zug, sein Kreis „ploppt“ ganz leicht. Mit „Bewegung reduzieren“
    steht er gleich fertig da (pathLength = 1: ein Strich so lang wie der ganze Haken). */

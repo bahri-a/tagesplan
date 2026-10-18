@@ -40,10 +40,11 @@ import {
 import { MANY_TASKS_HINT_FROM } from '../../config/defaults'
 import { T } from '../../config/texts'
 import { TaskCard } from '../../components/TaskCard'
+import { useUndoToast } from '../../components/toastContext'
 import type { ID, Task } from '../../model/types'
 import { addTask, copyTask, deleteTask, moveTask, reorderTasks, swapDays } from '../../store/actions'
 import { activeDay, hasRecentTasks, plannedDay, tasksOfDay } from '../../store/selectors'
-import { getState, shallowEqual, useAppSelector } from '../../store/store'
+import { getState, shallowEqual, useAppSelector, type AppState } from '../../store/store'
 import { IS_MOBILE } from '../../platform/device'
 import { RecentTasks } from './RecentTasks'
 import { type PlanDays } from './shared'
@@ -320,23 +321,31 @@ function DayColumn(props: DayColumnProps) {
 }
 
 /**
- * Leiser Knopf mittig unter beiden Spalten: „Heute ⇄ Morgen“ tauscht die Aufgaben der beiden Tage.
- * Hat nur ein Tag Aufgaben, wandern sie auf den anderen. Nur sichtbar, wenn es etwas zu tauschen gibt.
+ * Leiser Knopf mittig unter beiden Spalten: „Heute ⇄ Morgen“ tauscht die offenen Aufgaben der beiden
+ * Tage (Erledigtes bleibt). Hat nur ein Tag offene Aufgaben, wandern sie auf den anderen.
+ * Nur sichtbar, wenn es etwas zu tauschen gibt. Danach kurz „Rückgängig“.
  */
 function SwapDays({ days, onNotice, compact = false }: { days: PlanDays; onNotice: (message: string) => void; compact?: boolean }) {
   const [today, tomorrow] = days
-  const todayCount = useAppSelector((s) => tasksOfDay(s, today.day.id).length)
-  const tomorrowCount = useAppSelector((s) => tasksOfDay(s, tomorrow.day.id).length)
+  const openOf = (s: AppState, dayId: ID) => tasksOfDay(s, dayId).filter((t) => t.completedAt === null).length
+  const todayCount = useAppSelector((s) => openOf(s, today.day.id))
+  const tomorrowCount = useAppSelector((s) => openOf(s, tomorrow.day.id))
+  const showUndo = useUndoToast()
   if (todayCount === 0 && tomorrowCount === 0) return null
 
   const hint = todayCount === 0 ? T.plan.swapToToday : tomorrowCount === 0 ? T.plan.swapToTomorrow : T.plan.swapDays
   const swap = () => {
-    if (!swapDays()) {
+    const undo = swapDays()
+    if (!undo) {
       onNotice(T.plan.swapBlocked)
       return
     }
-    if (todayCount > 0 && tomorrowCount > 0) onNotice(T.plan.swapped)
-    else onNotice(T.plan.swappedTo(todayCount === 0 ? today.label : tomorrow.label))
+    showUndo(
+      todayCount > 0 && tomorrowCount > 0
+        ? T.plan.swapped
+        : T.plan.swappedTo(todayCount === 0 ? today.label : tomorrow.label),
+      undo,
+    )
   }
 
   const icon = (
