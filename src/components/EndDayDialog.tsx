@@ -1,5 +1,5 @@
 /**
- * Dialog „Tag beenden“.
+ * Dialog „Tag abschließen“.
  *  1. Kurze Rückfrage (entfällt, wenn du über „Willkommen zurück“ kommst).
  *  2. Falls zwei Aufgaben auf denselben Platz wollen: Die beiden Karten
  *     stehen nebeneinander – ein Klick wählt, welche dort bleibt.
@@ -13,7 +13,7 @@ import { T } from '../config/texts'
 import type { ConflictChoices } from '../logic/carryOver'
 import type { ID } from '../model/types'
 import { endDay, getEndDayConflicts } from '../store/actions'
-import { activeDay, dayYield, lifetimeWork } from '../store/selectors'
+import { activeDay, dayYield, lifetimeWork, tasksOfDay } from '../store/selectors'
 import { useAppState } from '../store/store'
 import { Dialog } from './Dialog'
 import { CheckIcon } from './icons'
@@ -36,6 +36,7 @@ export function EndDayDialog({ skipConfirm = false, onCancel, onEnded }: Props) 
   const [dropped, setDropped] = useState<ReadonlySet<ID>>(new Set())
   // Die Konflikte ändern sich, wenn etwas gestrichen wird – deshalb jedes Mal neu ermittelt.
   const conflicts = getEndDayConflicts(dropped)
+  const hasOpen = tasksOfDay(state, activeDay(state).id).some((t) => t.completedAt === null)
 
   const finish = (finalChoices: ConflictChoices, finalDropped: ReadonlySet<ID> = dropped) => {
     endDay(finalChoices, finalDropped)
@@ -46,7 +47,16 @@ export function EndDayDialog({ skipConfirm = false, onCancel, onEnded }: Props) 
     return (
       <Dialog title={T.endDay.title} onClose={onCancel}>
         <DayYield />
-        <p className="dialog-text">{T.endDay.question}</p>
+        <p className="dialog-text">
+          {T.endDay.question}
+          {/* Nur, wenn noch etwas offen ist (nicht nach „Alles erledigt“). */}
+          {hasOpen && (
+            <>
+              <br />
+              {T.endDay.questionOpen}
+            </>
+          )}
+        </p>
         {state.timer.phase === 'block' && <p className="hint">{T.endDay.runningBlock}</p>}
         <div className="dialog-actions">
           <button type="button" className="btn btn-quiet" onClick={onCancel}>

@@ -116,6 +116,10 @@ test('Block im Vollbild: ruhige Ansicht, Antippen zeigt die Knöpfe, danach Paus
   await expect(html).not.toHaveAttribute('data-focus', 'on')
   await page.getByRole('button', { name: 'Erledigt', exact: true }).tap()
   await expect(page.locator('.all-done-numbers')).toContainText('1 Block · 5 Min.')
+  // „Doch nicht erledigt“ steht über dem Haken, nicht darauf.
+  const back = (await page.locator('.all-done .back-to-ask').boundingBox())!
+  const mark = (await page.locator('.all-done .message-mark').boundingBox())!
+  expect(back.y + back.height).toBeLessThanOrEqual(mark.y)
 
   expect(errors).toEqual([])
 })

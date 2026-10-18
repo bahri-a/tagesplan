@@ -299,6 +299,41 @@
   }
 }
 
+/* Im App-Fenster: Meldungen stehen übereinander (höchstens zwei), „Neue Version“ ganz oben. */
+.toast-stack {
+  position: fixed;
+  left: 50%;
+  bottom: calc(1.5rem + var(--safe-bottom));
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.toast-stack:empty {
+  display: none;
+}
+
+.toast-stack > .toast {
+  position: static;
+  max-width: 100%;
+  transform: none;
+  animation-name: toast-rise;
+  pointer-events: auto;
+}
+
+@keyframes toast-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
 /* ---------- Tag beenden: zwei Aufgaben nebeneinander ---------- */
 
 .conflict-choices {

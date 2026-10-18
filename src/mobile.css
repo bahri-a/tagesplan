@@ -543,11 +543,11 @@
 }
 
 /* „Doch nicht erledigt“ (kurz nach „Erledigt“): Am Handy ist oben links neben dem Symbol kein
-   Platz – deshalb als eigene kleine Zeile über dem Symbol. */
+   Platz – deshalb als eigene kleine Zeile über dem Symbol, mit etwas Luft zum Haken. */
 [data-device='mobile'] .is-message > .back-to-ask {
   position: relative;
   align-self: flex-start;
-  margin: -0.6rem 0 -0.3rem -0.4rem;
+  margin: -0.6rem 0 0.25rem -0.4rem;
 }
 
 /* Tippflächen: Kleine Knöpfe und leise Links bekommen am Handy unsichtbar mindestens 44 Punkt
@@ -565,7 +565,7 @@
 }
 
 /* Meldungen unten und die Übersicht einer Aufgabe: über der Reiter-Leiste, nicht darauf. */
-[data-device='mobile'] .toast {
+[data-device='mobile'] :is(.toast, .toast-stack) {
   bottom: calc(4.4rem + var(--safe-bottom));
 }
 

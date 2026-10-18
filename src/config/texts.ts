@@ -131,7 +131,13 @@ export const T = {
     peekUpcoming: 'Kommt noch',
     peekWorked: (blocks: number, time: string) => `${blocks} geschafft (${time})`,
     peekClose: 'Übersicht schließen',
-    endDay: 'Tag beenden',
+    endDay: 'Tag abschließen',
+    // Leise Zeile über „Morgen“ (in „Alles erledigt“ und im leeren „Heute“). Großes M = der Reiter „Morgen“.
+    plannedTomorrow: (n: number) => `Für Morgen geplant:\n${n === 1 ? '1 Aufgabe' : `${n} Aufgaben`}`,
+    nothingPlanned: 'Für Morgen noch nichts geplant',
+    planTomorrow: 'Planen',
+    // Leeres „Heute“ am Morgen danach: den geplanten Tag gleich holen.
+    fetchPlanned: 'Jetzt holen',
     allSteps: (done: number, total: number) => `Alle Schritte (${done}/${total})`,
     hideSteps: 'Schritte ausblenden',
     // Rauschen im Block: ein Knopf, der deutlich zeigt, ob es an oder aus ist.
@@ -203,10 +209,10 @@ export const T = {
     dropHere: 'Hierher ziehen',
     // Leiser Knopf unter beiden Spalten: tauscht die Aufgaben von heute und morgen.
     swapDays: 'Heute und Morgen tauschen',
-    swapToToday: 'Alle Aufgaben auf heute verschieben',
-    swapToTomorrow: 'Alle Aufgaben auf morgen verschieben',
+    swapToToday: 'Alle offenen Aufgaben auf heute verschieben',
+    swapToTomorrow: 'Alle offenen Aufgaben auf morgen verschieben',
     swapped: 'Heute und Morgen getauscht.',
-    swappedTo: (day: string) => `Alle Aufgaben liegen jetzt bei ${day}.`,
+    swappedTo: (day: string) => `Alle offenen Aufgaben liegen jetzt bei ${day}.`,
     swapBlocked: 'Gerade läuft ein Block – tauschen geht danach.',
     dragMoved: (title: string, day: string) => `„${title}“ liegt jetzt bei ${day}.`,
     // „Zuletzt verwendet“ unten in „Planen“
@@ -273,17 +279,22 @@ export const T = {
   },
 
   endDay: {
-    title: 'Tag beenden',
-    question: 'Möchtest du den Tag jetzt beenden? Offene Aufgaben wandern auf ihren Platz im neuen Tag.',
+    title: 'Tag abschließen',
+    question: 'Möchtest du den Tag jetzt abschließen?',
+    // Nur, wenn noch etwas offen ist:
+    questionOpen: 'Offene Aufgaben wandern auf ihren Platz im neuen Tag.',
     runningBlock: 'Der laufende Block wird dabei gestoppt – deine Minuten bleiben gespeichert.',
     conflictTitle: (place: number) => `Welche Aufgabe soll auf Platz ${place}?`,
     conflictHint: 'Die andere kommt direkt dahinter. Mit × streichst du eine.',
     dropLabel: (title: string) => `„${title}“ streichen`,
     carried: 'von heute',
     planned: 'für morgen geplant',
-    confirm: 'Tag beenden',
+    confirm: 'Tag abschließen',
     cancel: 'Abbrechen',
-    finished: 'Neuer Tag – schön, dass du da bist.',
+    // Nach „Tag abschließen“ (abends) …
+    finished: 'Feierabend!\nMorgen geht es hier weiter.',
+    // … und nach „Neuen Tag beginnen“ (am Morgen danach).
+    welcome: 'Neuer Tag – schön, dass du da bist.',
     // Kleiner Tagesertrag im Dialog – ohne Vergleich, ohne Streak.
     yieldTitle: 'Heute geschafft',
     yieldBlocks: (n: number) => (n === 1 ? '1 Block' : `${n} Blöcke`),
@@ -352,10 +363,11 @@ export const T = {
   },
 
   // Vor der ersten Frage nach Mitteilungen (die kommt nur ein einziges Mal).
+  // Ein Wort je Gerät, wie das System: iPhone „Mitteilungen“, Mac „Benachrichtigungen“.
   notifyPrimer: {
     title: 'Eine Sache vorab',
     textMobile: 'Damit du das Blockende hörst,\nauch wenn das iPhone gesperrt ist:\nerlaube gleich die Mitteilungen.',
-    textMac: 'Damit du das Blockende mitbekommst,\nauch wenn Tagesplan im Hintergrund ist:\nerlaube gleich die Mitteilungen.',
+    textMac: 'Damit du das Blockende mitbekommst,\nauch wenn Tagesplan im Hintergrund ist:\nerlaube gleich die Benachrichtigungen.',
     next: 'Weiter',
     // Leise unter dem Startknopf (Handy), wenn Mitteilungen abgelehnt sind.
     off: 'Mitteilungen aus · Blockende nur bei offener App',
@@ -446,6 +458,7 @@ export const T = {
     paletteRose: 'Rosé',
     paletteLavendel: 'Lavendel',
     sounds: 'Töne & Benachrichtigungen',
+    soundsMobile: 'Töne & Mitteilungen',
     soundsLabel: 'Töne',
     soundsHint: 'Aus = keine Töne bei Block- und Pausenende.\nDas Rauschen bleibt davon unberührt.',
     soundsOn: 'An',
@@ -470,6 +483,10 @@ export const T = {
     notifyDenied:
       'Benachrichtigungen sind blockiert. Du kannst sie über das Symbol links neben der Adresse wieder erlauben.',
     notifyAllow: 'Erlauben',
+    // Handy im Browser (z. B. iPhone-Safari): dort heißen sie „Mitteilungen“.
+    mobileNotifyGranted: 'Mitteilungen sind erlaubt.',
+    mobileNotifyDefault: 'Mitteilungen sind noch nicht erlaubt.',
+    mobileNotifyDenied: 'Mitteilungen sind blockiert. Du kannst sie in den Einstellungen des Browsers wieder erlauben.',
     // iPhone-App: Mitteilungen statt Browser-Benachrichtigungen
     nativeNotifyGranted: 'Mitteilungen sind erlaubt – auch bei gesperrtem iPhone kommt das Signal.',
     nativeNotifyDefault: 'Mitteilungen sind noch nicht erlaubt. Ohne sie klingelt nichts, wenn das iPhone gesperrt ist.',

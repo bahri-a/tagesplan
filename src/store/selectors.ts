@@ -302,6 +302,25 @@ export function canStartNewDay(s: AppState, now: number): boolean {
   return dayKey(day.firstWorkAt) < dayKey(now)
 }
 
+/** Wie viele offene Aufgaben unter „Morgen“ warten. */
+export function plannedWaiting(s: AppState): number {
+  return tasksOfDay(s, plannedDay(s).id).filter((t) => t.completedAt === null).length
+}
+
+/**
+ * Leeres „Heute“ am Morgen danach: Soll „Jetzt holen“ den geplanten Tag holen?
+ * Nur, wenn heute nichts geplant und nichts gearbeitet ist, unter „Morgen“ etwas wartet und
+ * der leere Tag an einem früheren Kalendertag begann – am selben Abend würde „Jetzt holen“
+ * sonst den Plan für morgen in den heutigen Tag laden.
+ */
+export function canFetchPlanned(s: AppState, now: number): boolean {
+  const day = activeDay(s)
+  if (day.firstWorkAt !== null || day.startedAt === null) return false
+  if (tasksOfDay(s, day.id).length > 0) return false
+  if (s.timer.phase === 'block') return false
+  return plannedWaiting(s) > 0 && dayKey(day.startedAt) < dayKey(now)
+}
+
 /**
  * Kleiner Tagesertrag für „Tag beenden“: durchgehaltene Blöcke, gearbeitete Minuten
  * (auch aus abgebrochenen und dem gerade laufenden Block, ohne Pausen) und erledigte Aufgaben.
