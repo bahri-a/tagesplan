@@ -222,19 +222,19 @@ function apply(changes: Changes): void {
   listeners.forEach((l) => l())
 }
 
-/** Speichert die Änderungen im Hintergrund (IndexedDB). */
+/**
+ * Speichert die Änderungen im Hintergrund (IndexedDB): eine Änderung = ein Speichervorgang über
+ * alle betroffenen Tabellen, strikt der Reihe nach. So kann ein später zweiter Versuch nie eine
+ * neuere Änderung mit einer älteren überschreiben.
+ */
 function save(changes: Changes): void {
   const { days, tasks, steps, blocks, settings, note, timer, local } = changes
-  const saves: Promise<void>[] = []
-  if (days) saves.push(database.putRecords('days', days))
-  if (tasks) saves.push(database.putRecords('tasks', tasks))
-  if (steps) saves.push(database.putRecords('steps', steps))
-  if (blocks) saves.push(database.putRecords('blocks', blocks))
-  if (settings) saves.push(database.putRecords('settings', [settings]))
-  if (note) saves.push(database.putRecords('notes', [note]))
-  if (timer) saves.push(database.putTimer(timer))
-  if (local) saves.push(database.putLocal(local))
-  pendingSaves = Promise.all([pendingSaves, ...saves]).then(() => undefined, reportSaveError)
+  const stored: database.StoredChanges = {
+    tables: { days, tasks, steps, blocks, settings: settings && [settings], notes: note && [note] },
+    timer,
+    local,
+  }
+  pendingSaves = pendingSaves.then(() => database.putChanges(stored)).catch(reportSaveError)
 }
 
 let pendingSaves: Promise<void> = Promise.resolve()

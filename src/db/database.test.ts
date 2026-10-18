@@ -1,13 +1,14 @@
 /**
- * Test für das Datenbank-Update: Eine Datenbank von Version 1 (wie in der
- * schon installierten App) wird beim Öffnen auf Version 2 gebracht.
+ * Tests für die Datenbank: das Update von Version 1 (wie in der schon installierten App) auf
+ * Version 2, und dass eine Änderung ganz oder gar nicht gespeichert wird.
  */
 import 'fake-indexeddb/auto'
 import { IDBFactory } from 'fake-indexeddb'
 import { openDB } from 'idb'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { getState, initStore, resetStoreForTests } from '../store/store'
-import { resetDatabaseForTests, TABLE_NAMES } from './database'
+import type { Day, Task } from '../model/types'
+import { loadAll, putChanges, resetDatabaseForTests, TABLE_NAMES } from './database'
 
 beforeEach(() => {
   globalThis.indexedDB = new IDBFactory()
@@ -64,5 +65,38 @@ describe('Datenbank-Update von Version 1', () => {
     await initStore()
     expect(getState().settings.blockMinutes).toBe(20)
     expect(getState().settings.shortBreakMinutes).toBe(10)
+  })
+})
+
+describe('Speichern in einem Rutsch', () => {
+  const base = { createdAt: 0, updatedAt: 1, deletedAt: null }
+  const day = { ...base, id: 'day-2', status: 'active', startedAt: 1, endedAt: null, firstWorkAt: null } as Day
+  const task = {
+    ...base,
+    id: 'task-9',
+    dayId: 'day-2',
+    title: 'Bericht',
+    position: 0,
+    estimatedBlocks: 3,
+    blockMinutesOverride: null,
+    completedAt: null,
+  } as unknown as Task
+
+  it('speichert alle Tabellen einer Änderung zusammen', async () => {
+    await initStore()
+    await putChanges({ tables: { days: [day], tasks: [task] }, timer: { phase: 'idle' } })
+    const stored = await loadAll()
+    expect(stored.days.some((d) => d.id === 'day-2')).toBe(true)
+    expect(stored.tasks.some((t) => t.id === 'task-9')).toBe(true)
+  })
+
+  it('scheitert ein Eintrag, ist nichts von der Änderung gespeichert', async () => {
+    await initStore()
+    // Eine Funktion lässt sich nicht speichern – der Tag davor darf dann auch nicht ankommen.
+    const broken = { ...task, title: () => 'kaputt' } as unknown as Task
+    await expect(putChanges({ tables: { days: [day], tasks: [broken] } })).rejects.toThrow()
+    const stored = await loadAll()
+    expect(stored.days.some((d) => d.id === 'day-2')).toBe(false)
+    expect(stored.tasks.some((t) => t.id === 'task-9')).toBe(false)
   })
 })

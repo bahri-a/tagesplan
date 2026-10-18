@@ -106,3 +106,39 @@ test('Fehler im Planer: nur dort eine Karte – der Block endet trotzdem mit Sig
   await expect(page.locator('.ask-done-question')).toHaveText('Hauptaufgabe erledigt oder noch ein Block?')
   expect(errors.filter((e) => !e.includes('Planer kaputt'))).toEqual([])
 })
+
+test('Wiederherstellen: erst zeigen, was drin ist – die App hat neuere Daten', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+  await page.clock.install({ time: new Date('2026-10-18T09:00:00') })
+  await page.goto('/')
+  await expect(page.locator('.focus-title')).toHaveText('Tagesplan ausprobieren')
+
+  // Eine Sicherung von vor einer Stunde – damals noch ohne Aufgaben.
+  const backup = await page.evaluate<string>(`(async () => {
+    const db = await new Promise((r) => { const q = indexedDB.open('tagesplan'); q.onsuccess = () => r(q.result) })
+    const all = (name) => new Promise((r) => { const q = db.transaction(name).objectStore(name).getAll(); q.onsuccess = () => r(q.result) })
+    const data = {}
+    for (const n of ['days', 'tasks', 'steps', 'blocks', 'settings', 'notes']) data[n] = await all(n)
+    data.tasks = []
+    data.steps = []
+    return JSON.stringify({ app: 'tagesplan', schemaVersion: 2, exportedAt: new Date(Date.now() - 3600000).toISOString(), data })
+  })()`)
+  await page.getByRole('button', { name: 'Einstellungen' }).click()
+  await page.locator('input[type=file]').setInputFiles({ name: 'sicherung.json', mimeType: 'application/json', buffer: Buffer.from(backup) })
+
+  const dialog = page.getByRole('dialog', { name: 'Sicherung wiederherstellen?' })
+  await expect(dialog).toContainText('In der Sicherung:2 Tage · 0 Aufgaben · 0 Blöcke')
+  await expect(dialog).toContainText('Jetzt in der App:2 Tage · 1 Aufgabe · 0 Blöcke')
+  await expect(dialog).toContainText('Achtung: Die App hat neuere Daten als die Sicherung.')
+
+  // Vorher wird der jetzige Stand als Datei gesichert, dann ersetzt.
+  const download = page.waitForEvent('download')
+  await dialog.getByRole('button', { name: 'Ja, wiederherstellen' }).click()
+  expect((await download).suggestedFilename()).toMatch(/^tagesplan-vor-wiederherstellen-.*\.json$/)
+  await expect(page.getByText('Fertig – deine Sicherung ist wiederhergestellt.')).toBeVisible()
+  await page.getByRole('button', { name: 'Heute', exact: true }).first().click()
+  await expect(page.locator('.empty-today')).toBeVisible()
+
+  expect(errors).toEqual([])
+})

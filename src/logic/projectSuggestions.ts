@@ -1,8 +1,10 @@
 /**
  * „VORSCHLÄGE“ AUS DER APP „PROJEKTE“
  * Projekte (bahri-a.github.io/projekte) und Tagesplan (bahri-a.github.io/tagesplan) liegen auf
- * derselben Adresse und teilen sich deshalb den Browser-Speicher. Tagesplan LIEST dort nur die
- * offenen Aufgaben – geändert wird in Projekte nie etwas.
+ * derselben Adresse und teilen sich deshalb den Browser-Speicher. Tagesplan LIEST dort die
+ * offenen Aufgaben. Nur „Aktualisieren“ schreibt etwas hinein: neue Funde werden ergänzt, alles
+ * andere (auch Felder, die Tagesplan nicht kennt) bleibt, wie es ist. Ist Projekte neuer als
+ * Tagesplan (höhere `version`), schreibt Tagesplan gar nichts.
  *
  * Aus jeder Aufgabe wird eine kurze Hauptaufgabe (1 bis 4 Wörter). Das formuliert Claude über den
  * Helfer von Projekte auf dem Mac (POST /kurztitel). Einmal formulierte Titel merkt sich Tagesplan
@@ -24,6 +26,15 @@ export const LIMIT_KEY = 'tagesplan-vorschlaege-max'
 export const HELPER_URL = 'http://127.0.0.1:3290/kurztitel'
 /** Derselbe Helfer: sucht im Second Brain und in den Outlook-Mails nach neuen Aufgaben. */
 export const SEARCH_URL = 'http://127.0.0.1:3290/aktualisieren'
+/** Diese Version der Projekte-Daten kennt Tagesplan (projekte/src/daten/bestand.ts). */
+export const KNOWN_PROJECTS_VERSION = 1
+
+/** Ist die gespeicherte Projekte-Version neuer, als Tagesplan sie kennt? */
+export function projectsDataTooNew(storage: Storage): boolean {
+  const data = read<{ version?: unknown } | null>(storage, PROJECTS_KEY, null)
+  return typeof data?.version === 'number' && data.version > KNOWN_PROJECTS_VERSION
+}
+
 /** Wann Projekte zuletzt gesucht hat (Projekte zeigt das im Reiter „Automatisch“). */
 export const LAST_SEARCH_KEY = 'projekte-zuletzt-aktualisiert'
 
@@ -280,6 +291,9 @@ export type SearchResult = { ok: true; added: number } | { ok: false; message: s
  * die Funde in Projekte ab – mit denselben Regeln wie dort (siehe `importCandidates`).
  */
 export async function searchNewTasks(storage: Storage, fetcher: typeof fetch = fetch): Promise<SearchResult> {
+  if (projectsDataTooNew(storage)) {
+    return { ok: false, message: 'Projekte ist neuer als Tagesplan.\nBitte in Projekte aktualisieren.' }
+  }
   let response: Response
   try {
     response = await fetcher(SEARCH_URL, { method: 'POST' })
@@ -304,8 +318,10 @@ const TIME = /^([01]\d|2[0-3]):[0-5]\d$/
  * (projekte/src/daten/bestand.ts, `importiere`): Was schon da ist (gleiche Quelle) oder in
  * Projekte abgelehnt wurde, kommt nicht noch einmal. Neue Funde landen dort im Reiter
  * „Automatisch“ und warten aufs Annehmen. Liefert, wie viele neu dazugekommen sind.
+ * Es wird nur ergänzt: alle anderen Felder bleiben. Ist Projekte neuer, passiert nichts (0).
  */
 export function importCandidates(storage: Storage, candidates: unknown[], now = new Date()): number {
+  if (projectsDataTooNew(storage)) return 0
   const data = read<{ version?: number; items?: unknown[]; geloeschteQuellen?: unknown[] } | null>(
     storage,
     PROJECTS_KEY,
@@ -347,7 +363,8 @@ export function importCandidates(storage: Storage, candidates: unknown[], now = 
   }
   if (added > 0) {
     write(storage, PROJECTS_KEY, {
-      version: 1,
+      ...data,
+      version: data?.version ?? KNOWN_PROJECTS_VERSION,
       items,
       geloeschteQuellen: Array.isArray(data?.geloeschteQuellen) ? data.geloeschteQuellen : [],
     })

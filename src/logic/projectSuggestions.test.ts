@@ -161,6 +161,26 @@ describe('Vorschläge aus Projekte', () => {
     expect(data.geloeschteQuellen).toEqual(['second-brain:notiz.md#weg'])
   })
 
+  it('ergänzt nur: fremde Felder bleiben, bei einer neueren Projekte-Version wird nichts geschrieben', async () => {
+    const storage = memoryStorage({
+      [PROJECTS_KEY]: JSON.stringify({ version: 1, items: [], geloeschteQuellen: [], bereiche: ['Arbeit'] }),
+    })
+    expect(importCandidates(storage, [{ titel: 'Neu', quelle: 'email', quellId: 'm1' }])).toBe(1)
+    expect(JSON.parse(storage.getItem(PROJECTS_KEY)!)).toMatchObject({ version: 1, bereiche: ['Arbeit'] })
+
+    const newer = JSON.stringify({ version: 2, items: [], neuesFeld: true })
+    const later = memoryStorage({ [PROJECTS_KEY]: newer })
+    expect(importCandidates(later, [{ titel: 'Neu', quelle: 'email', quellId: 'm1' }])).toBe(0)
+    expect(later.getItem(PROJECTS_KEY)).toBe(newer)
+    let asked = false
+    const helper = (async () => {
+      asked = true
+      return new Response('[]')
+    }) as typeof fetch
+    expect((await searchNewTasks(later, helper)).ok).toBe(false)
+    expect(asked).toBe(false)
+  })
+
   it('„Aktualisieren“: sucht über den Helfer und meldet, was schiefging', async () => {
     const storage = memoryStorage()
     const found = (async () => new Response(JSON.stringify([{ titel: 'Arzt', quelle: 'email', quellId: 'm9' }]))) as typeof fetch
