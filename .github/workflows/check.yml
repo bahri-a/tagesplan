@@ -46,7 +46,7 @@ jobs:
         run: npm run build
 
       - name: Browser für den Klick-Test installieren
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium webkit
 
       - name: Klick-Test im Browser
         run: npx playwright test
