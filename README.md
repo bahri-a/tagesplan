@@ -357,7 +357,8 @@ der Hinweis **„Eine neue Version der App ist bereit“** → **Neu laden**.
 Ein laufender Timer läuft danach einfach weiter.
 
 **Prüfungen:** Bei jedem Pull Request prüft GitHub automatisch Lint, Tests, Bauen und einen
-**Klick-Test im Browser** (`e2e/`, Playwright: Aufgabe anlegen → Block → Pause → erledigt).
+**Klick-Test im Browser** (`e2e/`, Playwright: Aufgabe anlegen → Block → Pause → erledigt), am
+Mac mit Chrome und als iPhone 15 Pro mit WebKit, der Technik der iPhone-App (`*.iphone.spec.ts`).
 Lokal: `npm run lint`, `npm test` und `npm run test:e2e`.
 
 **Zurück zu einer älteren Version:** GitHub → **Actions** → **Veröffentlichen** → **Run workflow**
