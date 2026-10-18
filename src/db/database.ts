@@ -127,24 +127,48 @@ export async function loadAll(): Promise<StoredData> {
   return { days, tasks, steps, blocks, settings, notes, timer, local }
 }
 
-/** Speichert (neue oder geänderte) Einträge in einer Tabelle. */
-export async function putRecords<N extends TableName>(name: N, records: Tables[N]): Promise<void> {
-  if (records.length === 0) return
-  await withRetry((database) => {
-    const tx = database.transaction(name, 'readwrite')
-    // `as never`: TypeScript kann die Zuordnung Tabelle ↔ Typ hier nicht selbst herleiten.
-    return Promise.all([...records.map((r) => tx.store.put(r as never)), tx.done])
+/** Eine Änderung für die Datenbank: neue oder geänderte Einträge je Tabelle, dazu Timer und Gerätewerte. */
+export interface StoredChanges {
+  tables: Partial<Tables>
+  timer?: TimerState
+  local?: LocalState
+}
+
+/**
+ * Speichert eine ganze Änderung in EINER Transaktion über alle betroffenen Tabellen: Entweder
+ * kommt alles an oder nichts (z. B. „Tag abschließen“: neuer Tag aktiv UND Aufgaben dort).
+ * Scheitert ein Eintrag, bleibt die Datenbank, wie sie war – der zweite Versuch schreibt alles neu.
+ */
+export async function putChanges({ tables, timer, local }: StoredChanges): Promise<void> {
+  const names = TABLE_NAMES.filter((name) => (tables[name]?.length ?? 0) > 0)
+  const touchesLocal = timer !== undefined || local !== undefined
+  if (names.length === 0 && !touchesLocal) return
+  const stores = touchesLocal ? [...names, 'local' as const] : names
+  await withRetry(async (database) => {
+    const tx = database.transaction(stores, 'readwrite')
+    const writes: Promise<unknown>[] = []
+    try {
+      for (const name of names) {
+        const store = tx.objectStore(name)
+        // `as never`: TypeScript kann die Zuordnung Tabelle ↔ Typ hier nicht selbst herleiten.
+        for (const record of tables[name]!) writes.push(store.put(record as never))
+      }
+      if (timer) writes.push(tx.objectStore('local').put(timer, 'timer'))
+      if (local) writes.push(tx.objectStore('local').put(local, 'local'))
+    } catch (error) {
+      // Ein Eintrag ließ sich gar nicht erst schreiben: die schon geschriebenen auch nicht behalten.
+      for (const write of [...writes, tx.done]) write.catch(() => undefined) // brechen jetzt alle ab
+      tx.abort()
+      throw error
+    }
+    // Scheitert ein put später, bricht die Transaktion ab und tx.done lehnt ab – nichts davon ist gespeichert.
+    await Promise.all([...writes, tx.done])
   })
 }
 
-/** Speichert den Timer-Zustand. */
-export async function putTimer(timer: TimerState): Promise<void> {
-  await withRetry((database) => database.put('local', timer, 'timer'))
-}
-
-/** Speichert die gerätebezogenen Werte. */
-export async function putLocal(local: LocalState): Promise<void> {
-  await withRetry((database) => database.put('local', local, 'local'))
+/** Speichert (neue oder geänderte) Einträge in einer Tabelle. */
+export async function putRecords<N extends TableName>(name: N, records: Tables[N]): Promise<void> {
+  await putChanges({ tables: { [name]: records } })
 }
 
 /** Ersetzt ALLE Daten (für „Wiederherstellen“). */

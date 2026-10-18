@@ -501,8 +501,17 @@ export const T = {
     restore: 'Wiederherstellen',
     restoreHint: 'Lädt eine Sicherungsdatei – ersetzt die aktuellen Daten.',
     restoreConfirmTitle: 'Sicherung wiederherstellen?',
-    restoreConfirm: (date: string) =>
-      `Die Sicherung vom ${date} ersetzt alle Daten, die gerade in der App sind.\nDein jetziger Stand wird vorher als Datei gesichert.`,
+    restoreConfirm: (date: string) => `Die Sicherung vom ${date} ersetzt alle Daten, die gerade in der App sind.`,
+    // Vergleich vor dem Ersetzen: was steckt drin? (Tage, Hauptaufgaben, durchgehaltene Blöcke)
+    restoreInBackup: 'In der Sicherung:',
+    restoreInApp: 'Jetzt in der App:',
+    restoreCounts: (days: number, tasks: number, blocks: number) =>
+      `${days === 1 ? '1 Tag' : `${days} Tage`} · ${tasks === 1 ? '1 Aufgabe' : `${tasks} Aufgaben`} · ${blocks === 1 ? '1 Block' : `${blocks} Blöcke`}`,
+    restoreAppNewer: 'Achtung: Die App hat neuere Daten als die Sicherung.',
+    restoreSafety: 'Dein jetziger Stand wird vorher als Datei gesichert.',
+    // iPhone-App: Die Sicherheitskopie landet direkt bei den täglichen Sicherungen.
+    restoreSafetyNative: 'Dein jetziger Stand wird vorher unter\nDateien › Tagesplan › Sicherungen abgelegt.',
+    restoreSafetyFailed: 'Die Sicherheitskopie ließ sich nicht ablegen – deshalb ist nichts ersetzt.\nVersuch es gleich noch einmal.',
     restoreYes: 'Ja, wiederherstellen',
     restoreNo: 'Abbrechen',
     restoreDone: 'Fertig – deine Sicherung ist wiederhergestellt.',

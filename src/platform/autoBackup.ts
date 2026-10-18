@@ -6,7 +6,7 @@
  */
 import { Directory, Encoding, Filesystem } from '@capacitor/filesystem'
 import { createBackup } from '../db/backup'
-import { AUTO_BACKUP_DIR, autoBackupName, autoBackupsToRemove } from '../logic/autoBackup'
+import { AUTO_BACKUP_DIR, autoBackupName, autoBackupsToRemove, safetyCopyName } from '../logic/autoBackup'
 import { fileDate } from '../logic/time'
 import { getState } from '../store/store'
 import { markBackupMade } from '../store/actions'
@@ -44,6 +44,26 @@ export async function runDailyBackup(now = Date.now()): Promise<void> {
     // Kein Platz o. Ä. – Sichern von Hand geht weiterhin.
   } finally {
     running = false
+  }
+}
+
+/**
+ * Vor dem Wiederherstellen: den jetzigen Stand als Sicherheitskopie in „Sicherungen“ ablegen
+ * („tagesplan-vor-wiederherstellen-2026-10-18.json“ – die tägliche Aufräumung lässt sie liegen).
+ * Gibt zurück, ob das geklappt hat.
+ */
+export async function writeSafetyCopy(now = Date.now()): Promise<boolean> {
+  try {
+    await Filesystem.writeFile({
+      path: `${AUTO_BACKUP_DIR}/${safetyCopyName(fileDate(now))}`,
+      data: JSON.stringify(createBackup(getState()), null, 2),
+      directory: Directory.Documents,
+      encoding: Encoding.UTF8,
+      recursive: true,
+    })
+    return true
+  } catch {
+    return false
   }
 }
 

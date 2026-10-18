@@ -140,6 +140,48 @@
   white-space: pre-line;
 }
 
+/* Wiederherstellen: Sicherung und App nebeneinander gezählt. */
+.restore-compare {
+  margin-bottom: 1rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius-small);
+  background: var(--accent-soft);
+  font-size: var(--fs-sm);
+}
+
+.restore-compare dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.3rem 0.75rem;
+  margin: 0;
+}
+
+/* Handy: Bezeichnung über den Zahlen – nebeneinander bräche es mitten in den Zahlen um. */
+[data-device='mobile'] .restore-compare dl {
+  grid-template-columns: 1fr;
+  gap: 0.1rem;
+}
+
+[data-device='mobile'] .restore-compare dd + dt {
+  margin-top: 0.45rem;
+}
+
+.restore-compare dt {
+  color: var(--text-muted);
+}
+
+.restore-compare dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.restore-newer {
+  margin-top: 0.5rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
 .dialog-actions {
   display: flex;
   flex-wrap: wrap;

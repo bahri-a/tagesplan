@@ -6,7 +6,7 @@ import * as sel from '../store/selectors'
 import { flushSaves, getState, initStore, resetStoreForTests } from '../store/store'
 import { memoryStorage } from '../logic/deviceStorage'
 import { DEFERRED_KEY, HIDDEN_KEY, LIMIT_KEY, PROJECTS_KEY } from '../logic/projectSuggestions'
-import { createBackup, parseBackup, restoreBackup } from './backup'
+import { appIsNewer, createBackup, parseBackup, restoreBackup, summarizeTables } from './backup'
 import { resetDatabaseForTests } from './database'
 
 beforeEach(async () => {
@@ -106,5 +106,33 @@ describe('Sichern und Wiederherstellen', () => {
     expect(parseBackup('{"app":"etwas-anderes"}')).toBeNull()
     expect(parseBackup(JSON.stringify({ ...createBackup(), data: { days: 'x' } }))).toBeNull()
     expect(parseBackup(JSON.stringify({ ...createBackup(), schemaVersion: 999 }))).toBeNull()
+  })
+
+  it('prüft jeden Eintrag voll – fehlende Pflichtfelder, doppelte Einstellungen, kein „Heute“', () => {
+    actions.addTask(sel.activeDay(getState()).id, 'Kapitel 3')
+    const good = createBackup()
+    expect(parseBackup(JSON.stringify(good))).not.toBeNull()
+    const broken = (patch: (data: typeof good.data) => object) =>
+      parseBackup(JSON.stringify({ ...good, data: { ...good.data, ...patch(good.data) } }))
+    expect(broken((d) => ({ tasks: d.tasks.map((t) => ({ ...t, title: undefined })) }))).toBeNull()
+    expect(broken((d) => ({ days: d.days.map((day) => ({ ...day, status: 'kaputt' })) }))).toBeNull()
+    expect(broken((d) => ({ settings: [...d.settings, ...d.settings] }))).toBeNull()
+    expect(broken(() => ({ notes: [] }))).toBeNull()
+    expect(broken((d) => ({ days: d.days.filter((day) => day.status !== 'active') }))).toBeNull()
+    expect(parseBackup(JSON.stringify({ ...good, exportedAt: 'gestern' }))).toBeNull()
+  })
+
+  it('zählt, was in Sicherung und App steckt, und merkt, wenn die App neuer ist', async () => {
+    const dayId = sel.activeDay(getState()).id
+    actions.addTask(dayId, 'Kapitel 3')
+    await flushSaves()
+    const backup = createBackup()
+    expect(summarizeTables(backup.data)).toEqual({ days: 2, tasks: 1, blocks: 0 })
+    expect(appIsNewer(backup)).toBe(false)
+
+    // Später in der App weitergearbeitet → die App hat neuere Daten als die Sicherung.
+    const later = { ...backup, exportedAt: new Date(Date.now() - 60_000).toISOString() }
+    actions.addTask(dayId, 'Mails')
+    expect(appIsNewer(later)).toBe(true)
   })
 })

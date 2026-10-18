@@ -14,7 +14,7 @@ import { openShortcuts } from '../components/shortcutsEvents'
 import { PlayIcon, ShareIcon } from '../components/icons'
 import { NumberStepper } from '../components/NumberStepper'
 import { ShareButton } from '../components/ShareButton'
-import { downloadBackup, parseBackup, restoreBackup, type BackupFile } from '../db/backup'
+import { appIsNewer, createBackup, downloadBackup, parseBackup, restoreBackup, summarizeTables, type BackupFile } from '../db/backup'
 import type { NoiseColor, PaletteSetting, SurfaceSetting, ThemeSetting } from '../model/types'
 import {
   notificationPermission,
@@ -376,7 +376,18 @@ function DataSection({ hidden = false }: { hidden?: boolean }) {
   const confirmRestore = async () => {
     if (!pending) return
     // Sicherheitsnetz: Erst den jetzigen Stand als Datei sichern – falls es die falsche Sicherung war.
-    downloadBackup('vor-wiederherstellen')
+    // iPhone-App: direkt in „Sicherungen“ (das Teilen-Menü ließe sich abbrechen). Klappt das nicht,
+    // wird nichts ersetzt.
+    if (__NATIVE_APP__) {
+      const saved = await import('../platform/autoBackup').then((m) => m.writeSafetyCopy()).catch(() => false)
+      if (!saved) {
+        setPending(null)
+        setMessage(T.settings.restoreSafetyFailed)
+        return
+      }
+    } else {
+      downloadBackup('vor-wiederherstellen')
+    }
     await restoreBackup(pending)
     setPending(null)
     setMessage(T.settings.restoreDone)
@@ -435,6 +446,10 @@ function DataSection({ hidden = false }: { hidden?: boolean }) {
           <p className="dialog-text restore-text">
             {T.settings.restoreConfirm(new Date(pending.exportedAt).toLocaleString('de-DE'))}
           </p>
+          <RestoreComparison backup={pending} />
+          <p className="dialog-text restore-text">
+            {__NATIVE_APP__ ? T.settings.restoreSafetyNative : T.settings.restoreSafety}
+          </p>
           <div className="dialog-actions">
             <button type="button" className="btn btn-quiet" onClick={() => setPending(null)}>
               {T.settings.restoreNo}
@@ -446,6 +461,25 @@ function DataSection({ hidden = false }: { hidden?: boolean }) {
         </Dialog>
       )}
     </section>
+  )
+}
+
+/** Vor dem Ersetzen: was steckt in der Sicherung, was gerade in der App – und ist die App neuer? */
+function RestoreComparison({ backup }: { backup: BackupFile }) {
+  const state = useAppState()
+  const inBackup = summarizeTables(backup.data)
+  const inApp = summarizeTables(createBackup(state).data)
+  const counts = (c: typeof inApp) => T.settings.restoreCounts(c.days, c.tasks, c.blocks)
+  return (
+    <div className="restore-compare">
+      <dl>
+        <dt>{T.settings.restoreInBackup}</dt>
+        <dd>{counts(inBackup)}</dd>
+        <dt>{T.settings.restoreInApp}</dt>
+        <dd>{counts(inApp)}</dd>
+      </dl>
+      {appIsNewer(backup, state) && <p className="restore-newer">{T.settings.restoreAppNewer}</p>}
+    </div>
   )
 }
 
