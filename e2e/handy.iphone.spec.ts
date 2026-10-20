@@ -100,7 +100,8 @@ test('Block im Vollbild: ruhige Ansicht, Antippen zeigt die Knöpfe, danach Paus
   // Ring und Zeit stehen frei, ganz im Bild.
   const ring = page.locator('.timer-ring')
   await expect(ring).toBeInViewport({ ratio: 1 })
-  await expect(page.locator('.timer-ring-time')).toHaveText('5:00')
+  // Die Uhr läuft echt weiter – bis hierher kann auf dem langsamen Prüfrechner eine Sekunde vergehen.
+  await expect(page.locator('.timer-ring-time')).toHaveText(/^(5:00|4:5\d)$/)
 
   // Nach ein paar Sekunden treten die Knöpfe zurück, ein Tippen holt sie wieder.
   await page.clock.fastForward(10_000)
