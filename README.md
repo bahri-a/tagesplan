@@ -270,8 +270,7 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
   (Arbeit bis 4 Uhr nachts zählt noch zum alten Tag.)
 
 ### Aussehen
-- **Einstellungen → Aussehen:** Automatisch / Hell / Dunkel und die **Flächen**:
-  **Pur** (massiv, Standard) oder **Milchglas** (leicht durchscheinend).
+- **Einstellungen → Aussehen:** Automatisch / Hell / Dunkel und die Farbwelt.
 - **Farbwelt:** **Salbei** (Standard, unten sanfte Hügel), **Fjord** („Tonal“: alles flach in
   Blautönen, ohne Rahmen und Schatten), **Rosé** (unten weiche Dünen) oder **Lavendel**
   („Farbnebel“: weicher Verlauf aus mehreren Tönen mit feiner Körnung). Bei Salbei und Rosé

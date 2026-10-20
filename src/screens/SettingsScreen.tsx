@@ -15,7 +15,7 @@ import { PlayIcon, ShareIcon } from '../components/icons'
 import { NumberStepper } from '../components/NumberStepper'
 import { ShareButton } from '../components/ShareButton'
 import { appIsNewer, createBackup, downloadBackup, parseBackup, restoreBackup, summarizeTables, type BackupFile } from '../db/backup'
-import type { NoiseColor, PaletteSetting, SurfaceSetting, ThemeSetting } from '../model/types'
+import type { NoiseColor, PaletteSetting, ThemeSetting } from '../model/types'
 import {
   notificationPermission,
   requestNotificationPermission,
@@ -31,11 +31,6 @@ const THEMES: { value: ThemeSetting; label: string }[] = [
   { value: 'system', label: T.settings.themeSystem },
   { value: 'light', label: T.settings.themeLight },
   { value: 'dark', label: T.settings.themeDark },
-]
-
-const SURFACES: { value: SurfaceSetting; label: string }[] = [
-  { value: 'pur', label: T.settings.surfacesPur },
-  { value: 'glass', label: T.settings.surfacesGlass },
 ]
 
 const PALETTES: { value: PaletteSetting; label: string }[] = [
@@ -254,14 +249,6 @@ export function SettingsScreen() {
             options={THEMES}
             value={settings.theme}
             onChange={(theme) => updateSettings({ theme })}
-          />
-        </SettingRow>
-        <SettingRow label={T.settings.surfaces} hint={T.settings.surfacesHint}>
-          <Segmented
-            label={T.settings.surfaces}
-            options={SURFACES}
-            value={settings.surfaces}
-            onChange={(surfaces) => updateSettings({ surfaces })}
           />
         </SettingRow>
         <SettingRow label={T.settings.palette} hint={T.settings.paletteHint}>

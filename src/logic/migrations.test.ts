@@ -12,7 +12,6 @@ function settings(blockMinutes: number, shortBreakMinutes: number): Settings {
     shortBreakMinutes,
     defaultBlocksPerTask: 3,
     theme: 'system',
-    surfaces: 'pur',
     palette: 'salbei',
     sounds: true,
     noiseOn: false,

@@ -5,8 +5,8 @@
  * Dunkel. Wenn du eine Farbe ändern willst, reicht es, sie hier zu ändern.
  * Bewusst gibt es KEIN Rot: Die App soll ruhig und freundlich wirken.
  *
- * Flächen (Karten, Kopfleiste, Leisten) gibt es in zwei Arten, wählbar in den
- * Einstellungen: „Pur“ (massiv, Standard) und „Milchglas“ (leicht durchscheinend).
+ * Flächen (Karten, Kopfleiste, Leisten) nehmen Farbe, Rand und Unschärfe aus den
+ * --panel-…-Variablen. Eine Farbwelt kann sie ändern (Lavendel: leicht durchscheinend).
  *
  * Die Farben ganz oben sind die Farbwelt „Salbei“ (Standard). Die anderen Farbwelten
  * stehen weiter unten unter FARBWELTEN.
@@ -66,7 +66,7 @@
   --glow-block: rgb(112 176 150 / 0.3);
   --glow-paused: rgb(112 176 150 / 0.14);
   --glow-break: rgb(112 156 212 / 0.3);
-  /* Milchglas */
+  /* Leicht durchscheinende Flächen: offene Aufgaben in der Leiste, kurze Übersicht einer Aufgabe */
   --glass-bg: rgb(255 254 250 / 0.46);
   --glass-sheen: rgb(255 255 255 / 0.6);
   --glass-border: rgb(255 255 255 / 0.75);
@@ -88,19 +88,11 @@
   --fs-xl: 1.25rem;
   --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Helvetica Neue', sans-serif;
 
-  /* Flächen „Pur“ (Standard) */
+  /* Flächen: Karten, Kopfleiste, Leisten */
   --panel-bg: var(--surface);
   --panel-sheen: none;
   --panel-border: var(--panel-edge);
   --panel-filter: none;
-}
-
-/* Flächen „Milchglas“ */
-:root[data-surfaces='glass'] {
-  --panel-bg: var(--glass-bg);
-  --panel-sheen: linear-gradient(160deg, var(--glass-sheen), transparent 55%);
-  --panel-border: var(--glass-border);
-  --panel-filter: blur(26px) saturate(1.6);
 }
 
 /* Dunkle Farben – für „Dunkel“ und für „Automatisch“, wenn macOS dunkel ist. */
@@ -233,9 +225,8 @@
   --glass-bg: light-dark(rgb(244 248 252 / 0.6), rgb(20 33 48 / 0.6));
   --glass-sheen: transparent;
   --glass-border: light-dark(#c6d6e5, #27394d);
-  /* Flächen ohne Rand und Schatten – auch bei Milchglas */
+  /* Flächen ohne Rand und Schatten */
   --panel-edge: transparent;
-  --panel-border: transparent;
   --accent-line: color-mix(in srgb, var(--accent) 30%, transparent);
   --shadow: none;
   --shadow-lift: none;
@@ -322,7 +313,7 @@
   --glow-break: light-dark(rgb(95 175 190 / 0.24), rgb(80 160 175 / 0.16));
   --glass-bg: light-dark(rgb(253 252 255 / 0.46), rgb(34 32 44 / 0.42));
   --panel-edge: light-dark(rgb(50 40 90 / 0.07), rgb(255 255 255 / 0.06));
-  /* Flächen: leicht durchscheinend über dem Nebel – bei Pur und Milchglas gleich */
+  /* Flächen: leicht durchscheinend über dem Nebel */
   --panel-bg: light-dark(rgb(255 255 255 / 0.72), rgb(255 255 255 / 0.06));
   --panel-sheen: none;
   --panel-border: light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.09));
@@ -506,7 +497,7 @@ select {
 
 /* ---------- Flächen, Hinweise, Formulare ---------- */
 
-/* Eine Fläche: pur (massiv) oder Milchglas – je nach Einstellung. */
+/* Eine Fläche: Farbe, Rand und Unschärfe aus den --panel-…-Variablen oben. */
 .card,
 .surface {
   border: 1px solid var(--panel-border);

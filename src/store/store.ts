@@ -292,7 +292,7 @@ async function loadFromDatabase(): Promise<void> {
     tasks: indexById(data.tasks.map((t) => ({ ...t, startCue: t.startCue ?? null, firstEstimatedBlocks: t.firstEstimatedBlocks ?? null }))),
     steps: indexById(data.steps),
     blocks: indexById(data.blocks),
-    // Standardwerte zuerst: So bekommen ältere Daten neue Einstellungen (z. B. „Flächen“) automatisch.
+    // Standardwerte zuerst: So bekommen ältere Daten neue Einstellungen (z. B. „Farbwelt“) automatisch.
     settings: data.settings[0]
       ? { ...DEFAULT_SETTINGS, ...data.settings[0] }
       : { ...baseFields(now), id: 'settings', ...DEFAULT_SETTINGS },

@@ -41,7 +41,7 @@ import { parseInvite, type Invite } from './logic/invite'
 import { formatCountdown } from './logic/time'
 import * as timer from './logic/timer'
 import { dropToast, emptyToasts, pushToast } from './logic/toasts'
-import type { ID, PaletteSetting, SurfaceSetting, ThemeSetting, TimerState } from './model/types'
+import type { ID, PaletteSetting, ThemeSetting, TimerState } from './model/types'
 import { TodayScreen } from './screens/today/TodayScreen'
 import { unlockAudio } from './signals/sounds'
 import { startMotor, useWakeEvents, type WakeEvent } from './signals/timerEngine'
@@ -168,7 +168,6 @@ function Shell() {
     requestToast({ message, duration, action }),
   )
   useTheme(settings.theme, settings.palette)
-  useSurfaces(settings.surfaces)
   // Handy: ruhige Fokus-Ansicht, solange in „Heute“ ein Block läuft (siehe platform/focusMode.ts).
   useFocusMode(timerState, screen === 'today')
 
@@ -468,13 +467,6 @@ function useMilestones(
         }),
     })
   }, [blocks])
-}
-
-/** Pur oder Milchglas: steuert die Flächen-Variablen in index.css. */
-function useSurfaces(surfaces: SurfaceSetting) {
-  useEffect(() => {
-    document.documentElement.dataset.surfaces = surfaces
-  }, [surfaces])
 }
 
 /** Zeigt die Restzeit im Fenstertitel – praktisch, wenn die App im Hintergrund ist. */
