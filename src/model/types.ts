@@ -114,7 +114,7 @@ export type NoiseColor = 'brown' | 'pink' | 'white' | 'mix'
 export type SurfaceSetting = 'pur' | 'glass'
 
 /**
- * Farbwelt: ändert nur Farben und das zarte Hintergrund-Muster, nie Aufbau oder Texte.
+ * Farbwelt: ändert nur Farben und Hintergrund (Landschaft, Farbnebel), nie Aufbau oder Texte.
  * 'salbei' = das ursprüngliche Aussehen (Standard).
  */
 export type PaletteSetting = 'salbei' | 'fjord' | 'rose' | 'lavendel'

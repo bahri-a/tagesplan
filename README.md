@@ -272,9 +272,10 @@ Ab jetzt startest du die App mit einem Klick aus dem Dock. Sie funktioniert auch
 ### Aussehen
 - **Einstellungen → Aussehen:** Automatisch / Hell / Dunkel und die **Flächen**:
   **Pur** (massiv, Standard) oder **Milchglas** (leicht durchscheinend).
-- **Farbwelt:** **Salbei** (das ursprüngliche Aussehen, Standard), **Fjord** (kühles Blau mit
-  feinen Wellen), **Rosé** (gedecktes Rosa mit zartem Punkteraster) oder **Lavendel** (sanftes
-  Violett mit weichem Verlauf). Es ändern sich nur Farben und Hintergrund, in Hell wie Dunkel.
+- **Farbwelt:** **Salbei** (Standard, unten sanfte Hügel), **Fjord** („Tonal“: alles flach in
+  Blautönen, ohne Rahmen und Schatten), **Rosé** (unten weiche Dünen) oder **Lavendel**
+  („Farbnebel“: weicher Verlauf aus mehreren Tönen mit feiner Körnung). Bei Salbei und Rosé
+  zeigt das Bild nachts Mond und Sterne. Es ändern sich nur Farben und Hintergrund, in Hell wie Dunkel.
 - Hast du in macOS „Bewegung reduzieren“ eingeschaltet, gibt es keine Animationen.
 
 ### Töne
@@ -343,6 +344,7 @@ Die meisten Wünsche lassen sich an **einer** Stelle ändern:
 | Startwerte, Tageswechsel (4 Uhr), Lautstärke | `src/config/defaults.ts` |
 | Alle Texte der Oberfläche | `src/config/texts.ts` |
 | Farben (hell und dunkel) | ganz oben in `src/index.css` (Farbwelten weiter unten unter FARBWELTEN) |
+| Aussehen der Farbwelten (Landschaft, Nebel, Reiter) | `src/palettes.css`, Bilder in `src/assets/landscapes/` |
 | Schriftgrößen und Rundungen (feste Stufen) | ebenfalls oben in `src/index.css` (`--fs-…`, `--radius-…`) |
 | Töne (Noten) | `src/signals/sounds.ts` |
 

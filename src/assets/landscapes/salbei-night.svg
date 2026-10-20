@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 400" preserveAspectRatio="xMidYMax slice">
+  <!-- Salbei bei Nacht: dieselben Hügel, Mond und Sterne. Wird unten am Bildschirm gezeigt (palettes.css). -->
+  <circle cx="1110" cy="190" r="22" fill="#e4ecdf" opacity="0.9"/>
+  <circle cx="348" cy="96" r="1.2" fill="#ffffff" opacity="0.7"/>
+  <circle cx="683" cy="102" r="0.8" fill="#ffffff" opacity="0.5"/>
+  <circle cx="378" cy="46" r="1.6" fill="#ffffff" opacity="0.7"/>
+  <circle cx="1198" cy="85" r="1" fill="#ffffff" opacity="0.35"/>
+  <circle cx="912" cy="149" r="1.6" fill="#ffffff" opacity="0.7"/>
+  <circle cx="32" cy="134" r="1" fill="#ffffff" opacity="0.7"/>
+  <circle cx="71" cy="134" r="1.2" fill="#ffffff" opacity="0.5"/>
+  <circle cx="855" cy="157" r="1.6" fill="#ffffff" opacity="0.7"/>
+  <circle cx="1129" cy="77" r="1.6" fill="#ffffff" opacity="0.35"/>
+  <circle cx="1258" cy="24" r="1" fill="#ffffff" opacity="0.5"/>
+  <circle cx="318" cy="164" r="1.6" fill="#ffffff" opacity="0.7"/>
+  <circle cx="1224" cy="76" r="1.6" fill="#ffffff" opacity="0.7"/>
+  <circle cx="508" cy="103" r="1" fill="#ffffff" opacity="0.5"/>
+  <circle cx="978" cy="158" r="1.2" fill="#ffffff" opacity="0.7"/>
+  <circle cx="963" cy="34" r="1.2" fill="#ffffff" opacity="0.7"/>
+  <circle cx="1295" cy="100" r="1" fill="#ffffff" opacity="0.7"/>
+  <circle cx="1191" cy="101" r="1.2" fill="#ffffff" opacity="0.35"/>
+  <circle cx="100" cy="146" r="1.6" fill="#ffffff" opacity="0.35"/>
+  <circle cx="499" cy="19" r="1" fill="#ffffff" opacity="0.35"/>
+  <circle cx="427" cy="133" r="0.8" fill="#ffffff" opacity="0.35"/>
+  <circle cx="869" cy="131" r="1.6" fill="#ffffff" opacity="0.7"/>
+  <circle cx="843" cy="97" r="1.2" fill="#ffffff" opacity="0.7"/>
+  <circle cx="345" cy="14" r="0.8" fill="#ffffff" opacity="0.35"/>
+  <circle cx="164" cy="95" r="1" fill="#ffffff" opacity="0.5"/>
+  <circle cx="424" cy="51" r="0.8" fill="#ffffff" opacity="0.5"/>
+  <circle cx="456" cy="163" r="1.6" fill="#ffffff" opacity="0.5"/>
+  <circle cx="664" cy="92" r="0.8" fill="#ffffff" opacity="0.7"/>
+  <circle cx="1391" cy="139" r="1.2" fill="#ffffff" opacity="0.5"/>
+  <circle cx="911" cy="124" r="1.2" fill="#ffffff" opacity="0.5"/>
+  <circle cx="1398" cy="92" r="1.2" fill="#ffffff" opacity="0.35"/>
+  <circle cx="1130" cy="168" r="1.2" fill="#ffffff" opacity="0.35"/>
+  <circle cx="545" cy="103" r="1" fill="#ffffff" opacity="0.35"/>
+  <circle cx="910" cy="62" r="1.2" fill="#ffffff" opacity="0.7"/>
+  <circle cx="1313" cy="107" r="1.2" fill="#ffffff" opacity="0.7"/>
+  <circle cx="705" cy="103" r="0.8" fill="#ffffff" opacity="0.5"/>
+  <circle cx="367" cy="82" r="1.2" fill="#ffffff" opacity="0.35"/>
+  <circle cx="527" cy="59" r="1.2" fill="#ffffff" opacity="0.7"/>
+  <circle cx="385" cy="136" r="0.8" fill="#ffffff" opacity="0.35"/>
+  <circle cx="1389" cy="119" r="1" fill="#ffffff" opacity="0.5"/>
+  <circle cx="720" cy="114" r="1.2" fill="#ffffff" opacity="0.35"/>
+  <circle cx="475" cy="118" r="0.8" fill="#ffffff" opacity="0.35"/>
+  <circle cx="863" cy="162" r="1" fill="#ffffff" opacity="0.5"/>
+  <circle cx="1160" cy="164" r="0.8" fill="#ffffff" opacity="0.5"/>
+  <circle cx="1064" cy="43" r="1.6" fill="#ffffff" opacity="0.5"/>
+  <circle cx="330" cy="28" r="1" fill="#ffffff" opacity="0.5"/>
+  <circle cx="1156" cy="144" r="1" fill="#ffffff" opacity="0.5"/>
+  <path d="M0 215 C 200 168, 380 186, 560 205 S 900 166, 1100 190 S 1350 200, 1440 178 V400 H0Z" fill="#17221d"/>
+  <rect x="298.5" y="234" width="3.0" height="16.0" fill="#1b2721"/>
+  <ellipse cx="300" cy="224.0" rx="9.0" ry="16.0" fill="#1b2721"/>
+  <rect x="328.8" y="238" width="2.4" height="12.8" fill="#1b2721"/>
+  <ellipse cx="330" cy="230.8" rx="7.2" ry="12.8" fill="#1b2721"/>
+  <rect x="1163.3" y="228" width="3.3" height="17.6" fill="#1b2721"/>
+  <ellipse cx="1165" cy="216.6" rx="9.9" ry="17.6" fill="#1b2721"/>
+  <rect x="1193.7" y="232" width="2.5" height="13.6" fill="#1b2721"/>
+  <ellipse cx="1195" cy="224.1" rx="7.6" ry="13.6" fill="#1b2721"/>
+  <rect x="1219.0" y="234" width="2.1" height="11.2" fill="#1b2721"/>
+  <ellipse cx="1220" cy="228.2" rx="6.3" ry="11.2" fill="#1b2721"/>
+  <path d="M0 262 C 180 222, 360 238, 520 252 S 860 220, 1040 246 S 1300 262, 1440 236 V400H0Z" fill="#1b2a23"/>
+  <path d="M0 310 C 220 278, 420 292, 640 310 S 1000 282, 1200 302 S 1380 306, 1440 296 V400H0Z" fill="#20332a"/>
+  <path d="M0 352 C 260 330, 520 346, 760 356 S 1180 334, 1440 350 V400H0Z" fill="#253d32"/>
+</svg>

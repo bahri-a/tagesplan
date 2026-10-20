@@ -3,13 +3,14 @@
  * =======================
  * Reihenfolge wie bisher: Grundlagen, Bildschirme, Bausteine – dann das Handy-Aussehen.
  * Ebenen (@layer), von unten nach oben:
- *   touch  – Grundwerte, die jede andere Regel überschreiben darf (unten in dieser Datei)
- *   app    – alle Stile der App
- *   mobile – mobile.css: gewinnt immer, egal wie genau eine Regel in den anderen Dateien zielt
+ *   touch    – Grundwerte, die jede andere Regel überschreiben darf (unten in dieser Datei)
+ *   app      – alle Stile der App
+ *   mobile   – mobile.css: gewinnt immer, egal wie genau eine Regel in den anderen Dateien zielt
+ *   palettes – palettes.css: das eigene Aussehen der Farbwelten, liegt über allem (auch am Handy)
  * Weil alle Stile hier geladen werden, bleibt die Reihenfolge gleich, auch wenn Bildschirme
  * erst später nachgeladen werden (React.lazy in App.tsx).
  */
-@layer touch, app, mobile;
+@layer touch, app, mobile, palettes;
 
 @import './index.css' layer(app);
 @import './screens/today/today.css' layer(app);
@@ -18,6 +19,7 @@
 @import './screens/settings.css' layer(app);
 @import './components/components.css' layer(app);
 @import './mobile.css' layer(mobile);
+@import './palettes.css' layer(palettes);
 
 /* Handy: Grundlage für die unsichtbar größeren Tippflächen (siehe mobile.css, „Tippflächen“).
    Ganz unten, damit Knöpfe mit eigener Position (absolute) diese behalten. */

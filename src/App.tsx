@@ -354,8 +354,9 @@ function useTheme(theme: ThemeSetting, palette: PaletteSetting) {
     root.dataset.palette = palette
 
     const updateTitleBar = () => {
-      // Die fertig ausgerechnete Farbe (die Farbwelten nutzen light-dark() in --bg).
-      const background = getComputedStyle(document.body).backgroundColor
+      // Die fertig ausgerechnete Farbe (die Farbwelten nutzen light-dark() in --bg). Vom <html>, weil
+      // <body> bei Landschaft und Farbnebel durchsichtig ist (das Bild liegt dahinter, palettes.css).
+      const background = getComputedStyle(document.documentElement).backgroundColor
       document.querySelector('meta[name="theme-color"]')?.setAttribute('content', background)
       // iPhone-App: Uhrzeit und Akku oben passend hell oder dunkel.
       if (__NATIVE_APP__) void import('./platform/nativeApp').then((m) => m.updateStatusBar(background))
