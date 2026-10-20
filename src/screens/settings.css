@@ -191,23 +191,23 @@
 }
 
 .palette-option[data-value='salbei'] {
-  --swatch-bg: light-dark(#f4f2ee, #1e1e1c);
+  --swatch-bg: light-dark(#f2f3ee, #111513);
   --swatch-accent: light-dark(#3b7667, #7dbdac);
 }
 
 .palette-option[data-value='fjord'] {
-  --swatch-bg: light-dark(#eef2f5, #182028);
-  --swatch-accent: light-dark(#2f6a8f, #86b8da);
+  --swatch-bg: light-dark(#e3ecf4, #0c1520);
+  --swatch-accent: light-dark(#1f5f8c, #8cc4ee);
 }
 
 .palette-option[data-value='rose'] {
-  --swatch-bg: light-dark(#f7f0ee, #211b1c);
+  --swatch-bg: light-dark(#f8f0ee, #161112);
   --swatch-accent: light-dark(#9e5b6a, #e0a3b0);
 }
 
 .palette-option[data-value='lavendel'] {
-  --swatch-bg: light-dark(#f3f2f8, #1c1a24);
-  --swatch-accent: light-dark(#6356a8, #b0a6ec);
+  --swatch-bg: light-dark(#f2f0fb, #0f0d18);
+  --swatch-accent: light-dark(#6049c9, #c0b3fb);
 }
 
 .settings-version {

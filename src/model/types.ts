@@ -110,11 +110,8 @@ export type ThemeSetting = 'system' | 'light' | 'dark'
  */
 export type NoiseColor = 'brown' | 'pink' | 'white' | 'mix'
 
-/** Aussehen der Flächen: 'pur' (massiv) oder 'glass' (Milchglas, leicht durchscheinend). */
-export type SurfaceSetting = 'pur' | 'glass'
-
 /**
- * Farbwelt: ändert nur Farben und das zarte Hintergrund-Muster, nie Aufbau oder Texte.
+ * Farbwelt: ändert nur Farben und Hintergrund (Landschaft, Farbnebel), nie Aufbau oder Texte.
  * 'salbei' = das ursprüngliche Aussehen (Standard).
  */
 export type PaletteSetting = 'salbei' | 'fjord' | 'rose' | 'lavendel'
@@ -125,8 +122,6 @@ export interface SettingsValues {
   shortBreakMinutes: number
   defaultBlocksPerTask: number
   theme: ThemeSetting
-  /** Seit 2026-09-28. Fehlt in älteren Daten → Standard aus DEFAULT_SETTINGS. */
-  surfaces: SurfaceSetting
   /** Farbwelt. Seit 2026-09-29; fehlt in älteren Daten → 'salbei' (das bisherige Aussehen). */
   palette: PaletteSetting
   /** Signaltöne an? `false` = keine Töne bei Block-/Pausenende, keine Vorwarnung, kein Ultra-Ton. Das Rauschen bleibt davon unberührt. Seit 2026-09-28. */

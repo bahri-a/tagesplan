@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 400" preserveAspectRatio="xMidYMax slice">
+  <!-- Salbei bei Tag: sanfte Hügel mit ein paar Bäumen, blasse Sonne rechts. Wird unten am Bildschirm gezeigt (palettes.css). -->
+  <circle cx="1110" cy="186" r="30" fill="#f6eed5"/>
+  <path d="M0 215 C 200 168, 380 186, 560 205 S 900 166, 1100 190 S 1350 200, 1440 178 V400 H0Z" fill="#dfe8db"/>
+  <rect x="298.5" y="234" width="3.0" height="16.0" fill="#b6cdb9"/>
+  <ellipse cx="300" cy="224.0" rx="9.0" ry="16.0" fill="#b6cdb9"/>
+  <rect x="328.8" y="238" width="2.4" height="12.8" fill="#b6cdb9"/>
+  <ellipse cx="330" cy="230.8" rx="7.2" ry="12.8" fill="#b6cdb9"/>
+  <rect x="1163.3" y="228" width="3.3" height="17.6" fill="#b6cdb9"/>
+  <ellipse cx="1165" cy="216.6" rx="9.9" ry="17.6" fill="#b6cdb9"/>
+  <rect x="1193.7" y="232" width="2.5" height="13.6" fill="#b6cdb9"/>
+  <ellipse cx="1195" cy="224.1" rx="7.6" ry="13.6" fill="#b6cdb9"/>
+  <rect x="1219.0" y="234" width="2.1" height="11.2" fill="#b6cdb9"/>
+  <ellipse cx="1220" cy="228.2" rx="6.3" ry="11.2" fill="#b6cdb9"/>
+  <path d="M0 262 C 180 222, 360 238, 520 252 S 860 220, 1040 246 S 1300 262, 1440 236 V400H0Z" fill="#cadccb"/>
+  <path d="M0 310 C 220 278, 420 292, 640 310 S 1000 282, 1200 302 S 1380 306, 1440 296 V400H0Z" fill="#b2cfb9"/>
+  <path d="M0 352 C 260 330, 520 346, 760 356 S 1180 334, 1440 350 V400H0Z" fill="#9bc2a6"/>
+</svg>

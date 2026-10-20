@@ -79,12 +79,12 @@ function copyStyles(target: Document) {
   }
 }
 
-/** Hell/Dunkel, Farbwelt und Pur/Milchglas vom App-Fenster übernehmen (auch wenn du sie später änderst). */
+/** Hell/Dunkel und Farbwelt vom App-Fenster übernehmen (auch wenn du sie später änderst). */
 function mirrorRootAttributes(target: Document): () => void {
   const copy = () => {
     const from = document.documentElement
     const to = target.documentElement
-    for (const name of ['data-theme', 'data-palette', 'data-surfaces']) {
+    for (const name of ['data-theme', 'data-palette']) {
       const value = from.getAttribute(name)
       if (value === null) to.removeAttribute(name)
       else to.setAttribute(name, value)

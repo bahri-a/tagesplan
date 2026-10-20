@@ -41,7 +41,7 @@ import { parseInvite, type Invite } from './logic/invite'
 import { formatCountdown } from './logic/time'
 import * as timer from './logic/timer'
 import { dropToast, emptyToasts, pushToast } from './logic/toasts'
-import type { ID, PaletteSetting, SurfaceSetting, ThemeSetting, TimerState } from './model/types'
+import type { ID, PaletteSetting, ThemeSetting, TimerState } from './model/types'
 import { TodayScreen } from './screens/today/TodayScreen'
 import { unlockAudio } from './signals/sounds'
 import { startMotor, useWakeEvents, type WakeEvent } from './signals/timerEngine'
@@ -168,7 +168,6 @@ function Shell() {
     requestToast({ message, duration, action }),
   )
   useTheme(settings.theme, settings.palette)
-  useSurfaces(settings.surfaces)
   // Handy: ruhige Fokus-Ansicht, solange in „Heute“ ein Block läuft (siehe platform/focusMode.ts).
   useFocusMode(timerState, screen === 'today')
 
@@ -354,8 +353,9 @@ function useTheme(theme: ThemeSetting, palette: PaletteSetting) {
     root.dataset.palette = palette
 
     const updateTitleBar = () => {
-      // Die fertig ausgerechnete Farbe (die Farbwelten nutzen light-dark() in --bg).
-      const background = getComputedStyle(document.body).backgroundColor
+      // Die fertig ausgerechnete Farbe (die Farbwelten nutzen light-dark() in --bg). Vom <html>, weil
+      // <body> bei Landschaft und Farbnebel durchsichtig ist (das Bild liegt dahinter, palettes.css).
+      const background = getComputedStyle(document.documentElement).backgroundColor
       document.querySelector('meta[name="theme-color"]')?.setAttribute('content', background)
       // iPhone-App: Uhrzeit und Akku oben passend hell oder dunkel.
       if (__NATIVE_APP__) void import('./platform/nativeApp').then((m) => m.updateStatusBar(background))
@@ -467,13 +467,6 @@ function useMilestones(
         }),
     })
   }, [blocks])
-}
-
-/** Pur oder Milchglas: steuert die Flächen-Variablen in index.css. */
-function useSurfaces(surfaces: SurfaceSetting) {
-  useEffect(() => {
-    document.documentElement.dataset.surfaces = surfaces
-  }, [surfaces])
 }
 
 /** Zeigt die Restzeit im Fenstertitel – praktisch, wenn die App im Hintergrund ist. */

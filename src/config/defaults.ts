@@ -24,8 +24,6 @@ export const DEFAULT_SETTINGS: SettingsValues = {
   defaultBlocksPerTask: 3,
   /** Aussehen: 'system' (wie macOS), 'light' (hell) oder 'dark' (dunkel). */
   theme: 'system',
-  /** Flächen: 'pur' (massiv) oder 'glass' (Milchglas). */
-  surfaces: 'pur',
   /** Farbwelt: 'salbei' (Standard), 'fjord', 'rose' oder 'lavendel'. */
   palette: 'salbei',
   /** Signaltöne an (Block-/Pausenende, Vorwarnung, Ultra). Das Rauschen schaltet sein eigener Knopf. */

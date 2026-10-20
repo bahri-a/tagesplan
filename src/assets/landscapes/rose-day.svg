@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 400" preserveAspectRatio="xMidYMax slice">
+  <!-- Rosé bei Tag: weiche Dünen, große blasse Sonne rechts. Wird unten am Bildschirm gezeigt (palettes.css). -->
+  <circle cx="1120" cy="196" r="70" fill="#f9dcd3"/>
+  <path d="M0 238 C 240 196, 480 250, 720 226 S 1200 204, 1440 234 V400H0Z" fill="#f1dedb"/>
+  <path d="M0 282 C 300 236, 520 304, 820 266 S 1250 250, 1440 282 V400H0Z" fill="#eac8c9"/>
+  <path d="M0 326 C 260 292, 600 340, 900 306 S 1300 300, 1440 322 V400H0Z" fill="#e0b2b8"/>
+  <path d="M0 366 C 300 346, 640 372, 980 352 S 1300 352, 1440 362 V400H0Z" fill="#d49ea8"/>
+</svg>

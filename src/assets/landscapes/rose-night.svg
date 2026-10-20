@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 400" preserveAspectRatio="xMidYMax slice">
+  <!-- Rosé bei Nacht: dieselben Dünen, Mond und Sterne. Wird unten am Bildschirm gezeigt (palettes.css). -->
+  <circle cx="1150" cy="196" r="24" fill="#f0d3da" opacity="0.85"/>
+  <circle cx="470" cy="32" r="0.8" fill="#ffffff" opacity="0.35"/>
+  <circle cx="1176" cy="23" r="0.8" fill="#ffffff" opacity="0.7"/>
+  <circle cx="315" cy="22" r="1.6" fill="#ffffff" opacity="0.35"/>
+  <circle cx="352" cy="97" r="0.8" fill="#ffffff" opacity="0.7"/>
+  <circle cx="186" cy="44" r="0.8" fill="#ffffff" opacity="0.7"/>
+  <circle cx="841" cy="16" r="1" fill="#ffffff" opacity="0.35"/>
+  <circle cx="800" cy="30" r="1.6" fill="#ffffff" opacity="0.35"/>
+  <circle cx="778" cy="100" r="1" fill="#ffffff" opacity="0.35"/>
+  <circle cx="836" cy="112" r="1.2" fill="#ffffff" opacity="0.35"/>
+  <circle cx="788" cy="18" r="0.8" fill="#ffffff" opacity="0.7"/>
+  <circle cx="302" cy="118" r="1.6" fill="#ffffff" opacity="0.5"/>
+  <circle cx="671" cy="158" r="1.2" fill="#ffffff" opacity="0.5"/>
+  <circle cx="363" cy="37" r="1" fill="#ffffff" opacity="0.35"/>
+  <circle cx="826" cy="93" r="1.2" fill="#ffffff" opacity="0.7"/>
+  <circle cx="647" cy="107" r="0.8" fill="#ffffff" opacity="0.35"/>
+  <circle cx="737" cy="35" r="1.2" fill="#ffffff" opacity="0.35"/>
+  <circle cx="1335" cy="76" r="0.8" fill="#ffffff" opacity="0.7"/>
+  <circle cx="824" cy="150" r="1.2" fill="#ffffff" opacity="0.5"/>
+  <circle cx="997" cy="104" r="1.6" fill="#ffffff" opacity="0.35"/>
+  <circle cx="1203" cy="161" r="1.6" fill="#ffffff" opacity="0.7"/>
+  <circle cx="953" cy="18" r="1.2" fill="#ffffff" opacity="0.7"/>
+  <circle cx="831" cy="118" r="1.6" fill="#ffffff" opacity="0.5"/>
+  <circle cx="1028" cy="152" r="1.2" fill="#ffffff" opacity="0.35"/>
+  <circle cx="1346" cy="66" r="0.8" fill="#ffffff" opacity="0.5"/>
+  <circle cx="94" cy="132" r="1" fill="#ffffff" opacity="0.7"/>
+  <circle cx="362" cy="71" r="1.6" fill="#ffffff" opacity="0.35"/>
+  <circle cx="246" cy="73" r="1.2" fill="#ffffff" opacity="0.35"/>
+  <circle cx="1173" cy="148" r="1.2" fill="#ffffff" opacity="0.7"/>
+  <circle cx="600" cy="66" r="1.6" fill="#ffffff" opacity="0.35"/>
+  <circle cx="224" cy="37" r="1" fill="#ffffff" opacity="0.7"/>
+  <circle cx="341" cy="87" r="1" fill="#ffffff" opacity="0.5"/>
+  <circle cx="410" cy="32" r="1.2" fill="#ffffff" opacity="0.7"/>
+  <circle cx="814" cy="162" r="0.8" fill="#ffffff" opacity="0.5"/>
+  <circle cx="1287" cy="134" r="1.6" fill="#ffffff" opacity="0.5"/>
+  <circle cx="577" cy="25" r="1.6" fill="#ffffff" opacity="0.35"/>
+  <circle cx="281" cy="168" r="1.6" fill="#ffffff" opacity="0.35"/>
+  <circle cx="166" cy="105" r="0.8" fill="#ffffff" opacity="0.35"/>
+  <circle cx="815" cy="95" r="1.2" fill="#ffffff" opacity="0.7"/>
+  <circle cx="46" cy="150" r="1.6" fill="#ffffff" opacity="0.35"/>
+  <circle cx="911" cy="163" r="1.2" fill="#ffffff" opacity="0.5"/>
+  <circle cx="184" cy="146" r="1.6" fill="#ffffff" opacity="0.5"/>
+  <circle cx="697" cy="22" r="0.8" fill="#ffffff" opacity="0.7"/>
+  <circle cx="497" cy="51" r="1" fill="#ffffff" opacity="0.7"/>
+  <circle cx="43" cy="162" r="1.2" fill="#ffffff" opacity="0.35"/>
+  <circle cx="990" cy="156" r="1.2" fill="#ffffff" opacity="0.7"/>
+  <circle cx="1236" cy="121" r="1.2" fill="#ffffff" opacity="0.7"/>
+  <path d="M0 238 C 240 196, 480 250, 720 226 S 1200 204, 1440 234 V400H0Z" fill="#231a1c"/>
+  <path d="M0 282 C 300 236, 520 304, 820 266 S 1250 250, 1440 282 V400H0Z" fill="#2c1f23"/>
+  <path d="M0 326 C 260 292, 600 340, 900 306 S 1300 300, 1440 322 V400H0Z" fill="#36252a"/>
+  <path d="M0 366 C 300 346, 640 372, 980 352 S 1300 352, 1440 362 V400H0Z" fill="#412c32"/>
+</svg>
