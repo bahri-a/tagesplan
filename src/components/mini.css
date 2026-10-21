@@ -63,9 +63,13 @@
 
 .mini-today .focus-card {
   gap: 0.7rem;
-  padding: 1rem 0.9rem;
+  padding: 0.85rem 0.9rem;
   border-radius: var(--radius-medium);
   box-shadow: none;
+}
+
+.mini-today .focus-phase {
+  gap: 0.75rem;
 }
 
 .mini-today .focus-title {
@@ -73,17 +77,34 @@
   line-height: 1.3;
 }
 
+/* Ring etwas größer, Zeit etwas kleiner: So hat die Zeit oben und an den Seiten gut Luft zum Ring. */
 .mini-today .timer-ring,
 .mini-today .ring-with-side {
-  width: 168px;
+  width: 180px;
+}
+
+/* Zeit, „noch“ (oder „+3 Min.“) und das Symbol stehen untereinander – etwas unter der Mitte,
+   denn oben wird der Ring für die breite Zeit zuerst eng. Jede Zeile hat eine feste Höhe,
+   damit die Zeit immer an derselben Stelle steht (läuft, pausiert, letzte Minuten). */
+.mini-today .timer-ring-center {
+  gap: 4px;
+}
+
+.mini-today .timer-ring-center:has(.ring-actions) {
+  padding-top: 16px;
 }
 
 .mini-today .timer-ring-time {
-  font-size: 2.6rem;
+  font-size: 2.25rem;
 }
 
 .mini-today .timer-ring-time.is-long {
-  font-size: 2rem;
+  font-size: 1.7rem;
+}
+
+.mini-today .timer-ring-caption {
+  height: 1.5rem;
+  line-height: 1.5rem;
 }
 
 /* Im kleinen Ring ist unten kein Platz: Pausen-Symbol direkt unter der Zeit. */
@@ -93,11 +114,15 @@
   transform: none;
 }
 
-/* „+3 Min.“ steht hier statt „noch“ unter der Zeit – alles mittig untereinander. */
+/* „+3 Min.“ steht hier statt „noch“ unter der Zeit – gleich hoch wie „noch“, alles mittig untereinander. */
 .mini-today .ring-inner-extend {
   position: static;
+  box-sizing: border-box;
+  height: 1.5rem;
+  min-height: 0;
+  padding: 0 0.65em;
+  font-size: var(--fs-sm);
   transform: none;
-  margin-top: 0.3rem;
 }
 
 .mini-today .timer-ring-center:has(.ring-inner-extend) .timer-ring-caption {
@@ -105,8 +130,30 @@
 }
 
 .mini-today .ring-pause {
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2rem;
+  height: 2rem;
+}
+
+.mini-today .ring-pause svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Pausiert: „Weiter“ sitzt an der Stelle des Pausen-Symbols. Der große Knopf hätte hier keinen Platz. */
+.mini-today .ring-resume {
+  display: grid;
+}
+
+.mini-today .ring-resume svg {
+  /* Der pausierte Ring ist blass – das Symbol darin nicht. */
+  opacity: 1;
+  fill: currentColor;
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+
+.mini-today .resume-big {
+  display: none;
 }
 
 .mini-today .btn-big {
@@ -139,6 +186,27 @@
   text-align: center;
 }
 
+/* „Block wirklich abbrechen?“: Frage in einer Zeile, darunter die beiden Knöpfe. Solange gefragt wird,
+   macht „Rauschen“ dafür Platz – sonst bräche hier alles in drei Zeilen um. */
+.mini-today .focus-phase:has(.confirm-inline) .noise-toggle {
+  display: none;
+}
+
+.mini-today .confirm-inline {
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem 0.4rem;
+  font-size: var(--fs-sm);
+}
+
+.mini-today .confirm-question {
+  flex-basis: 100%;
+}
+
+.mini-today .confirm-inline .btn {
+  white-space: nowrap;
+}
+
 /* „Pause überspringen“: Unten rechts in der Karte wäre es hier vom Inhalt verdeckt –
    deshalb als eigene leise Zeile ganz unten. */
 .mini-today .skip-break {
@@ -160,4 +228,36 @@
   gap: 0.75rem;
   padding: 0.55em 0.9em;
   font-size: var(--fs-sm);
+}
+
+/* „Gedanke parken“ (Taste N) und die Meldung danach stehen genau auf der Zeile
+   „Früher fertig · Abbrechen“ – die blendet so lange aus, statt durchzuschimmern. */
+.mini-today .quiet-actions {
+  anchor-name: --mini-actions;
+  transition: opacity 0.2s;
+}
+
+.mini-body:has(> .quick-park, > .toast) .mini-today .quiet-actions {
+  opacity: 0;
+}
+
+.mini-body .quick-park {
+  bottom: 10px;
+  width: calc(100vw - 48px);
+}
+
+.mini-body .quick-park .input {
+  min-height: 36px;
+  padding-block: 0.35em;
+  font-size: var(--fs-sm);
+}
+
+@supports (anchor-name: --a) {
+  .mini-body:has(.mini-today .quiet-actions) > :is(.quick-park, .toast) {
+    position-anchor: --mini-actions;
+    position-visibility: always;
+    top: anchor(center);
+    bottom: auto;
+    translate: 0 -50%;
+  }
 }
