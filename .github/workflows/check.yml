@@ -22,7 +22,9 @@ concurrency:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    # Fest auf 24.04: Auf „ubuntu-latest“ (inzwischen 26.04) lässt sich der Browser für den
+    # Klick-Test (Playwright 1.56) nicht installieren.
+    runs-on: ubuntu-24.04
     steps:
       - name: Code holen
         uses: actions/checkout@v5
