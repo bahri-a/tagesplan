@@ -12,7 +12,7 @@ import { useNow } from '../../components/hooks'
 import { StepList } from '../../components/StepList'
 import { TimerRing } from '../../components/TimerRing'
 import { useUndoToast } from '../../components/toastContext'
-import { LinkIcon, PauseIcon } from '../../components/icons'
+import { LinkIcon, PauseIcon, PlayIcon } from '../../components/icons'
 import { ShareButton } from '../../components/ShareButton'
 import { formatClock, inviteUrl } from '../../logic/invite'
 import { blockMarks, type Mark } from '../../logic/progress'
@@ -408,8 +408,19 @@ function RunningBlock({ timerState, now, step }: { timerState: timer.BlockTimer;
                   {T.today.extendBlock}
                 </button>
               )}
-              {!paused && (
-                <div className="ring-actions">
+              <div className="ring-actions">
+                {paused ? (
+                  // Nur im Mini-Fenster sichtbar (mini.css): „Weiter“ an derselben Stelle wie das Pausen-Symbol.
+                  <button
+                    type="button"
+                    className="ring-pause ring-resume"
+                    title={T.today.resume}
+                    aria-label={T.today.resume}
+                    onClick={resumeCurrentBlock}
+                  >
+                    <PlayIcon />
+                  </button>
+                ) : (
                   <button
                     type="button"
                     className="ring-pause"
@@ -419,8 +430,8 @@ function RunningBlock({ timerState, now, step }: { timerState: timer.BlockTimer;
                   >
                     <PauseIcon />
                   </button>
-                </div>
-              )}
+                )}
+              </div>
             </>
           }
         />
@@ -441,7 +452,7 @@ function RunningBlock({ timerState, now, step }: { timerState: timer.BlockTimer;
           <p className="phase-note">{T.today.paused}</p>
           <button
             type="button"
-            className="btn btn-primary btn-big"
+            className="btn btn-primary btn-big resume-big"
             onClick={() => {
               requestFocusFullscreen()
               resumeCurrentBlock()
@@ -459,7 +470,7 @@ function RunningBlock({ timerState, now, step }: { timerState: timer.BlockTimer;
       <div className="quiet-actions">
         {confirmAbort ? (
           <span className="confirm-inline">
-            {T.today.abortConfirm}
+            <span className="confirm-question">{T.today.abortConfirm}</span>
             <button
               type="button"
               className="btn btn-small"
