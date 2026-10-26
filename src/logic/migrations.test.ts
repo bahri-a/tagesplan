@@ -37,6 +37,7 @@ function task(shortBreakMinutesOverride: number | null): Task {
     completedAt: null,
     startCue: null,
     firstEstimatedBlocks: null,
+    skippedAt: null,
   }
 }
 

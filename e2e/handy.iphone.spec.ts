@@ -124,3 +124,23 @@ test('Block im Vollbild: ruhige Ansicht, Antippen zeigt die Knöpfe, danach Paus
 
   expect(errors).toEqual([])
 })
+
+test('Im Block: „Aufgabenblöcke löschen“ steht nach dem Antippen über der Leiste', async ({ page }) => {
+  const errors = await open(page)
+  await expect(page.locator('.focus-title')).toHaveText(EXAMPLE)
+  await page.getByRole('button', { name: 'Starten', exact: true }).tap()
+  await expect(page.locator('html')).toHaveAttribute('data-focus', 'on')
+  await page.clock.fastForward(10_000)
+  const skip = page.getByRole('button', { name: /^Aufgabenbl(ock|öcke) löschen$/ })
+  await expect(skip).toBeHidden()
+  await page.locator('.timer-ring').tap()
+  await expect(skip).toBeVisible()
+  const link = (await skip.boundingBox())!
+  const bar = (await page.locator('.nav').boundingBox())!
+  expect(link.y + link.height).toBeLessThanOrEqual(bar.y)
+
+  await skip.tap()
+  await expect(page.locator('html')).not.toHaveAttribute('data-focus', 'on')
+  await expect(page.locator('.toast')).toContainText(/^Bl(ock|öcke) gelöscht/)
+  expect(errors).toEqual([])
+})

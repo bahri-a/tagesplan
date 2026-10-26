@@ -334,7 +334,7 @@ function DoneCards({ tasks }: { tasks: Task[] }) {
     <ul className="done-cards" aria-label={T.today.doneCardsLabel}>
       {tasks.map((task, index) => {
         const work = works[index]
-        const parts = [T.today.doneCard]
+        const parts = [task.skippedAt === null ? T.today.doneCard : T.today.doneCardSkipped]
         if (work.blocks > 0) parts.push(T.endDay.yieldBlocks(work.blocks))
         if (work.minutes > 0) parts.push(T.endDay.yieldTime(work.minutes))
         return (

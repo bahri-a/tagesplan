@@ -1275,6 +1275,17 @@
   white-space: pre-line;
 }
 
+/* „Schon ohne App erledigt?“ und direkt darunter „Aufgabenblock löschen“ – eng beieinander. */
+.gentle-links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gentle-more.link-quiet {
+  margin-top: 0.15rem;
+}
+
 /* Startknopf ab der zweiten Aufgabe: oben klein die Frage, darunter „Weiter mit „…““ */
 .long-pause-label {
   display: flex;
