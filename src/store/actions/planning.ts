@@ -33,6 +33,7 @@ export function addTask(dayId: ID, title: string): Task {
     // Gemerktes Startsignal (Häkchen „Für alle neuen Hauptaufgaben“) – pro Aufgabe änderbar. Nur auf dem Mac.
     startCue: SHOWS_START_CUE ? s.settings.defaultStartCue : null,
     firstEstimatedBlocks: null,
+    skippedAt: null,
   }
   commit({ tasks: [task] })
   return task
@@ -57,6 +58,7 @@ export function addExampleTask(): Task {
     completedAt: null,
     startCue: null,
     firstEstimatedBlocks: null,
+    skippedAt: null,
   }
   const steps: Step[] = T.example.steps.map((text, position) => ({
     ...baseFields(now),
@@ -92,6 +94,7 @@ export function copyTask(taskId: ID, dayId: ID, { learn = false } = {}): Task | 
     completedAt: null,
     startCue: source.startCue,
     firstEstimatedBlocks: null,
+    skippedAt: null,
   }
   const steps: Step[] = stepsOfTask(s, taskId).map((step) => ({
     ...step,
@@ -254,12 +257,12 @@ export function reorderTasks(dayId: ID, orderedIds: ID[]): void {
   commit({ tasks: renumber(ordered) })
 }
 
-/** Aufgabe als erledigt markieren (oder wieder öffnen). */
+/** Aufgabe als erledigt markieren (oder wieder öffnen). Ein „übersprungen“ fällt dabei weg. */
 export function setTaskCompleted(taskId: ID, done: boolean): void {
   const s = getState()
   const task = s.tasks[taskId]
   if (!task) return
-  const changes: Changes = { tasks: [{ ...task, completedAt: done ? Date.now() : null }] }
+  const changes: Changes = { tasks: [{ ...task, completedAt: done ? Date.now() : null, skippedAt: null }] }
   // Die kurze Pause dieser Aufgabe ist damit vorbei – als Nächstes kommt die lange Pause.
   if (done && s.timer.phase === 'break' && s.timer.taskId === taskId) {
     changes.timer = { phase: 'idle' }

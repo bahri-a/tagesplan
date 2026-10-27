@@ -164,12 +164,18 @@ export function blocksDone(s: AppState, taskId: ID): number {
 
 /**
  * Wie viele Blöcke hat die Aufgabe wirklich gebraucht? Nur bei erledigten Aufgaben mit
- * mindestens einem geschafften Block – sonst `null` (noch keine Erfahrung).
+ * mindestens einem geschafften Block – sonst `null` (noch keine Erfahrung). Übersprungene
+ * Aufgaben („Aufgabenblöcke löschen“) wurden nicht fertig gemacht und zählen auch nicht.
  */
 export function blocksNeeded(s: AppState, taskId: ID): number | null {
   const task = s.tasks[taskId]
-  if (!task || task.completedAt === null) return null
+  if (!task || task.completedAt === null || task.skippedAt !== null) return null
   return blocksDone(s, taskId) || null
+}
+
+/** Wie viele Blöcke dieser Aufgabe noch offen sind – ein gerade laufender zählt mit. */
+export function blocksLeft(s: AppState, task: Task): number {
+  return Math.max(0, task.estimatedBlocks - blocksDone(s, task.id))
 }
 
 /** Blocklänge für diese Aufgabe in Minuten (individuell oder Standard). */
@@ -281,7 +287,8 @@ export function undoableFinish(s: AppState, now: number): { task: Task; until: n
   if (s.timer.phase === 'block') return null
   const done = tasksOfDay(s, activeDay(s).id).filter((t) => t.completedAt !== null)
   const last = done.sort((a, b) => b.completedAt! - a.completedAt!)[0]
-  if (!last) return null
+  // Übersprungen („Aufgabenblöcke löschen“): Zurück geht es dort über „Rückgängig“ in der Meldung.
+  if (!last || last.skippedAt !== null) return null
   const finishedAt = last.completedAt!
   const until = finishedAt + UNDO_FINISH_MS
   if (now >= until) return null
@@ -323,7 +330,8 @@ export function canFetchPlanned(s: AppState, now: number): boolean {
 
 /**
  * Kleiner Tagesertrag für „Tag beenden“: durchgehaltene Blöcke, gearbeitete Minuten
- * (auch aus abgebrochenen und dem gerade laufenden Block, ohne Pausen) und erledigte Aufgaben.
+ * (auch aus abgebrochenen und dem gerade laufenden Block, ohne Pausen) und erledigte Aufgaben
+ * (übersprungene nicht).
  */
 export function dayYield(s: AppState, dayId: ID, now: number) {
   const blocks = groupBy(s.blocks, 'dayId').get(dayId) ?? []
@@ -335,7 +343,7 @@ export function dayYield(s: AppState, dayId: ID, now: number) {
     completedBlocks: blocks.filter((b) => b.status === 'completed').length,
     minutes: Math.round(workedSeconds / 60),
     doneTitles: tasksOfDay(s, dayId)
-      .filter((t) => t.completedAt !== null)
+      .filter((t) => t.completedAt !== null && t.skippedAt === null)
       .map((t) => t.title),
   }
 }

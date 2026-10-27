@@ -30,6 +30,7 @@ import {
   extendBlock,
   finishBlockEarly,
   skipBlockAsDone,
+  skipRemainingBlocks,
   logBlockAsDone,
   finishTask,
   isInWarningTime,
@@ -45,6 +46,7 @@ import {
   activeDay,
   blockMinutesFor,
   blocksDone,
+  blocksLeft,
   needsLongPause,
   stepsOfTask,
   tasksOfDay,
@@ -131,16 +133,18 @@ export function FocusCard({ task }: { task: Task }) {
           </>
         )}
 
-        {/* Ganz unten, abgesetzt: Block schon ohne App gemacht → zählt als erledigt. */}
+        {/* Ganz unten, abgesetzt: Block schon ohne App gemacht → zählt als erledigt. Darunter: Rest löschen. */}
         {t.phase === 'block' && (
-          <button
-            type="button"
-            className="gentle-line link-quiet"
-            title={T.today.skipAsDoneHint}
-            onClick={() => undoToast(T.today.loggedAsDone, skipBlockAsDone())}
-          >
-            {T.today.skipAsDone}
-          </button>
+          <GentleLinks task={task}>
+            <button
+              type="button"
+              className="gentle-line link-quiet"
+              title={T.today.skipAsDoneHint}
+              onClick={() => undoToast(T.today.loggedAsDone, skipBlockAsDone())}
+            >
+              {T.today.skipAsDone}
+            </button>
+          </GentleLinks>
         )}
 
         {view.action === 'askDone' ? (
@@ -322,13 +326,40 @@ function StartArea({ task, firstBlock, breakOver }: { task: Task; firstBlock: bo
       {IS_MOBILE && notificationPermission() === 'denied' && <p className="notify-off">{T.notifyPrimer.off}</p>}
       {/* Block schon ohne App gemacht → gleich als erledigt eintragen (nicht mitten in der kurzen Pause). */}
       {!inShortBreak && (
+        <GentleLinks task={task}>
+          <button
+            type="button"
+            className="gentle-line link-quiet"
+            title={T.today.skipAsDoneHint}
+            onClick={() => undoToast(T.today.loggedAsDone, logBlockAsDone(task.id))}
+          >
+            {T.today.skipAsDone}
+          </button>
+        </GentleLinks>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Die leisen Links ganz unten: „Schon ohne App erledigt?“ und direkt darunter „Aufgabenblock
+ * löschen“ (bzw. „Aufgabenblöcke löschen“, wenn noch mehrere offen sind) – die Hauptaufgabe hat
+ * sich erübrigt. Sofort, danach „Blöcke gelöscht · Rückgängig“.
+ */
+function GentleLinks({ task, children }: { task: Task; children: ReactNode }) {
+  const undoToast = useUndoToast()
+  const left = useAppSelector((s) => blocksLeft(s, task))
+  return (
+    <div className="gentle-links">
+      {children}
+      {left > 0 && (
         <button
           type="button"
-          className="gentle-line link-quiet"
-          title={T.today.skipAsDoneHint}
-          onClick={() => undoToast(T.today.loggedAsDone, logBlockAsDone(task.id))}
+          className="gentle-more link-quiet"
+          title={T.today.skipRestHint}
+          onClick={() => undoToast(T.today.skippedRest(left), skipRemainingBlocks(task.id))}
         >
-          {T.today.skipAsDone}
+          {T.today.skipRest(left)}
         </button>
       )}
     </div>

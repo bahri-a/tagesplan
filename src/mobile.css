@@ -259,7 +259,8 @@
 [data-focus] .block-dots,
 [data-focus] .noise-toggle,
 [data-focus] .quiet-actions,
-[data-focus] .focus-card .gentle-line {
+[data-focus] .focus-card .gentle-line,
+[data-focus] .focus-card .gentle-more {
   visibility: hidden;
   opacity: 0;
   transition:
@@ -271,6 +272,7 @@
 [data-focus][data-focus-controls] .noise-toggle,
 [data-focus][data-focus-controls] .quiet-actions,
 [data-focus][data-focus-controls] .focus-card .gentle-line,
+[data-focus][data-focus-controls] .focus-card .gentle-more,
 [data-focus][data-focus-controls] .topbar {
   visibility: visible;
   opacity: 1;

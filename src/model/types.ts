@@ -68,6 +68,12 @@ export interface Task extends BaseRecord {
    * Statistik in Version 2 („geschätzt 3 · gebraucht 5“); wird jetzt nirgends angezeigt.
    */
   firstEstimatedBlocks: number | null
+  /**
+   * Wann die restlichen Blöcke gelöscht wurden („Aufgabenblöcke löschen“, hat sich erübrigt) – oder
+   * `null`. Die Aufgabe ist dann auch abgeschlossen (`completedAt`), zählt aber nicht als Erfahrung
+   * für die Blockanzahl. Seit 2026-10-26. Fehlt in älteren Daten → `null` (ergänzt beim Laden).
+   */
+  skippedAt: number | null
 }
 
 /** Ein kleiner Schritt einer Hauptaufgabe (Checkliste). */

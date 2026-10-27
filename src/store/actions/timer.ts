@@ -16,11 +16,14 @@ import type { Block, ID, TimerState } from '../../model/types'
 import {
   activeDay,
   blockMinutesFor,
+  blocksLeft,
+  blocksOfTask,
   canUndoExtraBlock,
   extraBlockStartsNow,
   isAskingDone,
   lastBlockEndedAt,
   shortBreakMinutesFor,
+  tasksOfDay,
   undoableFinish,
 } from '../selectors'
 import { commit, getState, type AppState, type Changes } from '../store'
@@ -197,6 +200,46 @@ export function logBlockAsDone(taskId: ID, now = Date.now()): Undo | null {
 export function abortCurrentBlock(): void {
   if (getState().timer.phase !== 'block') return
   commit(stopTimerChanges(Date.now()))
+}
+
+/**
+ * „Aufgabenblock löschen“ / „Aufgabenblöcke löschen“: Die Hauptaufgabe hat sich erübrigt. Alle noch
+ * offenen Blöcke fallen weg, die Aufgabe ist damit abgeschlossen (als übersprungen markiert – zählt
+ * nicht als Erfahrung für die Blockanzahl). Ein laufender Block stoppt und wird wie beim Abbrechen
+ * gespeichert: Die bis dahin gearbeiteten Minuten zählen. Eine kurze Pause dieser Aufgabe endet.
+ * Wurde an der Aufgabe noch gar nicht gearbeitet, kommt vor der nächsten keine zweite lange Pause.
+ * Gibt „Rückgängig“ zurück: Alles ist wie vorher (ein laufender Block läuft weiter).
+ */
+export function skipRemainingBlocks(taskId: ID, now = Date.now()): Undo | null {
+  const s = getState()
+  const task = s.tasks[taskId]
+  if (!task || task.completedAt !== null || blocksLeft(s, task) === 0) return null
+  const before = s.timer
+  if (before.phase === 'block' && before.taskId !== taskId) return null
+  const ownTimer = before.phase !== 'idle' && before.taskId === taskId
+  const blocks = before.phase === 'block' ? [blockRecord(before, 'aborted', now)] : []
+  const next: TimerState = ownTimer ? { phase: 'idle' } : before
+  const changes: Changes = {
+    tasks: [{ ...task, completedAt: now, skippedAt: now }],
+    blocks,
+    timer: next,
+  }
+  // Die lange Pause vor dieser Aufgabe ist schon vorbei – ohne Arbeit daran gilt sie für die nächste.
+  const nextTask = tasksOfDay(s, task.dayId).find((t) => t.completedAt === null && t.id !== taskId)
+  const carryLongPause =
+    s.local.longPauseEndedFor === taskId && nextTask !== undefined && blocks.length === 0 && blocksOfTask(s, taskId).length === 0
+  if (carryLongPause) changes.local = { ...s.local, longPauseEndedFor: nextTask.id }
+  commit(changes)
+  return undoTimerAction(before, next, blocks, (current) => {
+    const t = current.tasks[taskId]
+    return {
+      tasks: t && t.skippedAt === now ? [{ ...t, completedAt: null, skippedAt: null }] : undefined,
+      local:
+        carryLongPause && current.local.longPauseEndedFor === nextTask.id
+          ? { ...current.local, longPauseEndedFor: taskId }
+          : undefined,
+    }
+  })
 }
 
 /** Ein Ereignis, bei dem ein Ton (und evtl. eine Benachrichtigung) kommt. */

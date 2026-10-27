@@ -48,6 +48,10 @@ export const T = {
     skipAsDone: 'Schon ohne App erledigt?',
     skipAsDoneHint: 'Habe ich bereits erledigt, aber vergessen die App zu starten.\nDer Block zählt mit voller Zeit.',
     loggedAsDone: 'Block eingetragen',
+    // Direkt darunter: Die Hauptaufgabe hat sich erübrigt – die restlichen Blöcke fallen weg.
+    skipRest: (left: number) => (left === 1 ? 'Aufgabenblock löschen' : 'Aufgabenblöcke löschen'),
+    skipRestHint: 'Hat sich erübrigt: Die restlichen Blöcke fallen weg.\nBisher gearbeitete Minuten zählen.',
+    skippedRest: (left: number) => (left === 1 ? 'Block gelöscht' : 'Blöcke gelöscht'),
     startBlock: 'Starten',
     spaceHint: 'Leertaste',
     // Startknopf ab der zweiten Aufgabe – zwei Zeilen: oben die Frage, darunter „Weiter mit …“.
@@ -97,6 +101,7 @@ export const T = {
     askDone: 'Hauptaufgabe erledigt oder noch ein Block?',
     // Karte über der aktuellen Aufgabe für jede heute erledigte Hauptaufgabe.
     doneCard: 'Erledigt',
+    doneCardSkipped: 'Übersprungen',
     doneCardsLabel: 'Heute erledigt',
     // An einem früheren Tag angefangen, aber noch nicht fertig:
     askResume: 'Hier hast du schon angefangen. Weitermachen oder abschließen?',

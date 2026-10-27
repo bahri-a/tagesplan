@@ -278,6 +278,47 @@ test('Lange Pause: ein Klick startet die nächste Aufgabe, „Doch nicht erledig
   expect(errors).toEqual([])
 })
 
+test('Aufgabenblöcke löschen: Die Aufgabe hat sich erübrigt, die Minuten zählen', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+
+  await page.clock.install({ time: new Date('2026-10-06T09:00:00') })
+  await page.goto('/')
+  await deleteExample(page)
+  const input = page.locator('.new-task input').first()
+  for (const title of ['Widerspruch', 'Apps']) {
+    await input.fill(title)
+    await input.press('Enter')
+  }
+  await page.getByRole('button', { name: 'Heute', exact: true }).first().click()
+
+  // Ein Block (3 geplant) ohne App: noch zwei offen → Plural
+  await page.getByRole('button', { name: /Schon ohne App erledigt/ }).click()
+  await expect(page.getByRole('button', { name: 'Aufgabenblöcke löschen' })).toBeVisible()
+  // Block 2 läuft 10 Minuten, dann hat sich die Aufgabe erübrigt
+  await page.getByRole('button', { name: 'Starten', exact: true }).click()
+  await page.clock.fastForward(10 * MIN)
+  await page.getByRole('button', { name: 'Aufgabenblöcke löschen' }).click()
+  await expect(page.locator('.toast')).toContainText('Blöcke gelöscht')
+
+  // Rückgängig: Block 2 läuft weiter
+  await page.getByRole('button', { name: 'Rückgängig' }).click()
+  await expect(page.getByRole('button', { name: 'Früher fertig' })).toBeVisible()
+  await page.getByRole('button', { name: 'Aufgabenblöcke löschen' }).click()
+
+  // „Widerspruch“ ist übersprungen, mit den bisherigen Minuten; „Apps“ ist dran (nach der langen Pause)
+  await expect(page.locator('.done-card')).toContainText('Übersprungen · 1 Block · 35 Min.')
+  await expect(page.locator('.up-next')).toContainText('„Apps“')
+
+  // Bei „Apps“ nur noch ein Block offen → Singular
+  await page.getByRole('button', { name: 'Nächste Hauptaufgabe starten' }).click()
+  await page.getByRole('button', { name: /Schon ohne App erledigt/ }).click()
+  await page.getByRole('button', { name: /Schon ohne App erledigt/ }).click()
+  await expect(page.getByRole('button', { name: 'Aufgabenblock löschen', exact: true })).toBeVisible()
+
+  expect(errors).toEqual([])
+})
+
 test('Mitteilungen: erst die Erklärung, dann die Frage von Chrome – der Block läuft', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
