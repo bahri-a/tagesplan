@@ -1,7 +1,7 @@
 /**
  * FORTSCHRITT ALS SYMBOLE
  * =======================
- * Rechnet aus, wie die Punkte oben in der Timer-Ansicht aussehen:
+ * Rechnet aus, wie die Block-Nummern (✓ – ② – ③) in der Timer-Ansicht aussehen:
  * eine Zeile für die Aufgaben des Tages, eine für die Blöcke der Aufgabe.
  * Reine Logik ohne Oberfläche – deshalb gut zu testen.
  */

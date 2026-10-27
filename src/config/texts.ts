@@ -17,12 +17,13 @@ export const T = {
   },
 
   today: {
-    // Fortschritt oben: nur die Block-Punkte (die Aufgaben stehen unten in der Leiste) …
+    // Fortschritt unter dem Titel: nur die Block-Nummern (die Aufgaben stehen unten in der Leiste) …
     perBlock: (m: number) => `je ${m} Min.`,
     // … und der ganze Stand als Satz (beim Drüberfahren mit der Maus und für Screenreader).
     taskOf: (n: number, total: number) => `Aufgabe ${n} von ${total}`,
-    blockOf: (n: number, total: number) => `Block ${n} von ${total}`,
-    blockDoneOf: (n: number, total: number) => `Block ${n} von ${total} geschafft`,
+    // Mehr Blöcke als geschätzt: nicht „Block 5 von 4“, sondern „Zusatzblock (Block 5)“.
+    blockOf: (n: number, total: number) => (n > total ? `Zusatzblock (Block ${n})` : `Block ${n} von ${total}`),
+    blockDoneOf: (n: number, total: number) => (n > total ? `Zusatzblock geschafft (Block ${n})` : `Block ${n} von ${total} geschafft`),
     remaining: 'noch',
     minutes: (m: number) => (m === 1 ? '1 Minute' : `${m} Minuten`),
     // Die ersten Schritte – vor dem Start nur zum Ansehen, im Block unter dem Timer zum Loslegen.

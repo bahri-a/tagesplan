@@ -129,8 +129,8 @@ export const NOISE_FADE_S = 1.5
 /** Wie lange nach Taste N die Meldung „Geparkt“ zu sehen ist (Millisekunden). */
 export const PARKED_TOAST_MS = 2500
 
-/** Größe des Mini-Fensters (Bild-im-Bild) beim Öffnen – danach frei ziehbar. */
-export const MINI_WINDOW_SIZE = { width: 300, height: 380 }
+/** Größe des Mini-Fensters (Bild-im-Bild) beim Öffnen – danach frei ziehbar. Hoch genug für Titel, Block-Nummern, Ring und Knöpfe. */
+export const MINI_WINDOW_SIZE = { width: 300, height: 400 }
 
 /**
  * Nach „Noch ein Block“ gibt es oben links in der Karte „Zurück“ zur Frage „Erledigt oder

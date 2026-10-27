@@ -27,7 +27,7 @@ test('Mini-Fenster: Pause überspringen (mit Rückgängig) und Gedanke parken (N
   const popupPromise = context.waitForEvent('page')
   await page.locator('.mini-button').click()
   const mini = await popupPromise
-  await mini.setViewportSize({ width: 300, height: 380 })
+  await mini.setViewportSize({ width: 300, height: 400 })
   await expect(mini.locator('.timer-ring')).toBeVisible()
   await page.clock.fastForward(25 * MIN + 2000)
   await expect(mini.getByText('Kurze Pause')).toBeVisible()

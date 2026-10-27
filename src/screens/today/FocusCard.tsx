@@ -1,18 +1,18 @@
 /**
  * DIE GROSSE KARTE IN „HEUTE“
- * Die aktuelle Hauptaufgabe mit Block-Punkten, Titel und – je nach Phase – Startknopf,
+ * Die aktuelle Hauptaufgabe mit Titel, Block-Nummern und – je nach Phase – Startknopf,
  * laufendem Block (Ring, nächster Schritt, Rauschen, Früher fertig/Abbrechen), kurzer Pause oder
  * der Frage „Erledigt oder noch ein Block?“. Auch im Mini-Fenster.
  */
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react'
 import { STEP_DONE_FEEDBACK_MS } from '../../config/defaults'
 import { T } from '../../config/texts'
 import { useNow } from '../../components/hooks'
 import { StepList } from '../../components/StepList'
 import { TimerRing } from '../../components/TimerRing'
 import { useUndoToast } from '../../components/toastContext'
-import { LinkIcon, PauseIcon, PlayIcon } from '../../components/icons'
+import { CheckIcon, LinkIcon, PauseIcon, PlayIcon } from '../../components/icons'
 import { ShareButton } from '../../components/ShareButton'
 import { formatClock, inviteUrl } from '../../logic/invite'
 import { blockMarks, type Mark } from '../../logic/progress'
@@ -95,13 +95,13 @@ export function FocusCard({ task }: { task: Task }) {
     <section className="card focus-card">
       {view.canUndoExtra && <BackToAsk />}
       {view.canSkipBreak && <SkipBreak />}
+      <h1 className="focus-title">{task.title}</h1>
       <BlockDots
         taskId={task.id}
         marks={blockMarks(done, task.estimatedBlocks, view.highlightBlock)}
         suffix={t.phase === 'idle' && view.action !== 'askDone' ? T.today.perBlock(minutes) : null}
         sentence={`${T.today.taskOf(number, taskCount)} · ${blockLine}`}
       />
-      <h1 className="focus-title">{task.title}</h1>
 
       <div className="focus-phase" key={view.key}>
         {/* Erst ansehen, abhaken erst im Block – und nur, bis der erste Block geschafft ist. */}
@@ -254,11 +254,13 @@ interface BlockDotsProps {
 }
 
 /**
- * Oben in der Karte: die Blöcke der Aufgabe als Punkte.
- * Voller Punkt = geschafft, breiter Punkt = jetzt dran, nur Umriss = kommt noch.
+ * Unter dem Titel: die Blöcke der Aufgabe als kleine Nummern-Kreise, verbunden durch kurze Striche
+ * (✓ – ② – ③ – ④). Voller Kreis mit Haken = geschafft, umrandet mit Nummer = jetzt dran,
+ * blasser Umriss mit Nummer = kommt noch. So sieht man ohne Nachdenken „Block 2 von 4“.
+ * Überall sichtbar – auch im Mini-Fenster und in der ruhigen Ansicht am Handy.
  * Abgebrochene Blöcke sehen aus wie geschaffte (sie zählen mit, nichts soll nach Fehler aussehen).
  * Der ganze Satz („Aufgabe 1 von 2 · Block 1 von 3 …“) steht im Tooltip und für Screenreader.
- * Füllt sich ein Punkt (Block geschafft), „ploppt“ er kurz auf – nicht beim ersten Zeichnen.
+ * Wird ein Block geschafft, „ploppt“ sein Kreis kurz auf – nicht beim ersten Zeichnen.
  */
 function BlockDots({ taskId, marks, suffix, sentence }: BlockDotsProps) {
   const marksRef = useRef<HTMLSpanElement>(null)
@@ -271,7 +273,7 @@ function BlockDots({ taskId, marks, suffix, sentence }: BlockDotsProps) {
     const previous = before.current
     before.current = { taskId, marks: current }
     if (!previous || previous.taskId !== taskId || prefersReducedMotion()) return
-    const dots = marksRef.current?.children
+    const dots = marksRef.current?.querySelectorAll('.block-mark')
     current.forEach((mark, index) => {
       if (mark !== 'done' || previous.marks[index] === 'done') return
       dots?.[index]?.animate(
@@ -286,7 +288,12 @@ function BlockDots({ taskId, marks, suffix, sentence }: BlockDotsProps) {
       <span className="visually-hidden">{sentence}</span>
       <span ref={marksRef} className="block-dots-marks" aria-hidden="true">
         {marks.map((mark, index) => (
-          <span key={index} className={`block-mark is-${mark}`} />
+          <Fragment key={index}>
+            {index > 0 && <span className="block-link" />}
+            <span className={`block-mark is-${mark}`}>
+              {mark === 'done' ? <CheckIcon /> : index + 1}
+            </span>
+          </Fragment>
         ))}
       </span>
       {suffix && <span aria-hidden="true">{suffix}</span>}
