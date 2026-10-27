@@ -2,7 +2,7 @@
  * BILDSCHIRM „HEUTE“ (Durchführen)
  * ================================
  * Zeigt immer die oberste noch nicht erledigte Hauptaufgabe – groß und ruhig:
- *  - oben in der Karte: die Block-Punkte (mit „je 25 Min.“), darunter der Titel
+ *  - oben in der Karte: der Titel, darunter die Block-Nummern ✓ – ② – ③ (vor dem Start mit „je 25 Min.“)
  *  - vor dem Start: die ersten Schritte zum Ansehen (noch nicht abhakbar), „Block starten“
  *    (ab der zweiten Aufgabe zweizeilig: „Lange Pause gemacht?“ / „Weiter mit „…““)
  *  - während des Blocks: weicher Ring mit Restzeit, dezent „Pausieren“ und „Abbrechen“,

@@ -86,7 +86,7 @@
   box-shadow: none;
 }
 
-:root[data-palette='fjord'] :is(.block-mark.is-current, .day-pill.is-current .day-mark) {
+:root[data-palette='fjord'] .day-pill.is-current .day-mark {
   background: var(--accent);
 }
 
@@ -229,7 +229,7 @@
   background: linear-gradient(135deg, var(--btn-a), var(--btn-b));
 }
 
-:root[data-palette='lavendel'] :is(.block-mark.is-current, .day-pill.is-current .day-mark) {
+:root[data-palette='lavendel'] .day-pill.is-current .day-mark {
   background: linear-gradient(90deg, var(--btn-a), var(--btn-b));
 }
 

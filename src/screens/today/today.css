@@ -142,7 +142,7 @@
   overflow-wrap: anywhere;
 }
 
-/* ---------- Block-Punkte oben ---------- */
+/* ---------- Oben in der Karte ---------- */
 
 /* „← Zurück“ nach „Noch ein Block“ – oben links, leise, verschiebt nichts in der Karte. */
 .focus-card {
@@ -206,10 +206,13 @@
   }
 }
 
+/* Block-Nummern unter dem Titel (✓ – ② – ③ – ④): rückt etwas näher an den Titel, gehört zu ihm. */
 .block-dots {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.6rem;
+  margin-top: -0.55rem;
   color: var(--text-muted);
   font-size: var(--fs-sm);
 }
@@ -217,29 +220,57 @@
 .block-dots-marks {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
   gap: 6px;
 }
 
+/* Alle Kreise gleich groß – nur Füllung und Rand zeigen den Stand. */
 .block-mark {
-  width: 8px;
-  height: 8px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
   border-radius: 999px;
   box-shadow: inset 0 0 0 1.5px var(--dot-open);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
   transition:
-    width 0.4s,
-    background 0.4s;
+    background 0.4s,
+    box-shadow 0.4s,
+    color 0.4s;
+}
+
+.block-mark svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .block-mark.is-done {
   background: var(--accent);
   box-shadow: none;
+  color: var(--surface);
 }
 
 .block-mark.is-current {
-  width: 26px;
-  background: linear-gradient(90deg, var(--ring-block-a), var(--ring-block-b));
-  box-shadow: none;
+  box-shadow: inset 0 0 0 2px var(--accent);
+  color: var(--text);
+}
+
+/* Der kurze Strich zwischen zwei Kreisen */
+.block-link {
+  width: 8px;
+  height: 1.5px;
+  border-radius: 1px;
+  background: var(--dot-open);
 }
 
 /* ---------- Der weiche Ring ---------- */

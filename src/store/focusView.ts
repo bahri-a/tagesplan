@@ -61,7 +61,7 @@ export interface FocusView {
   canUndoExtra: boolean
   /** Leises „Pause überspringen“ anbieten? */
   canSkipBreak: boolean
-  /** Ist bei den Block-Punkten ein Block „jetzt dran“ (läuft oder kann gleich starten)? */
+  /** Ist bei den Block-Nummern ein Block „jetzt dran“ (läuft oder kann gleich starten)? */
   highlightBlock: boolean
   /** Ändert sich dieser Schlüssel, blendet die Karte ihren unteren Teil weich neu ein. */
   key: string
