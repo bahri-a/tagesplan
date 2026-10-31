@@ -18,6 +18,7 @@ import {
   extraBlockStartsNow,
   isAskingDone,
   isAskingResume,
+  isUltraRingingAt,
 } from './selectors'
 import type { AppState } from './store'
 
@@ -28,8 +29,6 @@ export type RingView =
   | 'running'
   /** Ein Block ist pausiert. */
   | 'paused'
-  /** Ultra-Modus: Die kurze Pause wartet auf „Pause machen“ (es piept). */
-  | 'breakNag'
   /** Die kurze Pause läuft. */
   | 'break'
   /** Die kurze Pause ist vorbei – der nächste Block kann starten. */
@@ -61,6 +60,8 @@ export interface FocusView {
   canUndoExtra: boolean
   /** Leises „Pause überspringen“ anbieten? */
   canSkipBreak: boolean
+  /** Ultra-Modus: Es piept gerade – „Ton aus“ anbieten? */
+  canSilence: boolean
   /** Ist bei den Block-Nummern ein Block „jetzt dran“ (läuft oder kann gleich starten)? */
   highlightBlock: boolean
   /** Ändert sich dieser Schlüssel, blendet die Karte ihren unteren Teil weich neu ein. */
@@ -79,7 +80,7 @@ export function focusView(s: AppState, task: Task, now: number): FocusView {
 
   let ring: RingView = 'none'
   if (t.phase === 'block') ring = t.pausedAt === null ? 'running' : 'paused'
-  else if (t.phase === 'break') ring = breakOver ? 'breakOver' : t.nagging && s.settings.ultraMode ? 'breakNag' : 'break'
+  else if (t.phase === 'break') ring = breakOver ? 'breakOver' : 'break'
 
   // Starten geht, wenn nichts läuft oder die kurze Pause vorbei ist.
   const canStart = t.phase === 'idle' || breakOver
@@ -97,8 +98,8 @@ export function focusView(s: AppState, task: Task, now: number): FocusView {
     extraStartsNow: asking && extraBlockStartsNow(s, task, now),
     canUndoExtra: canUndoExtraBlock(s, task, now),
     canSkipBreak: t.phase === 'break' && !breakOver,
+    canSilence: isUltraRingingAt(s, now),
     highlightBlock: t.phase === 'block' || (canStart && !asking),
-    // „Pause machen“ (breakNag → break) blendet nicht neu ein – es bleibt dieselbe Pause.
-    key: `${ring === 'breakNag' ? 'break' : ring}-${action}`,
+    key: `${ring}-${action}`,
   }
 }

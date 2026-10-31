@@ -26,7 +26,6 @@ import {
   abortCurrentBlock,
   addExtraBlock,
   canExtendBlock,
-  confirmBreak,
   extendBlock,
   finishBlockEarly,
   skipBlockAsDone,
@@ -36,6 +35,7 @@ import {
   isInWarningTime,
   pauseCurrentBlock,
   resumeCurrentBlock,
+  silenceUltra,
   skipBreak,
   updateSettings,
   startBlock,
@@ -117,7 +117,7 @@ export function FocusCard({ task }: { task: Task }) {
             center={<span className="timer-ring-label">{T.today.breakOver}</span>}
           />
         )}
-        {(view.ring === 'break' || view.ring === 'breakNag') && t.phase === 'break' && (
+        {view.ring === 'break' && t.phase === 'break' && (
           <>
             <TimerRing
               variant="break"
@@ -125,8 +125,8 @@ export function FocusCard({ task }: { task: Task }) {
               totalMs={t.durationMs}
               caption={T.today.breakTitle}
             />
-            {view.ring === 'breakNag' ? (
-              <BreakAsk question={T.today.ultraAsk} />
+            {view.canSilence ? (
+              <SilenceUltra />
             ) : (
               <p className="phase-note">{pick(T.today.breakHints, t.startedAt)}</p>
             )}
@@ -195,16 +195,13 @@ function finish(taskId: ID) {
   finishTask(taskId)
 }
 
-/** Ultra-Modus: Die fällige Pause bestätigen, damit das Piepen aufhört. */
-function BreakAsk({ question }: { question: string }) {
+/** Ultra-Modus: Die Pause läuft schon – „Ton aus“ stoppt nur das Piepen (sonst hört es nach 20 s von selbst auf). */
+function SilenceUltra() {
   return (
-    <div className="ask-done">
-      <p className="ask-done-question">{question}</p>
-      <div className="ask-done-actions">
-        <button type="button" className="btn btn-primary btn-big" onClick={() => confirmBreak()}>
-          {T.today.breakConfirm}
-        </button>
-      </div>
+    <div className="ask-done-actions">
+      <button type="button" className="btn" onClick={() => silenceUltra()}>
+        {T.today.silenceUltra}
+      </button>
     </div>
   )
 }
@@ -232,8 +229,7 @@ function BackToAsk() {
 }
 
 /**
- * Ganz leise unten rechts in der Karte, solange die kurze Pause läuft (oder auf „Pause machen“
- * wartet): „Pause überspringen“. Sofort – danach „Pause übersprungen · Rückgängig“.
+ * Ganz leise unten rechts in der Karte, solange die kurze Pause läuft: „Pause überspringen“. Sofort – danach „Pause übersprungen · Rückgängig“.
  */
 function SkipBreak() {
   const undoToast = useUndoToast()

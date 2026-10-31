@@ -137,8 +137,8 @@ export interface SettingsValues {
   /** Welches Rauschen. */
   noiseColor: NoiseColor
   /**
-   * Ultra-Modus: Endet ein Block, piept es nervig und wiederholt, bis die Pause bestätigt wird –
-   * nach dem letzten Block, bis „Erledigt“ oder „Noch ein Block“ gewählt ist. Seit 2026-09-29; fehlt in älteren Daten → aus.
+   * Ultra-Modus: Endet ein Block, beginnt die kurze Pause von selbst, und es piept wiederholt –
+   * bis „Ton aus“, höchstens 20 Sekunden (nach dem letzten Block nicht). Seit 2026-09-29; fehlt in älteren Daten → aus.
    */
   ultraMode: boolean
   /**
@@ -202,9 +202,8 @@ export type TimerState =
       /** Wurde das Pausenende schon mit Ton gemeldet? */
       endSignaled: boolean
       /**
-       * Ultra-Modus: Die Pause ist noch nicht bestätigt – ab `startedAt` piept es, bis „Pause machen“
-       * (höchstens `durationMs` lang). Bis dahin zählt die Pause nicht, sie beginnt erst mit der Bestätigung.
-       * Fehlt in älteren Daten = nein.
+       * Ultra-Modus: Ab `startedAt` (dem Blockende) piept es – höchstens 20 Sekunden, bis „Ton aus“.
+       * Die Pause zählt dabei schon ab `startedAt`. Fehlt in älteren Daten = nein.
        */
       nagging?: boolean
     }

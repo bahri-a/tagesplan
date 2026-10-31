@@ -5,7 +5,7 @@
  * „Welche Aufgabe ist gerade dran?“. Sie ändern nichts.
  */
 
-import { BACKUP_REMINDER_DAYS, MILESTONES, UNDO_EXTRA_BLOCK_MS, UNDO_FINISH_MS } from '../config/defaults'
+import { BACKUP_REMINDER_DAYS, MILESTONES, ULTRA_MAX_RING_MS, UNDO_EXTRA_BLOCK_MS, UNDO_FINISH_MS } from '../config/defaults'
 import { T } from '../config/texts'
 import { dayKey } from '../logic/time'
 import { blockWorkedMs, isBreakOver } from '../logic/timer'
@@ -400,4 +400,23 @@ export function shouldRemindBackup(s: AppState, now: number): boolean {
 function daysBetween(from: number, to: number): number {
   const day = (t: number) => Date.parse(`${dayKey(t)}T00:00:00Z`) / 86_400_000
   return Math.round(day(to) - day(from))
+}
+
+/**
+ * Ultra-Modus: Soll gerade gepiept werden? Ja, solange niemand „Ton aus“ gedrückt hat, die Pause
+ * noch läuft – und der Modus an ist. Höchstens ULTRA_MAX_RING_MS (20 Sekunden) nach dem
+ * Blockende, damit es nicht minutenlang klingelt, wenn du kurz weg bist. Nach dem letzten Block
+ * piept es nicht (dann gibt es keine kurze Pause).
+ */
+export function isUltraRingingAt(s: AppState, now: number): boolean {
+  const t = s.timer
+  return (
+    t.phase === 'break' &&
+    t.nagging === true &&
+    !t.endSignaled &&
+    s.settings.ultraMode &&
+    s.settings.sounds &&
+    now >= t.startedAt &&
+    now < t.startedAt + Math.min(t.durationMs, ULTRA_MAX_RING_MS)
+  )
 }

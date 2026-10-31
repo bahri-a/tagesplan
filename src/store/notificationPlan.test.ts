@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DEFAULT_SETTINGS } from '../config/defaults'
 import { resetDatabaseForTests } from '../db/database'
 import * as actions from './actions'
-import { keepDeliveredNotifications, plannedNotifications } from './notificationPlan'
+import { plannedNotifications } from './notificationPlan'
 import * as sel from './selectors'
 import { getState, initStore, resetStoreForTests } from './store'
 
@@ -81,34 +81,17 @@ describe('Mitteilungen der iPhone-App', () => {
     expect(plan()).toEqual([])
   })
 
-  it('Ultra-Modus → nur das Blockende; die Mitteilung bleibt bis „Pause machen“', () => {
+  it('Ultra-Modus → wie sonst: Blockende und Pausenende, die Pause beginnt von selbst', () => {
     actions.updateSettings({ ultraMode: true })
     const task = actions.addTask(today(), 'A')
     actions.startBlock(task.id)
-    expect(plan()).toEqual([{ kind: 'blockEnd', at: BLOCK }])
-
+    expect(plan()).toEqual([
+      { kind: 'blockEnd', at: BLOCK },
+      { kind: 'breakEnd', at: BLOCK + BREAK },
+    ])
     actions.checkTimer(at(BLOCK + 1000))
-    expect(plan()).toEqual([])
-    expect(keepDeliveredNotifications(getState())).toBe(true)
-
-    actions.confirmBreak(at(BLOCK + 2 * MIN))
-    expect(keepDeliveredNotifications(getState())).toBe(false)
-    expect(plan()).toEqual([{ kind: 'breakEnd', at: BLOCK + 2 * MIN + BREAK }])
-  })
-
-  it('Ultra-Modus nach dem letzten Block → Mitteilung muss nicht stehen bleiben', () => {
-    actions.updateSettings({ ultraMode: true })
-    const task = actions.addTask(today(), 'A')
-    actions.updateTask(task.id, { estimatedBlocks: 1 })
-    actions.startBlock(task.id)
-    actions.checkTimer(at(BLOCK + 1000))
-    expect(keepDeliveredNotifications(getState())).toBe(false)
-  })
-
-  it('Ultra-Modus mit Tönen aus → Pause wartet trotzdem auf „Pause machen“', () => {
-    actions.updateSettings({ ultraMode: true, sounds: false })
-    const task = actions.addTask(today(), 'A')
-    actions.startBlock(task.id)
-    expect(plan().map((n) => n.kind)).toEqual(['blockEnd'])
+    expect(plan()).toEqual([{ kind: 'breakEnd', at: BLOCK + BREAK }])
+    actions.silenceUltra()
+    expect(plan()).toEqual([{ kind: 'breakEnd', at: BLOCK + BREAK }])
   })
 })

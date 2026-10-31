@@ -105,7 +105,7 @@ export function startTimerEngine(): () => void {
   const worker = new Worker(new URL('../logic/ticker.worker.ts', import.meta.url), {
     type: 'module',
   })
-  // Ultra-Modus: Solange die fällige Pause nicht bestätigt ist, alle ULTRA_REPEAT_MS piepen.
+  // Ultra-Modus: Nach dem Blockende alle ULTRA_REPEAT_MS piepen (bis „Ton aus“, höchstens 20 s).
   // Läuft im selben Sekundentakt wie der Timer – so klappt es auch im Hintergrund.
   let lastUltraAt = 0
   // Wie oft es in dieser Pause schon gepiept hat: jedes Mal etwas lauter (siehe ultraVolume).

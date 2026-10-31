@@ -87,9 +87,8 @@ export const T = {
       'Kurz weg vom Bildschirm – Augen und Kopf erholen sich.',
     ],
     breakOver: 'Pause vorbei',
-    // Ultra-Modus: Die fällige Pause muss bestätigt werden, sonst piept es weiter.
-    ultraAsk: 'Zeit für die Pause!',
-    breakConfirm: 'Pause machen',
+    // Ultra-Modus: Die Pause läuft schon, es piept bis zu 20 Sekunden – das stoppt es früher.
+    silenceUltra: 'Ton aus',
     // Leise unten rechts in der Pause – mit kurzer Nachfrage.
     skipBreak: 'Pause überspringen',
     breakSkipped: 'Pause übersprungen',
@@ -476,7 +475,7 @@ export const T = {
     testBlockEnd: 'Ton „Block vorbei“',
     testBreakEnd: 'Ton „Pause vorbei“',
     ultraLabel: 'Ultra-Modus',
-    ultraHint: 'Endet ein Block, piept es, bis du die Pause bestätigst –\nhöchstens 20 Sekunden lang.',
+    ultraHint: 'Endet ein Block, piept es bis zu 20 Sekunden –\ndie Pause läuft dabei schon.',
     ultraOn: 'An',
     ultraOff: 'Aus',
     testUltra: 'Ton „Ultra“',
