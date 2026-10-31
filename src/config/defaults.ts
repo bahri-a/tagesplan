@@ -92,12 +92,12 @@ export const WARNING_VOLUME = 0.08
  */
 export const SLEEP_GAP_MS = 3 * 60_000
 
-/** Ultra-Modus: so oft (Millisekunden) piept es, bis die Pause bestätigt ist. */
+/** Ultra-Modus: so oft (Millisekunden) piept es nach dem Blockende (bis „Ton aus“ oder höchstens ULTRA_MAX_RING_MS). */
 export const ULTRA_REPEAT_MS = 2000
 
 /**
  * Ultra-Modus: Höchstens so lange (Millisekunden) nach dem Blockende piept es – danach ist Ruhe,
- * damit es nicht minutenlang klingelt, wenn du gerade weg bist. „Pause machen“ bleibt stehen.
+ * damit es nicht minutenlang klingelt, wenn du gerade weg bist. Die Pause läuft dabei schon.
  */
 export const ULTRA_MAX_RING_MS = 20_000
 

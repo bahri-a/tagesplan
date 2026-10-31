@@ -13,7 +13,7 @@
  */
 
 import { LocalNotifications, type PermissionStatus } from '@capacitor/local-notifications'
-import { keepDeliveredNotifications, plannedNotifications, type PlannedNotification } from '../store/notificationPlan'
+import { plannedNotifications, type PlannedNotification } from '../store/notificationPlan'
 import { getState, subscribeToStore } from '../store/store'
 import { setNativeNotificationPermission, type PermissionState } from './notifications'
 
@@ -29,7 +29,6 @@ const THREAD = 'tagesplan-timer'
 let permission: PermissionState = 'default'
 /** Zuletzt bestellter Plan – nur bei Änderungen wird neu bestellt. */
 let lastPlanKey = ''
-let lastKeep = false
 /** Bestellungen nacheinander abarbeiten (nie zwei gleichzeitig). */
 let queue: Promise<void> = Promise.resolve()
 
@@ -67,8 +66,8 @@ export async function startNativeNotifications(): Promise<void> {
   // Tippt man auf eine Mitteilung, öffnet sich die App – mehr ist nicht nötig.
   subscribeToStore(sync)
   document.addEventListener('visibilitychange', () => {
-    // Kurz warten: Erst rechnet der Timer nach (z. B. Ultra-Modus → Pause wartet), dann aufräumen.
-    if (document.visibilityState === 'visible') setTimeout(() => clearDeliveredIfDone(true), 1000)
+    // Kurz warten: Erst rechnet der Timer nach, dann aufräumen.
+    if (document.visibilityState === 'visible') setTimeout(clearDelivered, 1000)
   })
   sync()
 }
@@ -84,7 +83,6 @@ function sync(): void {
     lastPlanKey = key
     queue = queue.then(() => order(plan, sounds)).catch(() => undefined)
   }
-  clearDeliveredIfDone(false)
 }
 
 /** Alte Bestellungen streichen, neue aufgeben. */
@@ -111,13 +109,10 @@ async function order(plan: PlannedNotification[], sounds: boolean): Promise<void
 }
 
 /**
- * Angezeigte Mitteilungen wegräumen, sobald die App offen ist – außer im Ultra-Modus, solange
- * die Pause noch nicht bestätigt ist (Wunsch 2026-10-03: „bleibt … bis man die Pause startet“).
+ * Angezeigte Mitteilungen wegräumen, sobald die App offen ist. (Früher blieb die Mitteilung im
+ * Ultra-Modus stehen, bis man „Pause machen“ drückte – seit die Pause von selbst beginnt, nicht mehr.)
  */
-function clearDeliveredIfDone(force: boolean): void {
-  const keep = keepDeliveredNotifications(getState())
-  const changed = keep !== lastKeep
-  lastKeep = keep
-  if (keep || document.visibilityState !== 'visible' || !(force || changed)) return
+function clearDelivered(): void {
+  if (document.visibilityState !== 'visible') return
   queue = queue.then(() => LocalNotifications.removeAllDeliveredNotifications()).catch(() => undefined)
 }

@@ -151,7 +151,7 @@ export function ultraVolume(ring: number): number {
 /**
  * Ultra-Modus: drei kurze, klare Töne (a'' – c''' – a''), deutlich, aber nicht schrill:
  * runde Dreieckswelle statt Rechteck, weicher Ein- und Ausklang, leichter Tiefpass.
- * Wird wiederholt, bis die fällige Pause bestätigt ist (siehe startTimerEngine), und wird
+ * Wird nach dem Blockende wiederholt, bis „Ton aus“ (höchstens 20 s, siehe startTimerEngine), und wird
  * dabei mit jedem Mal etwas lauter (`ring` zählt mit, siehe ultraVolume).
  * Ohne Angabe (Probehören in den Einstellungen): so laut, wie es höchstens wird.
  */

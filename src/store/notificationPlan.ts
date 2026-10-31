@@ -46,17 +46,16 @@ export function plannedNotifications(s: AppState): PlannedNotification[] {
         body: lastBlock ? T.notification.lastBlockEndBody(title) : T.notification.blockEndBody(title),
       },
     ]
-    // Danach startet die kurze Pause von selbst – ihr Ende also gleich mit planen.
-    // Nicht nach dem letzten Block (dann gibt es keine Pause) und nicht im Ultra-Modus
-    // (dort beginnt die Pause erst mit „Pause machen“).
-    if (!lastBlock && !s.settings.ultraMode) {
+    // Danach startet die kurze Pause von selbst (auch im Ultra-Modus) – ihr Ende also gleich
+    // mit planen. Nicht nach dem letzten Block (dann gibt es keine Pause).
+    if (!lastBlock) {
       const breakMs = (task ? shortBreakMinutesFor(s, task) : s.settings.shortBreakMinutes) * 60_000
       list.push(breakEndNotification(blockEnd + breakMs, title))
     }
     return list
   }
 
-  if (t.phase === 'break' && !t.endSignaled && !t.nagging) {
+  if (t.phase === 'break' && !t.endSignaled) {
     return [breakEndNotification(timer.breakEndsAt(t), title)]
   }
   return []
@@ -70,13 +69,4 @@ function breakEndNotification(at: number, title: string): PlannedNotification {
     title: T.notification.breakEndTitle,
     body: T.notification.breakEndBody(title),
   }
-}
-
-/**
- * Ultra-Modus: Die Mitteilung zum Blockende bleibt auf dem Display stehen, bis die Pause
- * bestätigt ist („Pause machen“). Sonst darf sie verschwinden, sobald die App offen ist.
- */
-export function keepDeliveredNotifications(s: AppState): boolean {
-  const t = s.timer
-  return t.phase === 'break' && t.nagging === true && !t.endSignaled
 }

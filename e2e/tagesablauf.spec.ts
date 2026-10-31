@@ -342,3 +342,54 @@ test('Mitteilungen: erst die Erklärung, dann die Frage von Chrome – der Block
 
   expect(errors).toEqual([])
 })
+
+test('Ultra-Modus: Die Pause beginnt von selbst, „Ton aus“ stoppt nur das Piepen', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+
+  await page.clock.install({ time: new Date('2026-10-06T09:00:00') })
+  await page.goto('/')
+  await deleteExample(page)
+  const input = page.locator('.new-task input').first()
+  await input.fill('Steuererklärung')
+  await input.press('Enter')
+
+  await page.getByRole('button', { name: 'Einstellungen' }).click()
+  await page.getByRole('radiogroup', { name: 'Ultra-Modus' }).getByRole('radio', { name: 'An' }).click()
+  await expect(page.getByText('die Pause läuft dabei schon.')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Heute', exact: true }).first().click()
+  await page.getByRole('button', { name: 'Starten', exact: true }).click()
+  await page.clock.fastForward(25 * MIN + 1000)
+
+  // Kein „Pause machen“ mehr: Die Pause zählt schon, es piept – „Ton aus“ steht da.
+  await expect(page.getByText('Kurze Pause', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Pause machen' })).toHaveCount(0)
+  const silence = page.getByRole('button', { name: 'Ton aus' })
+  await expect(silence).toBeVisible()
+  await silence.click()
+  await expect(silence).toHaveCount(0)
+
+  // Die Pause endet pünktlich 7 Minuten nach dem Blockende.
+  await page.clock.fastForward(7 * MIN)
+  await expect(page.getByText('Pause vorbei')).toBeVisible()
+  expect(errors).toEqual([])
+})
+
+test('Ultra-Modus: Ohne „Ton aus“ verschwindet der Knopf nach 20 Sekunden von selbst', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-10-06T09:00:00') })
+  await page.goto('/')
+  await deleteExample(page)
+  const input = page.locator('.new-task input').first()
+  await input.fill('Steuererklärung')
+  await input.press('Enter')
+  await page.getByRole('button', { name: 'Einstellungen' }).click()
+  await page.getByRole('radiogroup', { name: 'Ultra-Modus' }).getByRole('radio', { name: 'An' }).click()
+  await page.getByRole('button', { name: 'Heute', exact: true }).first().click()
+  await page.getByRole('button', { name: 'Starten', exact: true }).click()
+  await page.clock.fastForward(25 * MIN + 1000)
+  await expect(page.getByRole('button', { name: 'Ton aus' })).toBeVisible()
+  await page.clock.fastForward(21_000)
+  await expect(page.getByRole('button', { name: 'Ton aus' })).toHaveCount(0)
+  await expect(page.getByText('Kurze Pause', { exact: true })).toBeVisible()
+})

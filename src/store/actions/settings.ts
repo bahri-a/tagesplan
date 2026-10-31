@@ -9,7 +9,7 @@ import { recentKey } from '../selectors'
 import { dayKey } from '../../logic/time'
 import { commit, getState } from '../store'
 import { clamp } from './helpers'
-import { confirmBreak } from './timer'
+import { silenceUltra } from './timer'
 
 export function updateSettings(patch: Partial<SettingsValues>): void {
   const current = getState().settings
@@ -18,8 +18,8 @@ export function updateSettings(patch: Partial<SettingsValues>): void {
     const { min, max } = SETTINGS_LIMITS[key]
     next[key] = clamp(Math.round(Number(next[key]) || min), min, max)
   }
-  // Ultra-Modus aus, während eine Pause auf Bestätigung wartet → die Pause beginnt jetzt.
-  if (current.ultraMode && !next.ultraMode) confirmBreak()
+  // Ultra-Modus aus, während es piept → Ruhe.
+  if (current.ultraMode && !next.ultraMode) silenceUltra()
   commit({ settings: next })
 }
 

@@ -9,7 +9,6 @@ import {
   BLOCK_EXTEND_MS,
   BLOCK_EXTEND_OFFER_MS,
   SETTINGS_LIMITS,
-  ULTRA_MAX_RING_MS,
 } from '../../config/defaults'
 import * as timer from '../../logic/timer'
 import type { Block, ID, TimerState } from '../../model/types'
@@ -21,6 +20,7 @@ import {
   canUndoExtraBlock,
   extraBlockStartsNow,
   isAskingDone,
+  isUltraRingingAt,
   lastBlockEndedAt,
   shortBreakMinutesFor,
   tasksOfDay,
@@ -280,11 +280,10 @@ export function checkTimer(now = Date.now()): TimerEvent[] {
     const { lastBlock, ...completed } = completeBlockChanges(t, endedAt)
     const taskTitle = titleOf(t.taskId)
     const fresh = now - endedAt < SIGNAL_MAX_DELAY_MS
-    // Ultra-Modus: Beginnt eine kurze Pause, piept es (nur wenn das Blockende gerade erst war),
-    // bis die Pause bestätigt ist. Nach dem letzten Block (keine kurze Pause) piept es nicht.
-    // In der iPhone-App auch, wenn das Blockende länger her ist: Dort hat die Mitteilung auf dem
-    // gesperrten Display schon geklingelt – die Pause beginnt trotzdem erst mit „Pause machen“.
-    if ((fresh || __NATIVE_APP__) && s.settings.ultraMode && completed.timer.phase === 'break') {
+    // Ultra-Modus: Die kurze Pause läuft sofort, dazu piept es (nur wenn das Blockende gerade
+    // erst war – sonst hat am iPhone schon die Mitteilung geklingelt). Nach dem letzten Block
+    // (keine kurze Pause) piept es nicht.
+    if (fresh && s.settings.ultraMode && completed.timer.phase === 'break') {
       completed.timer = { ...completed.timer, nagging: true }
     }
     Object.assign(changes, completed)
@@ -304,31 +303,16 @@ export function checkTimer(now = Date.now()): TimerEvent[] {
   return events
 }
 
-/**
- * Ultra-Modus: Soll gerade gepiept werden? Ja, solange die fällige Pause nicht bestätigt ist,
- * noch läuft – und der Modus an ist. Höchstens ULTRA_MAX_RING_MS (20 Sekunden) nach dem
- * Blockende, damit es nicht minutenlang klingelt, wenn du kurz weg bist. Nach dem letzten Block
- * piept es nicht.
- */
+/** Ultra-Modus: Soll gerade gepiept werden? (siehe `isUltraRingingAt`) */
 export function isUltraRinging(now = Date.now()): boolean {
-  const s = getState()
-  const t = s.timer
-  return (
-    t.phase === 'break' &&
-    t.nagging === true &&
-    !t.endSignaled &&
-    s.settings.ultraMode &&
-    s.settings.sounds &&
-    now >= t.startedAt &&
-    now < t.startedAt + Math.min(t.durationMs, ULTRA_MAX_RING_MS)
-  )
+  return isUltraRingingAt(getState(), now)
 }
 
-/** „Pause machen“: Im Ultra-Modus hört das Piepen auf – erst jetzt beginnt die Pause zu zählen. */
-export function confirmBreak(now = Date.now()): void {
+/** „Ton aus“: Im Ultra-Modus hört das Piepen auf. Die Pause läuft unverändert weiter. */
+export function silenceUltra(): void {
   const t = getState().timer
-  if (t.phase !== 'break' || t.endSignaled || !t.nagging) return
-  commit({ timer: { ...t, nagging: false, startedAt: Math.max(t.startedAt, now) } })
+  if (t.phase !== 'break' || !t.nagging) return
+  commit({ timer: { ...t, nagging: false } })
 }
 
 /**

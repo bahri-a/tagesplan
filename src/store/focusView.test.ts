@@ -73,17 +73,17 @@ const rows: Row[] = [
       actions.checkTimer(at(BLOCK))
       return at(BLOCK + MIN)
     },
-    { ring: 'break', action: 'none', canSkipBreak: true, highlightBlock: false, showStepsPreview: false },
+    { ring: 'break', action: 'none', canSkipBreak: true, canSilence: false, highlightBlock: false, showStepsPreview: false },
   ],
   [
-    'Ultra-Modus: Pause wartet auf „Pause machen“',
+    'Ultra-Modus: Pause läuft schon, es piept → „Ton aus“',
     (id) => {
       actions.updateSettings({ ultraMode: true })
       actions.startBlock(id)
       actions.checkTimer(at(BLOCK))
       return at(BLOCK + 1000)
     },
-    { ring: 'breakNag', action: 'none', canSkipBreak: true },
+    { ring: 'break', action: 'none', canSkipBreak: true, canSilence: true },
   ],
   [
     'kurze Pause vorbei',
@@ -165,19 +165,21 @@ describe('Große Karte in „Heute“: welche Phase?', () => {
     expect(focusView(getState(), getState().tasks[b.id], at(2 * BLOCK + 2 * MIN)).showStepsPreview).toBe(false)
   })
 
-  it('„Pause machen“ (Ultra) blendet die Karte nicht neu ein, Ende der Pause schon', () => {
+  it('„Ton aus“ (Ultra) blendet die Karte nicht neu ein, Ende der Pause schon', () => {
     const nag = viewAfter((id) => {
       actions.updateSettings({ ultraMode: true })
       actions.startBlock(id)
       actions.checkTimer(at(BLOCK))
       return at(BLOCK + 1000)
     })
-    actions.confirmBreak(at(BLOCK + 2000))
+    expect(nag.canSilence).toBe(true)
+    actions.silenceUltra()
     const task = sel.currentTask(getState())!
     const running = focusView(getState(), task, at(BLOCK + 3000))
     expect(running.ring).toBe('break')
+    expect(running.canSilence).toBe(false)
     expect(running.key).toBe(nag.key)
-    const over = focusView(getState(), task, at(BLOCK + 2000 + BREAK + 1000))
+    const over = focusView(getState(), task, at(BLOCK + BREAK + 1000))
     expect(over.key).not.toBe(running.key)
   })
 })

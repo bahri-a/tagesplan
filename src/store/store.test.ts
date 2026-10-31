@@ -160,24 +160,24 @@ describe('Ultra-Modus', () => {
     expect(actions.isUltraRinging(at(BLOCK + MIN))).toBe(false)
   })
 
-  it('piept bei fälliger Pause, bis „Pause machen“ – erst dann beginnt die Pause zu zählen', () => {
+  it('Blockende: Die Pause läuft sofort, dazu piept es – „Ton aus“ stoppt nur das Piepen', () => {
     actions.updateSettings({ ultraMode: true })
     const task = actions.addTask(today(), 'A')
     actions.startBlock(task.id)
     expect(actions.checkTimer(at(BLOCK + 500))).toEqual([{ type: 'blockEnd', taskTitle: 'A', fresh: true, lastBlock: false }])
     expect(actions.isUltraRinging(at(BLOCK + 10_000))).toBe(true)
-    // Vor der Bestätigung steht die Pause auf voller Länge.
+    // Die Pause zählt schon ab dem Blockende.
     let t = getState().timer
-    expect(t.phase === 'break' && timer.breakRemainingMs(t, at(BLOCK + 20_000))).toBe(BREAK)
-    actions.confirmBreak(at(BLOCK + 20_000))
-    expect(actions.isUltraRinging(at(BLOCK + 30_000))).toBe(false)
+    expect(t.phase === 'break' && t.startedAt).toBe(START + BLOCK)
+    expect(t.phase === 'break' && timer.breakRemainingMs(t, at(BLOCK + 10_000))).toBe(BREAK - 10_000)
+    actions.silenceUltra()
+    expect(actions.isUltraRinging(at(BLOCK + 12_000))).toBe(false)
     t = getState().timer
-    expect(t.phase === 'break' && t.startedAt).toBe(START + BLOCK + 20_000)
-    expect(actions.checkTimer(at(BLOCK + BREAK + 100))).toEqual([])
-    expect(actions.checkTimer(at(BLOCK + 20_000 + BREAK + 100))).toEqual([{ type: 'breakEnd', taskTitle: 'A', fresh: true }])
+    expect(t.phase === 'break' && t.startedAt).toBe(START + BLOCK)
+    expect(actions.checkTimer(at(BLOCK + BREAK + 100))).toEqual([{ type: 'breakEnd', taskTitle: 'A', fresh: true }])
   })
 
-  it('unbestätigte Pause läuft nicht ab – das Piepen hört nach 20 Sekunden trotzdem auf', () => {
+  it('ohne „Ton aus“ hört das Piepen nach 20 Sekunden auf – die Pause endet pünktlich', () => {
     actions.updateSettings({ ultraMode: true })
     const task = actions.addTask(today(), 'A')
     actions.startBlock(task.id)
@@ -185,16 +185,20 @@ describe('Ultra-Modus', () => {
     expect(actions.isUltraRinging(at(BLOCK + 19_000))).toBe(true)
     expect(actions.isUltraRinging(at(BLOCK + 21_000))).toBe(false)
     expect(actions.isUltraRinging(at(BLOCK + BREAK - 1000))).toBe(false)
-    // „Pause machen“ steht weiter da, bis bestätigt.
-    const waiting = getState().timer
-    expect(waiting.phase === 'break' && waiting.nagging).toBe(true)
-    expect(actions.checkTimer(at(BLOCK + 2 * BREAK))).toEqual([])
-    const t = getState().timer
-    expect(t.phase === 'break' && t.nagging).toBe(true)
-    // Ultra-Modus aus → die Pause beginnt jetzt.
+    expect(actions.checkTimer(at(BLOCK + BREAK + 100))).toEqual([{ type: 'breakEnd', taskTitle: 'A', fresh: true }])
+  })
+
+  it('Ultra-Modus aus, während es piept → sofort Ruhe, die Pause läuft weiter', () => {
+    actions.updateSettings({ ultraMode: true })
+    const task = actions.addTask(today(), 'A')
+    actions.startBlock(task.id)
+    actions.checkTimer(at(BLOCK + 500))
     actions.updateSettings({ ultraMode: false })
-    const after = getState().timer
-    expect(after.phase === 'break' && after.nagging).toBe(false)
+    const t = getState().timer
+    expect(t.phase === 'break' && t.nagging).toBe(false)
+    expect(t.phase === 'break' && t.startedAt).toBe(START + BLOCK)
+    actions.updateSettings({ ultraMode: true })
+    expect(actions.isUltraRinging(at(BLOCK + 5000))).toBe(false)
   })
 
   it('„Pause überspringen“ beendet die Pause sofort, ohne Ton', () => {
