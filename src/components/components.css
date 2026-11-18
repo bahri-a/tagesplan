@@ -22,6 +22,21 @@
   background: var(--bg);
 }
 
+/* Mac, Seite gescrollt: ein weicher Milchglas-Streifen hinter der Leiste, der nach unten ausläuft –
+   Karten verschwimmen darunter, statt mit den Reitern zu kollidieren. */
+:root:not([data-device='mobile'])[data-scrolled] .topbar::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 -1.25rem;
+  z-index: -1;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  -webkit-mask-image: linear-gradient(#000 65%, transparent);
+  mask-image: linear-gradient(#000 65%, transparent);
+  pointer-events: none;
+}
+
 /* Reiter als ruhige Leiste – die aktive Seite salbeigrün hinterlegt */
 .nav {
   display: flex;

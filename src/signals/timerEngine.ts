@@ -14,6 +14,8 @@ import { SLEEP_GAP_MS, ULTRA_REPEAT_MS } from '../config/defaults'
 import { T } from '../config/texts'
 import { announce } from '../components/announce'
 import { IS_MOBILE } from '../platform/device'
+import { deviceStorage } from '../logic/deviceStorage'
+import type { TimerState } from '../model/types'
 import { buzz } from '../platform/focusMode'
 import { checkTimer, isUltraRinging, pauseForSleep, type TimerEvent } from '../store/actions'
 import { getState, subscribeToStore } from '../store/store'
@@ -94,6 +96,25 @@ export function useWakeEvents(onWake: (e: WakeEvent) => void): void {
 
 let stopEngine: (() => void) | null = null
 
+/** Gerätespeicher: Zeitpunkt des letzten Takts, solange ein Block läuft (siehe startTimerEngine). */
+const LAST_RUN_KEY = 'tagesplan-letzter-takt'
+
+/** Letzter Takt des gerade laufenden Blocks – nur, wenn er zu diesem Block gehört. */
+export function readLastRun(t: TimerState, storage: Storage = deviceStorage()): number | null {
+  if (t.phase !== 'block' || t.pausedAt !== null) return null
+  const at = Number(storage.getItem(LAST_RUN_KEY))
+  return Number.isFinite(at) && at >= t.startedAt ? at : null
+}
+
+function writeLastRun(at: number | null, storage: Storage = deviceStorage()): void {
+  try {
+    if (at === null) storage.removeItem(LAST_RUN_KEY)
+    else storage.setItem(LAST_RUN_KEY, String(at))
+  } catch {
+    /* Speicher gesperrt – dann eben ohne Merker */
+  }
+}
+
 /**
  * Der „Motor“ des Timers – läuft einmal für die ganze App (mehrfache Aufrufe starten ihn nicht neu).
  * Ein Web Worker gibt im Sekundentakt Bescheid; dann wird geprüft, ob ein
@@ -112,7 +133,9 @@ export function startTimerEngine(): () => void {
   let ultraRing = 0
   // Mac: Wann lief der Block zuletzt nachweislich (letzter Takt)? Eine große Lücke = der Mac
   // hat geschlafen. Am Handy nicht – dort ist die App bei gesperrtem Display immer still.
-  let lastRunningAt: number | null = null
+  // Den letzten Takt merkt sich die App auch über einen Neustart hinweg: Wurde sie mitten im
+  // Block geschlossen und erst später wieder geöffnet, kommt dieselbe Frage wie nach dem Schlafen.
+  let lastRunningAt: number | null = IS_MOBILE ? null : readLastRun(getState().timer)
   const check = () => {
     const t = getState().timer
     const running = t.phase === 'block' && t.pausedAt === null
@@ -122,6 +145,7 @@ export function startTimerEngine(): () => void {
     checkTimer().forEach((e) => signal(e, emitWake))
     const after = getState().timer
     lastRunningAt = after.phase === 'block' && after.pausedAt === null ? Date.now() : null
+    if (!IS_MOBILE) writeLastRun(lastRunningAt)
     const now = Date.now()
     if (!isUltraRinging(now)) {
       ultraRing = 0

@@ -114,7 +114,14 @@ export function FocusCard({ task }: { task: Task }) {
             variant="break"
             remainingMs={0}
             totalMs={t.durationMs}
-            center={<span className="timer-ring-label">{T.today.breakOver}</span>}
+            center={
+              <span className="timer-ring-label">
+                {T.today.breakOver}
+                {sinceText(t.startedAt + t.durationMs, now) && (
+                  <small className="timer-ring-since">{T.today.breakOverSince(sinceText(t.startedAt + t.durationMs, now)!)}</small>
+                )}
+              </span>
+            }
           />
         )}
         {view.ring === 'break' && t.phase === 'break' && (
@@ -413,6 +420,12 @@ function StartButton({ task, label: ownLabel }: { task: Task; label?: string }) 
  * (`step`) – was als Nächstes zu tun ist, gehört zum Ring. Rauschen, „Früher fertig“ und
  * „Abbrechen“ stehen weiter unten.
  */
+/** „12 Min.“ / „1 Std. 5 Min.“ seit `since` – erst ab einer vollen Minute, vorher `null`. */
+function sinceText(since: number, now: number): string | null {
+  const minutes = Math.floor((now - since) / 60_000)
+  return minutes >= 1 ? T.endDay.yieldTime(minutes) : null
+}
+
 function RunningBlock({ timerState, now, step }: { timerState: timer.BlockTimer; now: number; step: ReactNode }) {
   const [confirmAbort, setConfirmAbort] = useState(false)
   const undoToast = useUndoToast()
@@ -483,7 +496,9 @@ function RunningBlock({ timerState, now, step }: { timerState: timer.BlockTimer;
 
       {paused && (
         <>
-          <p className="phase-note">{T.today.paused}</p>
+          <p className="phase-note">
+            {sinceText(timerState.pausedAt!, now) ? T.today.pausedSince(sinceText(timerState.pausedAt!, now)!) : T.today.paused}
+          </p>
           <button
             type="button"
             className="btn btn-primary btn-big resume-big"

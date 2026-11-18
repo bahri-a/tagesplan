@@ -469,6 +469,15 @@
   font-weight: 500;
 }
 
+.timer-ring-since {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
 .phase-note {
   max-width: 24rem;
   color: var(--text-muted);
@@ -902,6 +911,19 @@
   display: flex;
   min-width: 0;
   max-width: 100%;
+}
+
+/* Mac: alle Pillen gleich breit (lange Titel werden gekürzt), drei pro Zeile, immer sichtbar (am Mac kein seitliches Wischen). */
+:root:not([data-device='mobile']) .day-bar ol {
+  width: min(600px, 100%);
+}
+
+:root:not([data-device='mobile']) .day-bar li {
+  flex: 0 0 calc((100% - 1rem) / 3);
+}
+
+:root:not([data-device='mobile']) .day-bar li .day-pill {
+  width: 100%;
 }
 
 .day-pill {
