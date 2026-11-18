@@ -68,6 +68,9 @@ export const T = {
     pause: 'Pausieren',
     resume: 'Weiter',
     paused: 'Pausiert – die Zeit steht.',
+    // Ab einer Minute: seit wann pausiert / seit wann die kurze Pause vorbei ist.
+    pausedSince: (since: string) => `Pausiert seit ${since} – die Zeit steht.`,
+    breakOverSince: (since: string) => `seit ${since}`,
     abort: 'Abbrechen',
     // Block vorzeitig erfolgreich abschließen – nur dieser Block wird kürzer, die kurze Pause startet.
     finishEarly: 'Früher fertig',
@@ -395,7 +398,7 @@ export const T = {
   sleep: {
     title: 'Warst du die ganze Zeit dran?',
     text: (minutes: number) =>
-      `Der Mac war ${minutes} Min. im Ruhezustand.\nJa: Die Zeit zählt als Arbeit.\nNein: Der Block wird abgebrochen und kommt noch einmal.`,
+      `Die App war ${minutes} Min. geschlossen oder der Mac im Ruhezustand.\nJa: Die Zeit zählt als Arbeit.\nNein: Der Block wird abgebrochen und kommt noch einmal.`,
     yes: 'Ja, zählt',
     no: 'Nein, abbrechen',
   },

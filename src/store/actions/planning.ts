@@ -15,7 +15,7 @@ import {
   tasksOfDay,
 } from '../selectors'
 import { commit, getState, type Changes } from '../store'
-import { clamp, renumber, stopTimerChanges } from './helpers'
+import { blockRecord, clamp, renumber, stopTimerChanges } from './helpers'
 import { SHOWS_START_CUE } from '../../platform/device'
 
 /** Neue Hauptaufgabe am Ende des Tages anlegen. */
@@ -265,6 +265,13 @@ export function setTaskCompleted(taskId: ID, done: boolean): void {
   const changes: Changes = { tasks: [{ ...task, completedAt: done ? Date.now() : null, skippedAt: null }] }
   // Die kurze Pause dieser Aufgabe ist damit vorbei – als Nächstes kommt die lange Pause.
   if (done && s.timer.phase === 'break' && s.timer.taskId === taskId) {
+    changes.timer = { phase: 'idle' }
+  }
+  // Läuft gerade ein Block dieser Aufgabe, endet er wie bei „Früher fertig“: Die Zeit bis jetzt
+  // zählt, eine kurze Pause gibt es nicht mehr (die Aufgabe ist ja fertig).
+  if (done && s.timer.phase === 'block' && s.timer.taskId === taskId) {
+    const now = Date.now()
+    changes.blocks = [blockRecord(s.timer, 'completed', now)]
     changes.timer = { phase: 'idle' }
   }
   commit(changes)

@@ -144,6 +144,12 @@ function Shell() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [primerOpen, setPrimerOpen] = useState(false)
 
+  // Jeder Reiter beginnt oben – sonst bleibt die Scrollposition des vorigen stehen (auch per Taste 1–3).
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [screen])
+  useScrolledMark()
+
   // Kurz nach dem Start still nachladen – beim ersten Antippen sind sie dann schon da.
   useEffect(() => preloadWhenIdle(IS_MOBILE ? [PlanScreen, SettingsScreen] : [PlanScreen, SettingsScreen, MiniWindow]), [])
 
@@ -239,8 +245,6 @@ function Shell() {
               onClick={() => {
                 setScreen(s.id)
                 setPlanTomorrow(false)
-                // iPhone-App: Jeder Reiter beginnt oben (sonst bleibt die Scrollposition des vorigen stehen).
-                if (__NATIVE_APP__) window.scrollTo(0, 0)
               }}
             >
               <span className="nav-icon">{s.icon}</span>
@@ -394,6 +398,24 @@ function useBackupReminder(show: (message: string, action: ToastAction) => void)
  * Hat das Speichern (auch nach einem zweiten Versuch) nicht geklappt, steht unten ein leiser
  * Hinweis mit „Jetzt sichern“ – die Daten im Arbeitsspeicher sind noch da und landen in der Datei.
  */
+/**
+ * Mac: Ist die Seite gescrollt, bekommt die Leiste oben einen leichten Milchglas-Streifen
+ * (`data-scrolled` am <html>), damit darunter durchscrollende Karten nicht mit ihr verschwimmen.
+ */
+function useScrolledMark() {
+  useEffect(() => {
+    if (IS_MOBILE) return
+    const root = document.documentElement
+    const update = () => {
+      if (window.scrollY > 4) root.dataset.scrolled = ''
+      else delete root.dataset.scrolled
+    }
+    update()
+    window.addEventListener('scroll', update, { passive: true })
+    return () => window.removeEventListener('scroll', update)
+  }, [])
+}
+
 function useSaveFailedNotice(show: (message: string, action: ToastAction) => void) {
   const failedAt = useSaveFailedAt()
   const showRef = useRef(show)

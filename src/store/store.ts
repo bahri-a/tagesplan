@@ -234,10 +234,35 @@ function save(changes: Changes): void {
     timer,
     local,
   }
-  pendingSaves = pendingSaves.then(() => database.putChanges(stored)).catch(reportSaveError)
+  pendingSaves = pendingSaves.then(() => saveInOrder(stored))
 }
 
 let pendingSaves: Promise<void> = Promise.resolve()
+
+/**
+ * Änderungen, die auch nach dem zweiten Versuch nicht gespeichert werden konnten. Sie stehen im
+ * Arbeitsspeicher schon richtig und werden beim nächsten Speichern zuerst (in ihrer Reihenfolge)
+ * nachgeholt – so geht nichts still verloren und ältere Werte überschreiben nie neuere.
+ */
+let unsaved: database.StoredChanges[] = []
+
+async function saveInOrder(stored: database.StoredChanges): Promise<void> {
+  const queue = [...unsaved, stored]
+  unsaved = []
+  for (let i = 0; i < queue.length; i++) {
+    try {
+      await database.putChanges(queue[i])
+    } catch (error) {
+      unsaved = queue.slice(i)
+      reportSaveError(error)
+      return
+    }
+  }
+  if (saveFailedAt !== null) {
+    saveFailedAt = null
+    saveErrorListeners.forEach((l) => l())
+  }
+}
 
 /** Wartet, bis alle Speichervorgänge abgeschlossen sind (z. B. vor dem Sichern). */
 export function flushSaves(): Promise<void> {
@@ -354,5 +379,6 @@ export function resetStoreForTests(): void {
   listeners.clear()
   outsideListeners.clear()
   pendingSaves = Promise.resolve()
+  unsaved = []
   saveFailedAt = null
 }

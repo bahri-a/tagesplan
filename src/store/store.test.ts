@@ -1306,3 +1306,42 @@ describe('Aufgabenblöcke löschen (hat sich erübrigt)', () => {
     expect(getState().tasks[task.id].skippedAt).toBeNull()
   })
 })
+
+describe('Analyse 16.11.: Fehler-Paket', () => {
+  it('S1: Erledigt im Planer beendet den laufenden Block dieser Aufgabe (Zeit zählt, keine Pause)', () => {
+    const task = actions.addTask(today(), 'Bericht')
+    actions.startBlock(task.id)
+    at(10 * MIN)
+    actions.setTaskCompleted(task.id, true)
+    const s = getState()
+    expect(s.timer.phase).toBe('idle')
+    expect(s.tasks[task.id].completedAt).not.toBeNull()
+    const blocks = Object.values(s.blocks).filter((b) => b.taskId === task.id)
+    expect(blocks).toHaveLength(1)
+    expect(blocks[0].status).toBe('completed')
+    expect(blocks[0].workedSeconds).toBe(600)
+  })
+
+  it('S1: Erledigt einer ANDEREN Aufgabe lässt den Block weiterlaufen', () => {
+    const running = actions.addTask(today(), 'Läuft')
+    const other = actions.addTask(today(), 'Andere')
+    actions.startBlock(running.id)
+    at(5 * MIN)
+    actions.setTaskCompleted(other.id, true)
+    expect(getState().timer.phase).toBe('block')
+  })
+
+  it('S3: Eine Änderung, die nicht gespeichert werden konnte, wird beim nächsten Speichern nachgeholt', async () => {
+    await flushSaves()
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const spy = vi.spyOn(database, 'putChanges').mockRejectedValueOnce(new Error('weg'))
+    const lost = actions.addTask(today(), 'Erst nicht gespeichert')
+    await flushSaves()
+    spy.mockRestore()
+    actions.addTask(today(), 'Danach')
+    await flushSaves()
+    const titles = (await database.loadAll()).tasks.map((t) => t.title)
+    expect(titles).toContain(lost.title)
+    expect(titles).toContain('Danach')
+  })
+})
