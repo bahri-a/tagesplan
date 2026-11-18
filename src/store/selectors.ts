@@ -420,3 +420,59 @@ export function isUltraRingingAt(s: AppState, now: number): boolean {
     now < t.startedAt + Math.min(t.durationMs, ULTRA_MAX_RING_MS)
   )
 }
+
+/**
+ * Planer: Was steht auf diesem Tag noch an? Offene Blöcke der offenen Hauptaufgaben
+ * (geschätzt minus geschafft) und die reine Arbeitszeit dafür, ohne Pausen.
+ */
+export function dayPlanSum(s: AppState, dayId: ID): { blocks: number; minutes: number } {
+  let blocks = 0
+  let minutes = 0
+  for (const task of tasksOfDay(s, dayId)) {
+    if (task.completedAt !== null) continue
+    const open = Math.max(task.estimatedBlocks - blocksDone(s, task.id), 0)
+    blocks += open
+    minutes += open * blockMinutesFor(s, task)
+  }
+  return { blocks, minutes }
+}
+
+/** Ab so vielen abgeschlossenen Arbeitstagen gibt es einen „sonst schaffst du“-Wert. */
+export const TYPICAL_DAY_MIN_DAYS = 5
+/** Wie viele der letzten Arbeitstage zählen. */
+export const TYPICAL_DAY_WINDOW = 14
+
+const typicalCache = new WeakMap<object, WeakMap<object, number | null>>()
+
+/**
+ * Wie viele Blöcke schaffst du an einem Tag sonst? Der Median der geschafften Blöcke über deine
+ * letzten 14 abgeschlossenen Tage, an denen du gearbeitet hast. Erst ab 5 solchen Tagen – sonst `null`.
+ */
+export function typicalDayBlocks(s: AppState): number | null {
+  let byDays = typicalCache.get(s.blocks)
+  if (!byDays) typicalCache.set(s.blocks, (byDays = new WeakMap()))
+  const cached = byDays.get(s.days)
+  if (cached !== undefined) return cached
+  const perDay = groupBy(s.blocks, 'dayId')
+  const counts = Object.values(s.days)
+    .filter((d) => d.deletedAt === null && d.status === 'ended')
+    .sort((a, b) => (b.endedAt ?? 0) - (a.endedAt ?? 0))
+    .map((d) => (perDay.get(d.id) ?? []).filter((b) => b.status === 'completed').length)
+    .filter((n) => n > 0)
+    .slice(0, TYPICAL_DAY_WINDOW)
+    .sort((a, b) => a - b)
+  const result = counts.length < TYPICAL_DAY_MIN_DAYS ? null : counts[Math.floor((counts.length - 1) / 2)]
+  byDays.set(s.days, result)
+  return result
+}
+
+/** Deutlich mehr geplant als sonst geschafft? (mindestens ein Viertel und 2 Blöcke mehr) */
+export function isOverPlanned(planned: number, typical: number | null): boolean {
+  return typical !== null && planned >= typical * 1.25 && planned - typical >= 2
+}
+
+/** Pausen im Block an diesem Tag: wie oft (Blöcke mit Pause) und wie lange zusammen (Minuten). */
+export function dayInterruptions(s: AppState, dayId: ID): { count: number; minutes: number } {
+  const blocks = (groupBy(s.blocks, 'dayId').get(dayId) ?? []).filter((b) => b.pausedMs > 0 && b.status !== 'undone')
+  return { count: blocks.length, minutes: Math.round(blocks.reduce((sum, b) => sum + b.pausedMs, 0) / 60_000) }
+}

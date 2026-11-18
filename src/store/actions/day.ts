@@ -41,7 +41,13 @@ export function endDay(choices: ConflictChoices = {}, dropped: ReadonlySet<ID> =
   const { order } = mergeCarryOver(tasksOfDay(s, oldDay.id), tasksOfDay(s, nextDay.id), choices, dropped)
 
   const changes: Changes = s.timer.phase === 'idle' ? {} : stopTimerChanges(now)
-  changes.tasks = order.map((task, index) => ({ ...task, dayId: nextDay.id, position: index }))
+  // Offen mitgewanderte Aufgaben zählen einen Tag mehr (für „3. Tag“ auf der Karte).
+  changes.tasks = order.map((task, index) => ({
+    ...task,
+    dayId: nextDay.id,
+    position: index,
+    carriedDays: task.dayId === oldDay.id ? (task.carriedDays ?? 0) + 1 : task.carriedDays,
+  }))
   changes.days = [
     { ...oldDay, status: 'ended', endedAt: now },
     { ...nextDay, status: 'active', startedAt: now },

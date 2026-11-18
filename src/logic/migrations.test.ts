@@ -38,6 +38,7 @@ function task(shortBreakMinutesOverride: number | null): Task {
     startCue: null,
     firstEstimatedBlocks: null,
     skippedAt: null,
+    carriedDays: 0,
   }
 }
 

@@ -34,6 +34,7 @@ export function addTask(dayId: ID, title: string): Task {
     startCue: SHOWS_START_CUE ? s.settings.defaultStartCue : null,
     firstEstimatedBlocks: null,
     skippedAt: null,
+    carriedDays: 0,
   }
   commit({ tasks: [task] })
   return task
@@ -59,6 +60,7 @@ export function addExampleTask(): Task {
     startCue: null,
     firstEstimatedBlocks: null,
     skippedAt: null,
+    carriedDays: 0,
   }
   const steps: Step[] = T.example.steps.map((text, position) => ({
     ...baseFields(now),
@@ -95,6 +97,7 @@ export function copyTask(taskId: ID, dayId: ID, { learn = false } = {}): Task | 
     startCue: source.startCue,
     firstEstimatedBlocks: null,
     skippedAt: null,
+    carriedDays: 0,
   }
   const steps: Step[] = stepsOfTask(s, taskId).map((step) => ({
     ...step,
@@ -246,6 +249,27 @@ export function restoreTask(taskId: ID): boolean {
     ),
     steps,
   })
+  return true
+}
+
+/**
+ * „Diese zuerst“ (Übersicht einer Pille in „Heute“): Die Aufgabe rückt direkt vor die erste offene
+ * Aufgabe des Tages und ist damit als Nächstes dran. Erledigte behalten ihren Platz.
+ * Nicht während ein Block läuft; eine kurze Pause endet dabei. Gibt zurück, ob sich etwas geändert hat.
+ */
+export function takeTaskFirst(taskId: ID): boolean {
+  const s = getState()
+  const task = s.tasks[taskId]
+  if (!task || task.completedAt !== null || s.timer.phase === 'block') return false
+  const tasks = tasksOfDay(s, task.dayId)
+  const firstOpen = tasks.findIndex((t) => t.completedAt === null)
+  if (tasks[firstOpen]?.id === taskId) return false
+  const others = tasks.filter((t) => t.id !== taskId)
+  const place = others.findIndex((t) => t.completedAt === null)
+  others.splice(place < 0 ? others.length : place, 0, task)
+  const changes: Changes = { tasks: renumber(others) }
+  if (s.timer.phase === 'break') changes.timer = { phase: 'idle' }
+  commit(changes)
   return true
 }
 

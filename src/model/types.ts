@@ -74,6 +74,11 @@ export interface Task extends BaseRecord {
    * für die Blockanzahl. Seit 2026-10-26. Fehlt in älteren Daten → `null` (ergänzt beim Laden).
    */
   skippedAt: number | null
+  /**
+   * Wie oft die Aufgabe beim „Tag abschließen“ schon offen in den nächsten Tag gewandert ist.
+   * Ab 2 (= dritter Tag) zeigt die Karte leise „3. Tag“.
+   */
+  carriedDays: number
 }
 
 /** Ein kleiner Schritt einer Hauptaufgabe (Checkliste). */

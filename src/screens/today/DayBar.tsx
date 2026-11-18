@@ -9,6 +9,7 @@ import { cleanStartCue } from '../../logic/variety'
 import { SHOWS_START_CUE } from '../../platform/device'
 import type { ID, Task } from '../../model/types'
 import { blockMinutesFor, stepsOfTask, taskWork } from '../../store/selectors'
+import { takeTaskFirst } from '../../store/actions'
 import { shallowEqual, useAppSelector } from '../../store/store'
 import { CheckIcon } from '../../components/icons'
 import { wasJustFinished } from './celebrate'
@@ -67,6 +68,8 @@ function DayPeek({ task, mark, onClose }: { task: Task; mark: Mark; onClose: () 
   const work = useAppSelector((s) => taskWork(s, task.id), shallowEqual)
   const minutes = useAppSelector((s) => blockMinutesFor(s, task))
   const cue = SHOWS_START_CUE && task.startCue ? cleanStartCue(task.startCue) : ''
+  // Vorziehen geht, solange kein Block läuft.
+  const canTakeFirst = useAppSelector((s) => s.timer.phase !== 'block')
 
   let status: string = T.today.peekUpcoming
   if (mark === 'current') status = T.today.peekCurrent
@@ -85,6 +88,18 @@ function DayPeek({ task, mark, onClose }: { task: Task; mark: Mark; onClose: () 
       <h2 className="day-peek-title">{task.title}</h2>
       <p className="day-peek-meta">{meta.join(' · ')}</p>
       {cue && <p className="day-peek-cue">{T.today.startCue(cue)}</p>}
+      {mark === 'open' && canTakeFirst && (
+        <button
+          type="button"
+          className="btn btn-small day-peek-first"
+          title={T.today.takeFirstHint}
+          onClick={() => {
+            if (takeTaskFirst(task.id)) onClose()
+          }}
+        >
+          {T.today.takeFirst}
+        </button>
+      )}
       {steps.length > 0 && (
         <>
           <p className="day-peek-label">{T.today.firstStep}</p>

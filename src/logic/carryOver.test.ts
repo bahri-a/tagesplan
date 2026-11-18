@@ -18,6 +18,7 @@ function task(id: string, position: number, done = false): Task {
     startCue: null,
     firstEstimatedBlocks: null,
     skippedAt: null,
+    carriedDays: 0,
   }
 }
 

@@ -313,13 +313,14 @@ async function loadFromDatabase(): Promise<void> {
 
   state = {
     days: indexById(data.days),
-    // Ältere Aufgaben kennen Startsignal, erste Schätzung und „übersprungen“ noch nicht → `null` ergänzen.
+    // Ältere Aufgaben kennen Startsignal, erste Schätzung, „übersprungen“ und Übertrag-Zähler noch nicht → ergänzen.
     tasks: indexById(
       data.tasks.map((t) => ({
         ...t,
         startCue: t.startCue ?? null,
         firstEstimatedBlocks: t.firstEstimatedBlocks ?? null,
         skippedAt: t.skippedAt ?? null,
+        carriedDays: t.carriedDays ?? 0,
       })),
     ),
     steps: indexById(data.steps),

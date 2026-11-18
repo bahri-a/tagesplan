@@ -1345,3 +1345,71 @@ describe('Analyse 16.11.: Fehler-Paket', () => {
     expect(titles).toContain('Danach')
   })
 })
+
+describe('Analyse 16.11.: Planen mit Augenmaß', () => {
+  it('F1: Tagessumme zählt nur offene Blöcke offener Aufgaben, ohne Pausen', () => {
+    const a = actions.addTask(today(), 'A') // 3 × 25
+    const b = actions.addTask(today(), 'B')
+    actions.updateTask(b.id, { estimatedBlocks: 2, blockMinutesOverride: 50 })
+    const done = actions.addTask(today(), 'Fertig')
+    actions.setTaskCompleted(done.id, true)
+    actions.startBlock(a.id)
+    at(BLOCK)
+    actions.checkTimer()
+    expect(sel.dayPlanSum(getState(), today())).toEqual({ blocks: 2 + 2, minutes: 2 * 25 + 2 * 50 })
+  })
+
+  it('F1: „sonst schaffst du“ erst ab 5 Arbeitstagen, als Median', () => {
+    expect(sel.typicalDayBlocks(getState())).toBeNull()
+    const perDay = [2, 6, 4, 5, 3]
+    for (const [i, n] of perDay.entries()) {
+      const task = actions.addTask(today(), `T${i}`)
+      actions.updateTask(task.id, { estimatedBlocks: n })
+      for (let k = 0; k < n; k++) actions.logBlockAsDone(task.id)
+      actions.setTaskCompleted(task.id, true)
+      actions.endDay()
+    }
+    expect(sel.typicalDayBlocks(getState())).toBe(4)
+    expect(sel.isOverPlanned(5, 4)).toBe(false)
+    expect(sel.isOverPlanned(6, 4)).toBe(true)
+  })
+
+  it('F4: offen mitgewanderte Aufgaben zählen Tage, neue und geplante nicht', () => {
+    const open = actions.addTask(today(), 'Schiebe ich')
+    const planned = actions.addTask(tomorrow(), 'Geplant')
+    actions.endDay()
+    expect(getState().tasks[open.id].carriedDays).toBe(1)
+    expect(getState().tasks[planned.id].carriedDays).toBe(0)
+    actions.endDay()
+    expect(getState().tasks[open.id].carriedDays).toBe(2)
+  })
+
+  it('F5: „Diese zuerst“ holt eine Aufgabe vor die erste offene, Erledigtes bleibt oben', () => {
+    const done = actions.addTask(today(), 'Fertig')
+    actions.addTask(today(), 'B')
+    const c = actions.addTask(today(), 'C')
+    actions.setTaskCompleted(done.id, true)
+    expect(actions.takeTaskFirst(c.id)).toBe(true)
+    expect(sel.tasksOfDay(getState(), today()).map((t) => t.title)).toEqual(['Fertig', 'C', 'B'])
+    expect(sel.currentTask(getState())?.id).toBe(c.id)
+  })
+
+  it('F5: nicht, während ein Block läuft', () => {
+    const a = actions.addTask(today(), 'A')
+    const b = actions.addTask(today(), 'B')
+    actions.startBlock(a.id)
+    expect(actions.takeTaskFirst(b.id)).toBe(false)
+  })
+
+  it('F10: Unterbrechungen = Blöcke mit Pause und deren Pausenzeit', () => {
+    const a = actions.addTask(today(), 'A')
+    actions.startBlock(a.id)
+    at(5 * MIN)
+    actions.pauseCurrentBlock()
+    at(17 * MIN)
+    actions.resumeCurrentBlock()
+    at(BLOCK + 12 * MIN)
+    actions.checkTimer()
+    expect(sel.dayInterruptions(getState(), today())).toEqual({ count: 1, minutes: 12 })
+  })
+})
