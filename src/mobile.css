@@ -389,6 +389,13 @@
   padding: 0;
 }
 
+[data-device='mobile'] .plan-day-sum-line {
+  margin: -0.2rem 0 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+
 [data-device='mobile'] .plan-column-title {
   position: absolute;
   width: 1px;

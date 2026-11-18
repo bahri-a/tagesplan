@@ -16,7 +16,7 @@ import type { Task } from '../model/types'
 import { stripStartCuePrefix } from '../logic/variety'
 import { IS_MOBILE, SHOWS_START_CUE } from '../platform/device'
 import { rememberStartCue, setTaskCompleted, updateTask } from '../store/actions'
-import { blockMinutesFor, shortBreakMinutesFor, stepsOfTask } from '../store/selectors'
+import { blockMinutesFor, blocksDone, shortBreakMinutesFor, stepsOfTask } from '../store/selectors'
 import { shallowEqual, useAppSelector } from '../store/store'
 import { CheckIcon, CopyIcon, TrashIcon } from './icons'
 import { NumberStepper } from './NumberStepper'
@@ -42,6 +42,12 @@ export function TaskCard({ task, number, expanded, focusStepInput, onToggle, onD
   const stepsDone = steps.filter((s) => s.doneAt !== null).length
   const minutes = useAppSelector((s) => blockMinutesFor(s, task))
   const isDone = task.completedAt !== null
+  // Erledigt: erste Schätzung gegen das wirklich Gebrauchte (nur wenn es abweicht).
+  const used = useAppSelector((s) => (isDone && task.skippedAt === null ? blocksDone(s, task.id) : 0))
+  const estimate = task.firstEstimatedBlocks
+  const showEstimate = isDone && used > 0 && estimate !== null && estimate !== used
+  // Offen und schon mehrere Tage mitgewandert: ab dem dritten Tag leise „3. Tag“.
+  const carriedDay = !isDone && task.carriedDays >= 2 ? task.carriedDays + 1 : null
 
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
     useSortable({ id: task.id })
@@ -91,8 +97,15 @@ export function TaskCard({ task, number, expanded, focusStepInput, onToggle, onD
           <span className="task-number">{isDone ? <CheckIcon className="glyph" /> : `${number}.`}</span>
           <span className="task-title">{task.title || '…'}</span>
           <span className="task-meta">
-            {T.plan.blocksMeta(task.estimatedBlocks)} · {minutes} {T.plan.minutesShort}
+            {showEstimate ? (
+              T.plan.estimateMeta(estimate!, used)
+            ) : (
+              <>
+                {T.plan.blocksMeta(task.estimatedBlocks)} · {minutes} {T.plan.minutesShort}
+              </>
+            )}
             {steps.length > 0 && <> · {T.plan.stepsMeta(stepsDone, steps.length)}</>}
+            {carriedDay !== null && <span className="task-carried"> · {T.plan.carriedMeta(carriedDay)}</span>}
           </span>
         </button>
 
@@ -155,6 +168,8 @@ function TaskEditor({ task, focusStepInput, onClose }: { task: Task; focusStepIn
 
   return (
     <div className="task-editor">
+      {/* Schon der dritte Tag offen auf dem Plan? Eine leise Frage, keine Pflicht. */}
+      {!isDone && task.carriedDays >= 2 && <p className="task-carried-hint">{T.plan.carriedHint(task.carriedDays + 1)}</p>}
       <label className="field">
         <span className="field-label">{T.plan.title}</span>
         <TitleInput task={task} />

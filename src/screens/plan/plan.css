@@ -30,6 +30,15 @@
   font-weight: 600;
 }
 
+/* „9 Blöcke · 3 Std. 45 Min.“ leise neben der Überschrift */
+.plan-day-sum {
+  margin-left: 0.6em;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
 .plan-empty {
   padding: 0.25rem 0;
 }
@@ -1160,4 +1169,19 @@
 
 .step-remove:hover {
   background: var(--surface-2);
+}
+
+/* Aufgabe wandert schon mehrere Tage offen mit: leise „3. Tag“ und eine Frage im Editor. */
+.task-carried {
+  color: var(--accent);
+}
+
+.task-carried-hint {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  color: var(--text);
+  font-size: var(--fs-sm);
+  white-space: pre-line;
 }

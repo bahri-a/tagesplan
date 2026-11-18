@@ -43,7 +43,7 @@ import { TaskCard } from '../../components/TaskCard'
 import { useUndoToast } from '../../components/toastContext'
 import type { ID, Task } from '../../model/types'
 import { addTask, copyTask, deleteTask, moveTask, reorderTasks, swapDays } from '../../store/actions'
-import { activeDay, hasRecentTasks, plannedDay, tasksOfDay } from '../../store/selectors'
+import { activeDay, dayPlanSum, hasRecentTasks, isOverPlanned, plannedDay, tasksOfDay, typicalDayBlocks } from '../../store/selectors'
 import { getState, shallowEqual, useAppSelector, type AppState } from '../../store/store'
 import { IS_MOBILE } from '../../platform/device'
 import { RecentTasks } from './RecentTasks'
@@ -257,6 +257,9 @@ interface DayColumnProps {
 function DayColumn(props: DayColumnProps) {
   const { dayId, label, isDropTarget, expandedId, justCreatedId, onToggle, onCreated, onDelete, onCopy } = props
   const tasks = useAppSelector((s) => tasksOfDay(s, dayId), shallowEqual)
+  // Wie voll ist der Tag? Offene Blöcke und reine Arbeitszeit – und was du sonst an einem Tag schaffst.
+  const sum = useAppSelector((s) => dayPlanSum(s, dayId), shallowEqual)
+  const typical = useAppSelector(typicalDayBlocks)
   const [newTitle, setNewTitle] = useState('')
   // Die ganze Spalte ist Ablagefläche – so klappt es auch, wenn der Tag noch leer ist.
   const { setNodeRef } = useDroppable({ id: COLUMN_PREFIX + dayId })
@@ -272,8 +275,17 @@ function DayColumn(props: DayColumnProps) {
     <section ref={setNodeRef} className={`plan-column${isDropTarget ? ' is-drop-target' : ''}`} aria-label={label}>
       <h2 className="plan-column-title">
         {label}
+        {sum.blocks > 0 && (
+          <span className="plan-day-sum" aria-label={T.plan.daySumLabel(sum.blocks, T.endDay.yieldTime(sum.minutes))}>
+            {T.plan.daySum(sum.blocks, T.endDay.yieldTime(sum.minutes))}
+          </span>
+        )}
         {isDropTarget && <span className="drop-hint">{T.plan.dropHere}</span>}
       </h2>
+      {/* Handy: Die Überschrift steckt im Umschalter Heute | Morgen – die Summe steht deshalb als eigene Zeile. */}
+      {IS_MOBILE && sum.blocks > 0 && (
+        <p className="plan-day-sum-line">{T.plan.daySum(sum.blocks, T.endDay.yieldTime(sum.minutes))}</p>
+      )}
 
       <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
         <ol className="task-list">
@@ -293,6 +305,8 @@ function DayColumn(props: DayColumnProps) {
       </SortableContext>
 
       {tasks.length === 0 && <p className="muted small plan-empty">{T.plan.empty}</p>}
+      {/* Deutlich mehr geplant als sonst geschafft? Ein leiser Hinweis, keine Grenze. */}
+      {isOverPlanned(sum.blocks, typical) && <p className="plan-tip">{T.plan.overPlanned(typical!)}</p>}
       {/* Viele Hauptaufgaben? Ein leiser Tipp statt einer festen Grenze. */}
       {tasks.length >= MANY_TASKS_HINT_FROM && <p className="plan-tip">{T.plan.manyTasks}</p>}
 

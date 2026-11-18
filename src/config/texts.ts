@@ -105,6 +105,12 @@ export const T = {
     // Karte über der aktuellen Aufgabe für jede heute erledigte Hauptaufgabe.
     doneCard: 'Erledigt',
     doneCardSkipped: 'Übersprungen',
+    // Erledigt-Karte: weicht das Gebrauchte von der ersten Schätzung ab, steht sie leise dabei.
+    doneEstimate: (n: number) => `geschätzt ${n}`,
+    // Übersicht einer Pille: diese Aufgabe als nächste nehmen.
+    takeFirst: 'Diese zuerst',
+    takeFirstHint: 'Diese Aufgabe nach oben holen – sie ist als Nächstes dran.',
+    tookFirst: (title: string) => `„${title}“ ist jetzt als Nächstes dran`,
     doneCardsLabel: 'Heute erledigt',
     // An einem früheren Tag angefangen, aber noch nicht fertig:
     askResume: 'Hier hast du schon angefangen. Weitermachen oder abschließen?',
@@ -160,6 +166,16 @@ export const T = {
     today: 'Heute',
     tomorrow: 'Morgen',
     manyTasks: 'Weniger Hauptaufgaben, dafür mehr Blöcke – so bleibt der Tag übersichtlich.',
+    // Summe neben der Spaltenüberschrift (nur offene Blöcke, ohne Pausen) – keine Uhrzeiten.
+    daySum: (blocks: number, time: string) => `${blocks === 1 ? '1 Block' : `${blocks} Blöcke`} · ${time}`,
+    daySumLabel: (blocks: number, time: string) => `Geplant: ${blocks === 1 ? '1 Block' : `${blocks} Blöcke`}, ${time} Arbeit`,
+    // Leiser Hinweis, wenn deutlich mehr geplant ist, als du an einem Tag sonst schaffst.
+    overPlanned: (typical: number) => `Sonst schaffst du etwa ${typical} Blöcke am Tag.`,
+    // Erledigte Aufgabe: erste Schätzung gegen das Gebrauchte.
+    estimateMeta: (estimated: number, used: number) => `geschätzt ${estimated} · gebraucht ${used}`,
+    // Aufgabe wandert schon mehrere Tage offen mit.
+    carriedMeta: (day: number) => `${day}. Tag`,
+    carriedHint: (day: number) => `Schon der ${day}. Tag auf dem Plan.\nKleiner schneiden oder streichen?`,
     newTask: 'Neue Hauptaufgabe …',
     add: 'Hinzufügen',
     title: 'Titel',
@@ -314,6 +330,9 @@ export const T = {
     },
     // Sammeln statt Serie: die Gesamtzahl seit Beginn – sie fällt nie zurück.
     lifetime: (n: number) => `Bisher insgesamt: ${n === 1 ? '1 Block' : `${n} Blöcke`}`,
+    // Pausierte Blöcke des Tages – ohne Wertung.
+    interruptions: (count: number, time: string) =>
+      `${count === 1 ? '1 Unterbrechung' : `${count} Unterbrechungen`}, zusammen ${time}`,
   },
 
   // Einmalige, leise Meldung bei 10, 25, 50, 100, 250 und 500 Blöcken.

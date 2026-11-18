@@ -13,7 +13,7 @@ import { T } from '../config/texts'
 import type { ConflictChoices } from '../logic/carryOver'
 import type { ID } from '../model/types'
 import { endDay, getEndDayConflicts } from '../store/actions'
-import { activeDay, dayYield, lifetimeWork, tasksOfDay } from '../store/selectors'
+import { activeDay, dayInterruptions, dayYield, lifetimeWork, tasksOfDay } from '../store/selectors'
 import { useAppState } from '../store/store'
 import { Dialog } from './Dialog'
 import { CheckIcon } from './icons'
@@ -149,10 +149,12 @@ function DayYield() {
   if (result.minutes === 0 && result.doneTitles.length === 0) return null
   const parts = [T.endDay.yieldBlocks(result.completedBlocks), T.endDay.yieldTime(result.minutes)]
   const lifetime = lifetimeWork(state).blocks
+  const pauses = dayInterruptions(state, activeDay(state).id)
   return (
     <div className="day-yield">
       <p className="day-yield-title">{T.endDay.yieldTitle}</p>
       <p className="day-yield-numbers">{parts.join(' · ')}</p>
+      {pauses.count > 0 && <p className="lifetime-line">{T.endDay.interruptions(pauses.count, T.endDay.yieldTime(Math.max(pauses.minutes, 1)))}</p>}
       {lifetime > 0 && <p className="lifetime-line">{T.endDay.lifetime(lifetime)}</p>}
       {result.doneTitles.length > 0 && (
         <ul className="day-yield-done">

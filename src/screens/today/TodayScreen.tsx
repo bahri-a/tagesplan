@@ -337,6 +337,11 @@ function DoneCards({ tasks }: { tasks: Task[] }) {
         const parts = [task.skippedAt === null ? T.today.doneCard : T.today.doneCardSkipped]
         if (work.blocks > 0) parts.push(T.endDay.yieldBlocks(work.blocks))
         if (work.minutes > 0) parts.push(T.endDay.yieldTime(work.minutes))
+        // Weicht das Gebrauchte von der ersten Schätzung ab, steht sie leise dabei – so lernt man schätzen.
+        const estimate = task.firstEstimatedBlocks
+        if (task.skippedAt === null && work.blocks > 0 && estimate !== null && estimate !== work.blocks) {
+          parts.push(T.today.doneEstimate(estimate))
+        }
         return (
           <li key={task.id} className={`card done-card${wasJustFinished(task.id) ? ' is-fresh' : ''}`}>
             <span className="done-card-mark" aria-hidden="true">
